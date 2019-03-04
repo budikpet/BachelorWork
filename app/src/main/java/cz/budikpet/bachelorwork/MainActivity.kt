@@ -16,17 +16,14 @@ import net.openid.appauth.AuthorizationService
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MY_MainActivity"
-
-    private val clientId = "1932312b-4981-4224-97b1-b45ad041a4b7"
-    private val redirectUri = Uri.parse("net.openid.appauthdemo:/oauth2redirect")
-    private val scope = "cvut:sirius:personal:read"
-
-    private val authStateManager: AuthStateManager by lazy { AuthStateManager(this) }
+    private lateinit var appAuthHandler: AppAuthHandler
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        if (authStateManager.authState!!.isAuthorized()) {
+        appAuthHandler = AppAuthHandler(this)
+
+        if (appAuthHandler.isAuthorized()) {
             Log.i(TAG, "User is already authenticated, proceeding to token activity")
             startActivity(Intent(this, AppAuthTest::class.java))
             finish()
@@ -59,7 +56,7 @@ class MainActivity : AppCompatActivity() {
             authService.performAuthorizationRequest(
                 authRequest,
                 PendingIntent.getActivity(this, 0, Intent(this, AppAuthTest::class.java), 0),
-                PendingIntent.getActivity(this, 0, Intent(this, AppAuthTest::class.java), 0)
+                PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), 0)
             )
         }
 
