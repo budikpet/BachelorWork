@@ -27,7 +27,6 @@ class AuthStateManager(context: Context) {
 
     private fun readAuthState(): AuthState {
         val stateJson = authPrefs.getString(STATE_KEY, "{}")
-        val state: AuthState
         return if (stateJson != null) {
             AuthState.jsonDeserialize(stateJson)
         } else {
@@ -41,7 +40,7 @@ class AuthStateManager(context: Context) {
             .apply()
     }
 
-    fun replace(state: AuthState): AuthState {
+    private fun replace(state: AuthState): AuthState {
         this.authState = state
         return state
     }

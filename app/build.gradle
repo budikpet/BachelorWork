@@ -41,10 +41,16 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
+    // Retrofit & RxJava
+    implementation "com.squareup.retrofit2:retrofit:2.4.0"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:2.4.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.3.0"
+    implementation "io.reactivex.rxjava2:rxandroid:2.0.2"
+
+    // AppAuth
     implementation 'net.openid:appauth:0.7.1'
     implementation 'joda-time:joda-time:2.10'
     implementation 'com.squareup.okio:okio:1.14.1'
-
     implementation "com.github.bumptech.glide:glide:${project.glideVersion}"
     annotationProcessor "com.github.bumptech.glide:compiler:${project.glideVersion}"
 }

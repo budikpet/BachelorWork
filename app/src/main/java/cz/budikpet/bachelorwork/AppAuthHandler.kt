@@ -4,17 +4,12 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import android.support.annotation.WorkerThread
 import android.util.Log
+import com.elyeproj.wikisearchcount.SiriusApiService
+import io.reactivex.android.schedulers.AndroidSchedulers
+import io.reactivex.disposables.Disposable
+import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.*
-import okio.Okio
-import org.json.JSONException
-import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
-import java.nio.charset.Charset
-import java.util.concurrent.ExecutorService
-import java.util.concurrent.Executors
 
 class AppAuthHandler(context: Context) {
     private val TAG = "MY_AppAuthHandler"
@@ -24,11 +19,14 @@ class AppAuthHandler(context: Context) {
     private val scope = "cvut:sirius:personal:read"
 
     private var context: Context = context
-    public val authStateManager: AuthStateManager = AuthStateManager(context)
+    private val authStateManager: AuthStateManager = AuthStateManager(context)
     private val authService: AuthorizationService
     private var authRequest: AuthorizationRequest
 
-    private var mExecutor: ExecutorService = Executors.newSingleThreadExecutor()
+    private var disposable: Disposable? = null
+    private val siriusApiServe by lazy {
+        SiriusApiService.create()
+    }
 
     init {
 
@@ -53,12 +51,10 @@ class AppAuthHandler(context: Context) {
     }
 
     fun close() {
-        if (authService != null) {
-            authService.dispose()
-        }
-        mExecutor.shutdownNow()
+        authService.dispose()
+        disposable?.dispose()
     }
-    
+
     // MARK: User authorization
 
     fun isAuthorized(): Boolean {
@@ -143,7 +139,7 @@ class AppAuthHandler(context: Context) {
             Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
         }
     }
-    
+
     // MARK: Helper flows
 
     fun signOut() {
@@ -188,29 +184,22 @@ class AppAuthHandler(context: Context) {
     }
 
     private fun fetchCalendarData(accessToken: String?, idToken: String?, ex: AuthorizationException?) {
+        // Check for errors and expired tokens
         if (ex != null) {
             Log.e(TAG, "Token refresh failed when fetching user info")
-            
+
             // Its possible the access token expired
             refreshAccessToken()
             return
         }
-        
-        mExecutor.submit {
-            try {
-                val conn = URL("https://sirius.fit.cvut.cz/api/v1/people/budikpet/events?from=2018-10-29&to=2018-10-30")
-                    .openConnection() as HttpURLConnection
-                conn.setRequestProperty("Authorization", "Bearer $accessToken")
 
-                conn.instanceFollowRedirects = false
-                val response = Okio.buffer(Okio.source(conn.inputStream))
-                    .readString(Charset.forName("UTF-8"))
-                Log.i(TAG, response)
-            } catch (ioEx: IOException) {
-                Log.e(TAG, "Network error when querying userinfo endpoint", ioEx)
-            } catch (jsonEx: JSONException) {
-                Log.e(TAG, "Failed to parse userinfo response")
-            }
-        }
+        // Call the endpoint
+        disposable = siriusApiServe.getEvents(accessToken = accessToken!!, from = "2018-10-29", to = "2018-10-30")
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result -> Log.i(TAG, "Success: ${result}") },
+                { error -> Log.e(TAG, "Error: ${error.message}") }
+            )
     }
 }

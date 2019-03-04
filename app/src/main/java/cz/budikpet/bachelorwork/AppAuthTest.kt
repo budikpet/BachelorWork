@@ -5,9 +5,6 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import kotlinx.android.synthetic.main.activity_app_auth_test.*
-import net.openid.appauth.AppAuthConfiguration
-import net.openid.appauth.AuthorizationService
-import net.openid.appauth.connectivity.DefaultConnectionBuilder
 
 class AppAuthTest : AppCompatActivity() {
     private val TAG = "MY_AppAuthTest"
@@ -34,9 +31,6 @@ class AppAuthTest : AppCompatActivity() {
 
         if (appAuthHandler.isAuthorized()) {
             Log.i(TAG, "Already authorized.")
-            // TODO: Remove
-            Log.i(TAG, "AccessToken: ${appAuthHandler.authStateManager.authState?.accessToken}")
-            Log.i(TAG, "RefreshToken: ${appAuthHandler.authStateManager.authState?.refreshToken}")
             return
         } else {
             Log.i(TAG, "Not authorized")
