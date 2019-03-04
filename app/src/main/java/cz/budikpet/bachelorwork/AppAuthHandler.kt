@@ -188,6 +188,14 @@ class AppAuthHandler(context: Context) {
     }
 
     private fun fetchCalendarData(accessToken: String?, idToken: String?, ex: AuthorizationException?) {
+        if (ex != null) {
+            Log.e(TAG, "Token refresh failed when fetching user info")
+            
+            // Its possible the access token expired
+            refreshAccessToken()
+            return
+        }
+        
         mExecutor.submit {
             try {
                 val conn = URL("https://sirius.fit.cvut.cz/api/v1/people/budikpet/events?from=2018-10-29&to=2018-10-30")
