@@ -25,12 +25,10 @@ class AuthStateManager(context: Context) {
             }
         }
         set(authState: AuthState?) {
-            if(authState == null) {
-                writeAuthState(AuthState())
-            } else {
-                writeAuthState(authState!!)
-            }
-            field = authState
+            field = if(authState == null) AuthState() else authState
+
+            writeAuthState(field!!)
+
         }
 
     private fun readAuthState(): AuthState {
