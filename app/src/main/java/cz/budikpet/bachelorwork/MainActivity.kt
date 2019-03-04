@@ -13,12 +13,6 @@ import android.content.Intent
 import android.app.PendingIntent
 import net.openid.appauth.AuthorizationService
 
-
-
-
-
-
-
 class MainActivity : AppCompatActivity() {
     private val clientId = "1932312b-4981-4224-97b1-b45ad041a4b7"
     private val redirectUri = Uri.parse("net.openid.appauthdemo:/oauth2redirect")
@@ -29,11 +23,13 @@ class MainActivity : AppCompatActivity() {
         Uri.parse("https://auth.fit.cvut.cz/oauth/token") // token endpoint
     )
 
+    private val authStateManager: AuthStateManager by lazy { AuthStateManager(this) }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val authState = AuthState(serviceConfig)
+        authStateManager.authState = AuthState(serviceConfig)
 
         val authRequestBuilder = AuthorizationRequest.Builder(
             serviceConfig, // the authorization service configuration
