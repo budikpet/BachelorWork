@@ -1,13 +1,9 @@
 package cz.budikpet.bachelorwork
 
 import android.content.Context
-import android.R.id.edit
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import android.support.annotation.AnyThread
-import android.support.annotation.NonNull
-import android.text.TextUtils.replace
-import android.util.Log
 import net.openid.appauth.*
 
 
@@ -20,14 +16,14 @@ class AuthStateManager(context: Context) {
 
     var authState: AuthState? = null
         get() {
-            if(field != null) {
+            if (field != null) {
                 return field
             } else {
                 return readAuthState()
             }
         }
         set(authState: AuthState?) {
-            field = if(authState == null) AuthState() else authState
+            field = if (authState == null) AuthState() else authState
 
             writeAuthState(field!!)
 

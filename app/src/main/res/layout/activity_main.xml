@@ -13,11 +13,4 @@
             android:id="@+id/appAuthPendingIntent"
             app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
             android:layout_marginTop="16dp" app:layout_constraintTop_toTopOf="parent"/>
-    <Button
-            android:text="AppAuth_Activity"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
-            android:id="@+id/appAuthActivity"
-            android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/appAuthPendingIntent"/>
 </android.support.constraint.ConstraintLayout>

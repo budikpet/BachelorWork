@@ -1,18 +1,10 @@
 package cz.budikpet.bachelorwork
 
-import android.net.Uri
-import android.support.v7.app.AppCompatActivity
-import android.os.Bundle
-
-import kotlinx.android.synthetic.main.activity_main.*
-import net.openid.appauth.AuthorizationServiceConfiguration
-import net.openid.appauth.AuthState
-import net.openid.appauth.ResponseTypeValues
-import net.openid.appauth.AuthorizationRequest
 import android.content.Intent
-import android.app.PendingIntent
+import android.os.Bundle
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import net.openid.appauth.AuthorizationService
+import kotlinx.android.synthetic.main.activity_main.*
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MY_MainActivity"
@@ -36,5 +28,11 @@ class MainActivity : AppCompatActivity() {
             appAuthHandler.authorize()
         }
 
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+
+        appAuthHandler.close()
     }
 }
