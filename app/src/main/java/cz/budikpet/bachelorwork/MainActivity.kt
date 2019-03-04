@@ -32,32 +32,8 @@ class MainActivity : AppCompatActivity() {
 
         setContentView(R.layout.activity_main)
 
-        if(authStateManager.authState!!.authorizationServiceConfiguration == null) {
-            Log.i(TAG, "auth config needs to be established")
-            val serviceConfig = AuthorizationServiceConfiguration(
-                Uri.parse("https://auth.fit.cvut.cz/oauth/authorize"), // authorization endpoint
-                Uri.parse("https://auth.fit.cvut.cz/oauth/token") // token endpoint
-            )
-            authStateManager.authState = AuthState(serviceConfig)
-        }
-
-        val authRequestBuilder = AuthorizationRequest.Builder(
-            authStateManager.authState!!.authorizationServiceConfiguration!!, // the authorization service configuration
-            clientId, // the client ID, typically pre-registered and static
-            ResponseTypeValues.CODE, // the response_type value: we want a code
-            redirectUri // the redirect URI to which the auth response is sent
-        ).setScope(scope)
-
-        val authRequest = authRequestBuilder.build()
-
         appAuthPendingIntent.setOnClickListener {
-            val authService = AuthorizationService(this)
-
-            authService.performAuthorizationRequest(
-                authRequest,
-                PendingIntent.getActivity(this, 0, Intent(this, AppAuthTest::class.java), 0),
-                PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), 0)
-            )
+            appAuthHandler.authorize()
         }
 
     }
