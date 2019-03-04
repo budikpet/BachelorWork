@@ -16,11 +16,7 @@ class AuthStateManager(context: Context) {
 
     var authState: AuthState? = null
         get() {
-            if (field != null) {
-                return field
-            } else {
-                return readAuthState()
-            }
+            return if (field != null) field else readAuthState()
         }
         set(authState: AuthState?) {
             field = if (authState == null) AuthState() else authState

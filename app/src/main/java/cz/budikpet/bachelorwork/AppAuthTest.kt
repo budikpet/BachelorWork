@@ -22,6 +22,8 @@ class AppAuthTest : AppCompatActivity() {
 
         backBtn.setOnClickListener { signOut() }
 
+        buttonRefresh.setOnClickListener { appAuthHandler.refreshAccessToken() }
+
         getEventsBtn.setOnClickListener {
             appAuthHandler.getEvents()
         }
@@ -32,6 +34,9 @@ class AppAuthTest : AppCompatActivity() {
 
         if (appAuthHandler.isAuthorized()) {
             Log.i(TAG, "Already authorized.")
+            // TODO: Remove
+            Log.i(TAG, "AccessToken: ${appAuthHandler.authStateManager.authState?.accessToken}")
+            Log.i(TAG, "RefreshToken: ${appAuthHandler.authStateManager.authState?.refreshToken}")
             return
         } else {
             Log.i(TAG, "Not authorized")

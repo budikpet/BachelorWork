@@ -15,6 +15,11 @@ class MainActivity : AppCompatActivity() {
 
         appAuthHandler = AppAuthHandler(this)
 
+        // Use refreshToken to skip authorization
+//        if(!appAuthHandler.isAuthorized() && appAuthHandler.) {
+//
+//        }
+
         if (appAuthHandler.isAuthorized()) {
             Log.i(TAG, "User is already authenticated, proceeding to token activity")
             startActivity(Intent(this, AppAuthTest::class.java))

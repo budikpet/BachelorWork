@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.support.annotation.WorkerThread
 import android.util.Log
 import net.openid.appauth.*
 import okio.Okio
@@ -23,8 +24,8 @@ class AppAuthHandler(context: Context) {
     private val scope = "cvut:sirius:personal:read"
 
     private var context: Context = context
-    private val authStateManager: AuthStateManager by lazy { AuthStateManager(context) }
-    private val authService = AuthorizationService(context)
+    public val authStateManager: AuthStateManager = AuthStateManager(context)
+    private val authService: AuthorizationService
     private var authRequest: AuthorizationRequest
 
     private var mExecutor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -48,12 +49,14 @@ class AppAuthHandler(context: Context) {
         ).setScope(scope)
 
         authRequest = authRequestBuilder.build()
+        authService = AuthorizationService(context)
     }
 
     fun close() {
         if (authService != null) {
             authService.dispose()
         }
+        mExecutor.shutdownNow()
     }
     
     // MARK: User authorization
@@ -81,12 +84,12 @@ class AppAuthHandler(context: Context) {
         val ex = AuthorizationException.fromIntent(intent)
 
         if (response != null || ex != null) {
-            authStateManager.updateAfterAuthorization(response, ex);
+            authStateManager.updateAfterAuthorization(response, ex)
         }
 
         if (response?.authorizationCode != null) {
             // authorization code exchange is required
-            authStateManager.updateAfterAuthorization(response, ex);
+            authStateManager.updateAfterAuthorization(response, ex)
             exchangeAuthorizationCode(response)
         } else if (ex != null) {
             Log.e(TAG, "Authorization flow failed: " + ex.message)
@@ -130,31 +133,57 @@ class AppAuthHandler(context: Context) {
 
         authStateManager.updateAfterTokenResponse(tokenResponse, authException)
         Log.i(TAG, "IsAuth: " + authStateManager.authState!!.isAuthorized)
-        Log.i(TAG, tokenResponse!!.accessToken)
-        if (!authStateManager.authState!!.isAuthorized()) {
+        if (!authStateManager.authState!!.isAuthorized) {
             val message = "Authorization Code exchange failed" + if (authException != null) authException.error else ""
 
             // WrongThread inference is incorrect for lambdas
             Log.e(TAG, message)
         } else {
-            Log.i("ACCESS_TOKEN", tokenResponse!!.accessToken)
+            Log.i(TAG, "AccessToken: ${authStateManager.authState?.accessToken}")
+            Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
         }
     }
+    
+    // MARK: Helper flows
 
     fun signOut() {
         // discard the authorization and token state, but retain the configuration and
         // dynamic client registration (if applicable), to save from retrieving them again.
         val currentState = authStateManager.authState
-        val clearedState = AuthState(currentState?.getAuthorizationServiceConfiguration()!!)
-        if (currentState.getLastRegistrationResponse() != null) {
-            clearedState.update(currentState.getLastRegistrationResponse())
+        val clearedState = AuthState(currentState?.authorizationServiceConfiguration!!)
+        if (currentState.lastRegistrationResponse != null) {
+            clearedState.update(currentState.lastRegistrationResponse)
         }
         authStateManager.authState = clearedState
     }
 
-    // MARK: API call methods
+    fun refreshAccessToken() {
+        Log.i(TAG, "Refreshing access token")
+        performTokenRequest(
+            authStateManager.authState!!.createTokenRefreshRequest(),
+            AuthorizationService.TokenResponseCallback { tokenResponse, authException ->
+                this.handleAccessTokenResponse(
+                    tokenResponse,
+                    authException
+                )
+            })
+    }
+
+    private fun handleAccessTokenResponse(
+        tokenResponse: TokenResponse?,
+        authException: AuthorizationException?
+    ) {
+        authStateManager.updateAfterTokenResponse(tokenResponse, authException)
+        Log.i(TAG, "handleAccessTokenResponse")
+    }
+
+    // MARK: API endpoint call methods
 
     fun getEvents() {
+        Log.i(TAG, "GetEvents")
+        Log.i(TAG, "AccessToken: ${authStateManager.authState?.accessToken}")
+        Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
+        val authService = AuthorizationService(context)
         authStateManager.authState?.performActionWithFreshTokens(authService, this::fetchCalendarData)
     }
 
