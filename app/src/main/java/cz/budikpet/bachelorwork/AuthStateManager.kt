@@ -6,18 +6,20 @@ import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import net.openid.appauth.AuthState
 import android.support.annotation.NonNull
-
+import android.util.Log
 
 
 class AuthStateManager(context: Context) {
+    private val TAG = "MY_MainActivity"
+
     private final val prefPath = "auth"
     private final val STATE_KEY = "stateJson"
     private val authPrefs: SharedPreferences = context.getSharedPreferences(prefPath, MODE_PRIVATE);
 
     var authState: AuthState? = null
         get() {
-            if(authState != null) {
-                return authState
+            if(field != null) {
+                return field
             } else {
                 return readAuthState()
             }
