@@ -4,9 +4,11 @@ import android.content.Context
 import android.R.id.edit
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
-import net.openid.appauth.AuthState
+import android.support.annotation.AnyThread
 import android.support.annotation.NonNull
+import android.text.TextUtils.replace
 import android.util.Log
+import net.openid.appauth.*
 
 
 class AuthStateManager(context: Context) {
@@ -45,5 +47,40 @@ class AuthStateManager(context: Context) {
         authPrefs.edit()
             .putString(STATE_KEY, state.jsonSerializeString())
             .apply()
+    }
+
+    fun replace(state: AuthState): AuthState {
+        this.authState = state
+        return state
+    }
+
+    fun updateAfterTokenResponse(response: TokenResponse?, ex: AuthorizationException?): AuthState {
+        val current = authState!!
+        current.update(response, ex)
+        return replace(current)
+    }
+
+    @AnyThread
+    fun updateAfterAuthorization(
+        response: AuthorizationResponse?,
+        ex: AuthorizationException?
+    ): AuthState {
+        val current = authState!!
+        current.update(response, ex)
+        return replace(current)
+    }
+
+    @AnyThread
+    fun updateAfterRegistration(
+        response: RegistrationResponse,
+        ex: AuthorizationException?
+    ): AuthState {
+        val current = authState!!
+        if (ex != null) {
+            return current
+        }
+
+        current.update(response)
+        return replace(current)
     }
 }
