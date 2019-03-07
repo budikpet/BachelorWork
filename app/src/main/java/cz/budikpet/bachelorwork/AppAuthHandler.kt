@@ -186,7 +186,7 @@ class AppAuthHandler(context: Context) {
     private fun fetchCalendarData(accessToken: String?, idToken: String?, ex: AuthorizationException?) {
         // Check for errors and expired tokens
         if (ex != null) {
-            Log.e(TAG, "Token refresh failed when fetching user info")
+            Log.e(TAG, "Request failed: $ex")
 
             // Its possible the access token expired
             refreshAccessToken()
@@ -194,11 +194,40 @@ class AppAuthHandler(context: Context) {
         }
 
         // Call the endpoint
-        disposable = siriusApiServe.getEvents(accessToken = accessToken!!, from = "2018-10-29", to = "2018-10-30")
+        disposable = siriusApiServe.getEvents(accessToken = accessToken!!,
+            from = "2019-1-1", to = "2019-3-1", limit = 1000, event_type = EventType.COURSE_EVENT)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map { t -> t.events }
+            .subscribe(
+                { result ->
+                    Log.i(TAG, "Events: $result")
+                    val types: MutableSet<EventType?> = hashSetOf();
+                    for(event in result) {
+                        types.add(event.event_type)
+                    }
+
+                    for(type in types) {
+                        Log.i(TAG, "EventType: $type")
+                    }
+                },
+                { error -> Log.e(TAG, "Error: ${error.message}") }
+            )
+
+        disposable = siriusApiServe.search(accessToken = accessToken!!, limit = 200, query = "Th")
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
-                { result -> Log.i(TAG, "Success: ${result}") },
+                { result ->
+                    val types: MutableSet<SearchItemType> = hashSetOf();
+                    for(item in result.results) {
+                        types.add(item.type)
+                    }
+
+                    for(type in types) {
+                        Log.i(TAG, "SearchItemType: $type")
+                    }
+                },
                 { error -> Log.e(TAG, "Error: ${error.message}") }
             )
     }
