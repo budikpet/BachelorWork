@@ -193,7 +193,71 @@ class AppAuthHandler(context: Context) {
             return
         }
 
-        // Call the endpoint
+        // Call endpoints
+//        testGetEvents(accessToken)
+//        testSearch(accessToken)
+//        testPeopleEvents(accessToken)
+//        testRoomEvents(accessToken)
+        testCourseEvents(accessToken)
+
+    }
+
+    private fun testCourseEvents(accessToken: String?) {
+        disposable = siriusApiServe.getCourseEvents(courseCode = "BI-AG2", accessToken = accessToken!!,
+            from = "2019-1-1", to = "2019-4-1", limit = 1000)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map { t -> t.events }
+            .subscribe(
+                { result -> Log.i(TAG, "CourseEvents: $result") },
+                { error -> Log.e(TAG, "Error: ${error.message}") }
+            )
+    }
+
+    private fun testRoomEvents(accessToken: String?) {
+        disposable = siriusApiServe.getRoomEvents(roomKosId = "TH:A-1231", accessToken = accessToken!!,
+            from = "2019-1-1", to = "2019-3-1", limit = 1000)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map { t -> t.events }
+            .subscribe(
+                { result -> Log.i(TAG, "RoomEvents: $result") },
+                { error -> Log.e(TAG, "Error: ${error.message}") }
+            )
+    }
+
+    private fun testPeopleEvents(accessToken: String?) {
+        disposable = siriusApiServe.getPersonEvents(username = "balikm", accessToken = accessToken!!,
+            from = "2019-1-1", to = "2019-3-1", limit = 1000)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .map { t -> t.events }
+            .subscribe(
+                { result -> Log.i(TAG, "PersonEvents: $result") },
+                { error -> Log.e(TAG, "Error: ${error.message}") }
+            )
+    }
+
+    private fun testSearch(accessToken: String?) {
+        disposable = siriusApiServe.search(accessToken = accessToken!!, limit = 200, query = "Th")
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result ->
+                    val types: MutableSet<SearchItemType> = hashSetOf();
+                    for(item in result.results) {
+                        types.add(item.type)
+                    }
+
+                    for(type in types) {
+                        Log.i(TAG, "SearchItemType: $type")
+                    }
+                },
+                { error -> Log.e(TAG, "Error: ${error.message}") }
+            )
+    }
+
+    private fun testGetEvents(accessToken: String?) {
         disposable = siriusApiServe.getEvents(accessToken = accessToken!!,
             from = "2019-1-1", to = "2019-3-1", limit = 1000, event_type = EventType.COURSE_EVENT)
             .subscribeOn(Schedulers.io())
@@ -209,23 +273,6 @@ class AppAuthHandler(context: Context) {
 
                     for(type in types) {
                         Log.i(TAG, "EventType: $type")
-                    }
-                },
-                { error -> Log.e(TAG, "Error: ${error.message}") }
-            )
-
-        disposable = siriusApiServe.search(accessToken = accessToken!!, limit = 200, query = "Th")
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { result ->
-                    val types: MutableSet<SearchItemType> = hashSetOf();
-                    for(item in result.results) {
-                        types.add(item.type)
-                    }
-
-                    for(type in types) {
-                        Log.i(TAG, "SearchItemType: $type")
                     }
                 },
                 { error -> Log.e(TAG, "Error: ${error.message}") }
