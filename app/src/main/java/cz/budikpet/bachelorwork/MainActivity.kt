@@ -34,12 +34,12 @@ class MainActivity : AppCompatActivity() {
 
         if (appAuthHandler.isAuthorized()) {
             Log.i(TAG, "Already authorized.")
+            // TODO: Check access token to refresh?
             return
         } else {
             Log.i(TAG, "Not authorized")
+            appAuthHandler.startAuthCodeExchange(intent)
         }
-
-        appAuthHandler.startAuthCodeExchange(intent)
     }
 
     override fun onDestroy() {

@@ -9,6 +9,8 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.*
+import kotlin.reflect.KFunction3
+
 
 class AppAuthHandler(context: Context) {
     private val TAG = "MY_AppAuthHandler"
@@ -179,13 +181,20 @@ class AppAuthHandler(context: Context) {
         return authStateManager.authState!!.isAuthorized
     }
 
+    /**
+     * Makes using the performActionWithFreshTokens method a bit easier.
+     */
+    fun performActionWithFreshTokens(action: KFunction3<String?, String?, AuthorizationException?, Unit>) {
+        authStateManager.authState?.performActionWithFreshTokens(authService, action)
+    }
+
     // MARK: API endpoint call methods
 
     fun getEvents() {
         Log.i(TAG, "GetEvents")
         Log.i(TAG, "AccessToken: ${authStateManager.authState?.accessToken}")
         Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
-        authStateManager.authState?.performActionWithFreshTokens(authService, this::fetchCalendarData)
+        performActionWithFreshTokens(this::fetchCalendarData)
     }
 
     private fun fetchCalendarData(accessToken: String?, idToken: String?, ex: AuthorizationException?) {
