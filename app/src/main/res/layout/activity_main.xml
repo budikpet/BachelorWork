@@ -6,11 +6,25 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         tools:context=".MainActivity">
+
     <Button
-            android:text="AppAuth_PendingIntent"
+            android:text="Back"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="16dp"
+            android:layout_marginStart="16dp" android:id="@+id/backBtn"/>
+    <Button
+            android:text="Get_Events"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/appAuthPendingIntent"
             app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
-            android:layout_marginTop="16dp" app:layout_constraintTop_toTopOf="parent"/>
+            android:id="@+id/getEventsBtn"
+            android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/backBtn"/>
+    <Button
+            android:text="RefreshTokens"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/buttonRefresh"
+            app:layout_constraintStart_toEndOf="@+id/backBtn" android:layout_marginStart="8dp"
+            app:layout_constraintBaseline_toBaselineOf="@+id/backBtn"/>
 </android.support.constraint.ConstraintLayout>

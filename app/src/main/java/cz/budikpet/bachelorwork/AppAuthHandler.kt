@@ -62,12 +62,12 @@ class AppAuthHandler(context: Context) {
      * A user is redirected to CTU login page to provide username and password.
      */
     fun startAuthorization() {
-        var errorIntent = Intent(context, MainActivity::class.java)
+        var errorIntent = Intent(context, CTULoginActivity::class.java)
         errorIntent.putExtra("TEST", "error")
 
         authService.performAuthorizationRequest(
             authRequest,
-            PendingIntent.getActivity(context, 0, Intent(context, AppAuthTest::class.java), 0),
+            PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), 0),
             PendingIntent.getActivity(context, 0, errorIntent, 0)
         )
     }
