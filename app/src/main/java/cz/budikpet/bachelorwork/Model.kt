@@ -51,34 +51,44 @@ object Model {
     data class SearchResult(val meta: Meta, val results: List<SearchItem>)
 
     /**
-     * A special header used by Sirius API endpoints which return a collection of data.
+     * A special item used by Sirius API endpoints which return a collection of data.
      * It holds information about this collection.
      */
     data class Meta(val count: Int, val offset: Int, val limit: Int)
 
     // SearchItem type
-    data class SearchItem(val id: String,
-                          val title: String?,
-                          val type: SearchItemType) // TODO: Create enum of this type
+    data class SearchItem(
+        val id: String,
+        val title: String?,
+        val type: SearchItemType
+    )
 
     // TODO: Add remaining values
     // Event type
-    data class Event(val id: Int,
-                     val name: EventName? = null,
-                     val starts_at: Date,
-                     val ends_at: Date,
-                     val deleted: Boolean = false,
-                     val capacity: Int,
-                     val occupied: Int = 0,
-                     val event_type: EventType?,
-                     val original_data: OriginalData,
-                     val links: Links)
+    data class Event(
+        val id: Int,
+        val name: EventName? = null,
+        val starts_at: Date,
+        val ends_at: Date,
+        val deleted: Boolean = false,
+        val capacity: Int,
+        val occupied: Int = 0,
+        val event_type: EventType?,
+        val original_data: OriginalData,
+        val links: Links
+    )
+
     data class EventName(val cs: String? = null)
-    data class OriginalData(val starts_at: Date,
-                            val ends_at: Date,
-                            val room_id: String)
-    data class Links(val room: String,
-                     val course: String,
-                     val teachers: List<String>,
-                     val students: List<String>)
+    data class OriginalData(
+        val starts_at: Date,
+        val ends_at: Date,
+        val room_id: String
+    )
+
+    data class Links(
+        val room: String,
+        val course: String,
+        val teachers: List<String>,
+        val students: List<String>
+    )
 }

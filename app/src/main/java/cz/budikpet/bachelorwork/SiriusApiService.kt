@@ -1,7 +1,5 @@
-package com.elyeproj.wikisearchcount
+package cz.budikpet.bachelorwork
 
-import cz.budikpet.bachelorwork.EventType
-import cz.budikpet.bachelorwork.Model
 import io.reactivex.Observable
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -86,10 +84,12 @@ interface SiriusApiService {
      * Used for autosuggestion when searching for timetables of classrooms, teachers, courses and other students.
      */
     @GET("search")
-    fun search(@Query("access_token") accessToken: String,
-               @Query("limit") limit: Int? = 10,    // <1; 1000>
-               @Query("offset") offset: Int? = 0,
-               @Query("q") query: String): Observable<Model.SearchResult>
+    fun search(
+        @Query("access_token") accessToken: String,
+        @Query("limit") limit: Int? = 10,    // <1; 1000>
+        @Query("offset") offset: Int? = 0,
+        @Query("q") query: String
+    ): Observable<Model.SearchResult>
 
     companion object {
         fun create(): SiriusApiService {

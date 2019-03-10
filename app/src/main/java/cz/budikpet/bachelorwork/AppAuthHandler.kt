@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import com.elyeproj.wikisearchcount.SiriusApiService
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
@@ -57,11 +56,12 @@ class AppAuthHandler(context: Context) {
 
     // MARK: User authorization
 
-    fun isAuthorized(): Boolean {
-        return authStateManager.authState!!.isAuthorized
-    }
-
-    fun authorize() {
+    /**
+     * Starts the authorization flow.
+     *
+     * A user is redirected to CTU login page to provide username and password.
+     */
+    fun startAuthorization() {
         var errorIntent = Intent(context, MainActivity::class.java)
         errorIntent.putExtra("TEST", "error")
 
@@ -74,6 +74,11 @@ class AppAuthHandler(context: Context) {
 
     // MARK: Authorization code exchange flow for tokens
 
+    /**
+     * We received data from the authorization server.
+     *
+     * @param intent It has the response and exception information of the authorization flow.
+     */
     fun startAuthCodeExchange(intent: Intent) {
         // We need to complete the authState
         val response = AuthorizationResponse.fromIntent(intent)
@@ -94,6 +99,9 @@ class AppAuthHandler(context: Context) {
         }
     }
 
+    /**
+     * We received authorization code which needs to be exchanged for tokens.
+     */
     private fun exchangeAuthorizationCode(authorizationResponse: AuthorizationResponse) {
         Log.i(TAG, "Exchanging authorization code")
 
@@ -135,12 +143,13 @@ class AppAuthHandler(context: Context) {
             // WrongThread inference is incorrect for lambdas
             Log.e(TAG, message)
         } else {
+            // The Authorization Code exchange was successful
             Log.i(TAG, "AccessToken: ${authStateManager.authState?.accessToken}")
             Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
         }
     }
 
-    // MARK: Helper flows
+    // MARK: Helper methods and flows
 
     fun signOut() {
         // discard the authorization and token state, but retain the configuration and
@@ -153,24 +162,21 @@ class AppAuthHandler(context: Context) {
         authStateManager.authState = clearedState
     }
 
-    fun refreshAccessToken() {
+    /**
+     * Get new access tokens using the refresh token.
+     */
+    fun startRefreshAccessToken() {
         Log.i(TAG, "Refreshing access token")
         performTokenRequest(
             authStateManager.authState!!.createTokenRefreshRequest(),
             AuthorizationService.TokenResponseCallback { tokenResponse, authException ->
-                this.handleAccessTokenResponse(
-                    tokenResponse,
-                    authException
-                )
+                authStateManager.updateAfterTokenResponse(tokenResponse, authException)
+                Log.i(TAG, "handleAccessTokenResponse")
             })
     }
 
-    private fun handleAccessTokenResponse(
-        tokenResponse: TokenResponse?,
-        authException: AuthorizationException?
-    ) {
-        authStateManager.updateAfterTokenResponse(tokenResponse, authException)
-        Log.i(TAG, "handleAccessTokenResponse")
+    fun isAuthorized(): Boolean {
+        return authStateManager.authState!!.isAuthorized
     }
 
     // MARK: API endpoint call methods
@@ -179,7 +185,6 @@ class AppAuthHandler(context: Context) {
         Log.i(TAG, "GetEvents")
         Log.i(TAG, "AccessToken: ${authStateManager.authState?.accessToken}")
         Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
-        val authService = AuthorizationService(context)
         authStateManager.authState?.performActionWithFreshTokens(authService, this::fetchCalendarData)
     }
 
@@ -189,7 +194,7 @@ class AppAuthHandler(context: Context) {
             Log.e(TAG, "Request failed: $ex")
 
             // Its possible the access token expired
-            refreshAccessToken()
+            startRefreshAccessToken()
             return
         }
 
@@ -203,8 +208,10 @@ class AppAuthHandler(context: Context) {
     }
 
     private fun testCourseEvents(accessToken: String?) {
-        disposable = siriusApiServe.getCourseEvents(courseCode = "BI-AG2", accessToken = accessToken!!,
-            from = "2019-1-1", to = "2019-4-1", limit = 1000)
+        disposable = siriusApiServe.getCourseEvents(
+            courseCode = "BI-AG2", accessToken = accessToken!!,
+            from = "2019-1-1", to = "2019-4-1", limit = 1000
+        )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .map { t -> t.events }
@@ -215,8 +222,10 @@ class AppAuthHandler(context: Context) {
     }
 
     private fun testRoomEvents(accessToken: String?) {
-        disposable = siriusApiServe.getRoomEvents(roomKosId = "TH:A-1231", accessToken = accessToken!!,
-            from = "2019-1-1", to = "2019-3-1", limit = 1000)
+        disposable = siriusApiServe.getRoomEvents(
+            roomKosId = "TH:A-1231", accessToken = accessToken!!,
+            from = "2019-1-1", to = "2019-3-1", limit = 1000
+        )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .map { t -> t.events }
@@ -227,8 +236,10 @@ class AppAuthHandler(context: Context) {
     }
 
     private fun testPeopleEvents(accessToken: String?) {
-        disposable = siriusApiServe.getPersonEvents(username = "balikm", accessToken = accessToken!!,
-            from = "2019-1-1", to = "2019-3-1", limit = 1000)
+        disposable = siriusApiServe.getPersonEvents(
+            username = "balikm", accessToken = accessToken!!,
+            from = "2019-1-1", to = "2019-3-1", limit = 1000
+        )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .map { t -> t.events }
@@ -245,11 +256,11 @@ class AppAuthHandler(context: Context) {
             .subscribe(
                 { result ->
                     val types: MutableSet<SearchItemType> = hashSetOf();
-                    for(item in result.results) {
+                    for (item in result.results) {
                         types.add(item.type)
                     }
 
-                    for(type in types) {
+                    for (type in types) {
                         Log.i(TAG, "SearchItemType: $type")
                     }
                 },
@@ -258,8 +269,10 @@ class AppAuthHandler(context: Context) {
     }
 
     private fun testGetEvents(accessToken: String?) {
-        disposable = siriusApiServe.getEvents(accessToken = accessToken!!,
-            from = "2019-1-1", to = "2019-3-1", limit = 1000, event_type = EventType.COURSE_EVENT)
+        disposable = siriusApiServe.getEvents(
+            accessToken = accessToken!!,
+            from = "2019-1-1", to = "2019-3-1", limit = 1000, event_type = EventType.COURSE_EVENT
+        )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .map { t -> t.events }
@@ -267,11 +280,11 @@ class AppAuthHandler(context: Context) {
                 { result ->
                     Log.i(TAG, "Events: $result")
                     val types: MutableSet<EventType?> = hashSetOf();
-                    for(event in result) {
+                    for (event in result) {
                         types.add(event.event_type)
                     }
 
-                    for(type in types) {
+                    for (type in types) {
                         Log.i(TAG, "EventType: $type")
                     }
                 },

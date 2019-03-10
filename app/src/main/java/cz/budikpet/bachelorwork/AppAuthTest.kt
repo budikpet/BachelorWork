@@ -19,7 +19,7 @@ class AppAuthTest : AppCompatActivity() {
 
         backBtn.setOnClickListener { signOut() }
 
-        buttonRefresh.setOnClickListener { appAuthHandler.refreshAccessToken() }
+        buttonRefresh.setOnClickListener { appAuthHandler.startRefreshAccessToken() }
 
         getEventsBtn.setOnClickListener {
             appAuthHandler.getEvents()

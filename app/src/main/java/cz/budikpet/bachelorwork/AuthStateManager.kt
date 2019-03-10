@@ -3,7 +3,6 @@ package cz.budikpet.bachelorwork
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
-import android.support.annotation.AnyThread
 import net.openid.appauth.*
 
 
@@ -25,6 +24,11 @@ class AuthStateManager(context: Context) {
 
         }
 
+    /**
+     * Either read the AuthState value from SharedPreferences, or create it.
+     *
+     * @return Current AuthState.
+     */
     private fun readAuthState(): AuthState {
         val stateJson = authPrefs.getString(STATE_KEY, "{}")
         return if (stateJson != null) {
@@ -34,6 +38,10 @@ class AuthStateManager(context: Context) {
         }
     }
 
+    /**
+     * Write @param state into SharedPreferences.
+     * @param state The AuthState to be written into SharedPreferences.
+     */
     private fun writeAuthState(state: AuthState) {
         authPrefs.edit()
             .putString(STATE_KEY, state.jsonSerializeString())
@@ -45,13 +53,9 @@ class AuthStateManager(context: Context) {
         return state
     }
 
-    fun updateAfterTokenResponse(response: TokenResponse?, ex: AuthorizationException?): AuthState {
-        val current = authState!!
-        current.update(response, ex)
-        return replace(current)
-    }
-
-    @AnyThread
+    /**
+     * Update the AuthState after the authorization code has been received.
+     */
     fun updateAfterAuthorization(
         response: AuthorizationResponse?,
         ex: AuthorizationException?
@@ -61,7 +65,15 @@ class AuthStateManager(context: Context) {
         return replace(current)
     }
 
-    @AnyThread
+    /**
+     * Update the AuthState after the authorization code has been exchanged for tokens.
+     */
+    fun updateAfterTokenResponse(response: TokenResponse?, ex: AuthorizationException?): AuthState {
+        val current = authState!!
+        current.update(response, ex)
+        return replace(current)
+    }
+
     fun updateAfterRegistration(
         response: RegistrationResponse,
         ex: AuthorizationException?

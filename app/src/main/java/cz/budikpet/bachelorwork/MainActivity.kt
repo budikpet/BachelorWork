@@ -30,7 +30,7 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         appAuthPendingIntent.setOnClickListener {
-            appAuthHandler.authorize()
+            appAuthHandler.startAuthorization()
         }
 
     }
