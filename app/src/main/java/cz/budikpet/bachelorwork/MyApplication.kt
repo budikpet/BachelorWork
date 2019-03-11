@@ -1,9 +1,11 @@
 package cz.budikpet.bachelorwork
 
 import android.app.Application
-import android.util.Log
+import cz.budikpet.bachelorwork.di.AppComponent
+import cz.budikpet.bachelorwork.di.AppModule
+import cz.budikpet.bachelorwork.di.DaggerAppComponent
 
-class MyApplication: Application() {
+class MyApplication : Application() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     companion object {
@@ -12,9 +14,10 @@ class MyApplication: Application() {
 
     override fun onCreate() {
         super.onCreate()
-        Log.i(TAG, "Created")
+
+        // Create an instance of @AppComponent
         appComponent = DaggerAppComponent.builder()
-            .contextModule(ContextModule(applicationContext))
+            .appModule(AppModule(applicationContext))
             .build()
     }
 }

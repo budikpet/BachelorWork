@@ -1,10 +1,12 @@
-package cz.budikpet.bachelorwork
+package cz.budikpet.bachelorwork.mvp.ctuLogin
 
 import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import cz.budikpet.bachelorwork.mvp.main.MainActivity
+import cz.budikpet.bachelorwork.util.AppAuthHolder
 
 /**
  * The activity checks whether a user is already authorized (logged in).

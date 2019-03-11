@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork
+package cz.budikpet.bachelorwork.util
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE

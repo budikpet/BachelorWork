@@ -1,9 +1,11 @@
-package cz.budikpet.bachelorwork
+package cz.budikpet.bachelorwork.mvp.main
 
 import android.content.Intent
 import android.util.Log
+import cz.budikpet.bachelorwork.MyApplication
+import cz.budikpet.bachelorwork.dataModel.Model
+import cz.budikpet.bachelorwork.util.AppAuthHolder
 import javax.inject.Inject
-import javax.inject.Named
 
 class MainActivityPresenter(
     private var mainActivityView: MainActivityView?,

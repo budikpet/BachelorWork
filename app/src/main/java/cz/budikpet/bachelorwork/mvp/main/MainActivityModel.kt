@@ -1,13 +1,18 @@
-package cz.budikpet.bachelorwork
+package cz.budikpet.bachelorwork.mvp.main
 
 import android.content.Intent
 import android.util.Log
+import cz.budikpet.bachelorwork.MyApplication
+import cz.budikpet.bachelorwork.api.SiriusApiService
+import cz.budikpet.bachelorwork.dataModel.EventType
+import cz.budikpet.bachelorwork.dataModel.Model
+import cz.budikpet.bachelorwork.dataModel.SearchItemType
+import cz.budikpet.bachelorwork.util.AppAuthHolder
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.*
 import javax.inject.Inject
-import javax.inject.Named
 
 class MainActivityModel() {
     interface Callbacks {
@@ -18,13 +23,12 @@ class MainActivityModel() {
 
     private val TAG = "MY_${this.javaClass.simpleName}"
 
-    @Inject //@field:Named("ApplicationContext")
+    @Inject
     internal lateinit var appAuthHolder: AppAuthHolder
 
+    @Inject
+    internal lateinit var siriusApiServe: SiriusApiService
     private var disposable: Disposable? = null
-    private val siriusApiServe by lazy {
-        SiriusApiService.create()
-    }
 
     init {
         MyApplication.appComponent.inject(this)

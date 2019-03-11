@@ -1,5 +1,7 @@
-package cz.budikpet.bachelorwork
+package cz.budikpet.bachelorwork.api
 
+import cz.budikpet.bachelorwork.dataModel.EventType
+import cz.budikpet.bachelorwork.dataModel.Model
 import io.reactivex.Observable
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory

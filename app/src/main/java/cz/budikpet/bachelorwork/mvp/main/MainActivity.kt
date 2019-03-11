@@ -1,8 +1,10 @@
-package cz.budikpet.bachelorwork
+package cz.budikpet.bachelorwork.mvp.main
 
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
+import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 interface MainActivityView {
@@ -24,7 +26,11 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mainActivityPresenter = MainActivityPresenter(this, MainActivityModel())
+        mainActivityPresenter =
+            MainActivityPresenter(
+                this,
+                MainActivityModel()
+            )
 
         backBtn.setOnClickListener { onSignOutClick() }
         buttonRefresh.setOnClickListener { onRefreshClick() }

@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork
+package cz.budikpet.bachelorwork.util
 
 import android.content.Context
 import android.net.Uri
@@ -6,6 +6,9 @@ import android.util.Log
 import net.openid.appauth.*
 import javax.inject.Inject
 
+/**
+ * Holds information needed to authorize with OAuth 2.0 server and manage tokens.
+ */
 class AppAuthHolder @Inject constructor(context: Context) {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
@@ -13,7 +16,8 @@ class AppAuthHolder @Inject constructor(context: Context) {
     private val redirectUri = Uri.parse("net.openid.appauthdemo:/oauth2redirect")
     private val scope = "cvut:sirius:personal:read"
 
-    val authStateManager: AuthStateManager = AuthStateManager(context)
+    val authStateManager: AuthStateManager =
+        AuthStateManager(context)
     val authService: AuthorizationService
     var authRequest: AuthorizationRequest
 
