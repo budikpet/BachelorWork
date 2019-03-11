@@ -1,77 +1,62 @@
 package cz.budikpet.bachelorwork
 
-import android.app.PendingIntent
-import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.util.Log
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.*
-import kotlin.reflect.KFunction3
 
+class MainActivityModel(appAuthHolder: AppAuthHolder) {
+    interface OnFinishedListener {
+        fun onTokenReceived(accessToken: String?)
+        fun onTokenError()
+        fun onEventsResult(result: Model.EventsResult)
+    }
 
-class AppAuthHandler(context: Context) {
-    private val TAG = "MY_AppAuthHandler"
-
-    private val clientId = "1932312b-4981-4224-97b1-b45ad041a4b7"
-    private val redirectUri = Uri.parse("net.openid.appauthdemo:/oauth2redirect")
-    private val scope = "cvut:sirius:personal:read"
-
-    private var context: Context = context
-    private val authStateManager: AuthStateManager = AuthStateManager(context)
-    private val authService: AuthorizationService
-    private var authRequest: AuthorizationRequest
+    private val TAG = "MY_Model"
+    private val appAuthHolder = appAuthHolder
 
     private var disposable: Disposable? = null
     private val siriusApiServe by lazy {
         SiriusApiService.create()
     }
 
-    init {
+    // MARK: Helper methods and flows
 
-        if (authStateManager.authState!!.authorizationServiceConfiguration == null) {
-            Log.i(TAG, "auth config needs to be established")
-            val serviceConfig = AuthorizationServiceConfiguration(
-                Uri.parse("https://auth.fit.cvut.cz/oauth/authorize"), // authorization endpoint
-                Uri.parse("https://auth.fit.cvut.cz/oauth/token") // token endpoint
-            )
-            authStateManager.authState = AuthState(serviceConfig)
-        }
-
-        val authRequestBuilder = AuthorizationRequest.Builder(
-            authStateManager.authState!!.authorizationServiceConfiguration!!, // the authorization service configuration
-            clientId, // the client ID, typically pre-registered and static
-            ResponseTypeValues.CODE, // the response_type value: we want a code
-            redirectUri // the redirect URI to which the auth response is sent
-        ).setScope(scope)
-
-        authRequest = authRequestBuilder.build()
-        authService = AuthorizationService(context)
-    }
-
-    fun close() {
-        authService.dispose()
+    fun onDestroy() {
         disposable?.dispose()
     }
 
-    // MARK: User authorization
+    fun signOut() {
+        // discard the authorization and token state, but retain the configuration and
+        // dynamic client registration (if applicable), to save from retrieving them again.
+        val currentState = appAuthHolder.authStateManager.authState
+        val clearedState = AuthState(currentState?.authorizationServiceConfiguration!!)
+        if (currentState.lastRegistrationResponse != null) {
+            clearedState.update(currentState.lastRegistrationResponse)
+        }
+        appAuthHolder.authStateManager.authState = clearedState
+    }
 
     /**
-     * Starts the authorization flow.
-     *
-     * A user is redirected to CTU login page to provide username and password.
+     * Get new access tokens using the refresh token.
      */
-    fun startAuthorization() {
-        var errorIntent = Intent(context, CTULoginActivity::class.java)
-        errorIntent.putExtra("TEST", "error")
+    fun startRefreshAccessToken() {
+        Log.i(TAG, "Refreshing access token")
+        performTokenRequest(
+            appAuthHolder.authStateManager.authState!!.createTokenRefreshRequest(),
+            AuthorizationService.TokenResponseCallback { tokenResponse, authException ->
+                appAuthHolder.authStateManager.updateAfterTokenResponse(tokenResponse, authException)
+                Log.i(TAG, "handleAccessTokenResponse")
+            })
+    }
 
-        authService.performAuthorizationRequest(
-            authRequest,
-            PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java), 0),
-            PendingIntent.getActivity(context, 0, errorIntent, 0)
-        )
+    /**
+     * Makes using the performActionWithFreshTokens method a bit easier.
+     */
+    fun performActionWithFreshTokens(action: AuthState.AuthStateAction) {
+        appAuthHolder.authStateManager.authState?.performActionWithFreshTokens(appAuthHolder.authService, action)
     }
 
     // MARK: Authorization code exchange flow for tokens
@@ -81,19 +66,19 @@ class AppAuthHandler(context: Context) {
      *
      * @param intent It has the response and exception information of the authorization flow.
      */
-    fun startAuthCodeExchange(intent: Intent) {
+    fun startAuthCodeExchange(onFinishedListener: OnFinishedListener, intent: Intent) {
         // We need to complete the authState
         val response = AuthorizationResponse.fromIntent(intent)
         val ex = AuthorizationException.fromIntent(intent)
 
         if (response != null || ex != null) {
-            authStateManager.updateAfterAuthorization(response, ex)
+            appAuthHolder.authStateManager.updateAfterAuthorization(response, ex)
         }
 
         if (response?.authorizationCode != null) {
             // authorization code exchange is required
-            authStateManager.updateAfterAuthorization(response, ex)
-            exchangeAuthorizationCode(response)
+            appAuthHolder.authStateManager.updateAfterAuthorization(response, ex)
+            exchangeAuthorizationCode(onFinishedListener, response)
         } else if (ex != null) {
             Log.e(TAG, "Authorization flow failed: " + ex.message)
         } else {
@@ -104,13 +89,17 @@ class AppAuthHandler(context: Context) {
     /**
      * We received authorization code which needs to be exchanged for tokens.
      */
-    private fun exchangeAuthorizationCode(authorizationResponse: AuthorizationResponse) {
+    private fun exchangeAuthorizationCode(
+        onFinishedListener: OnFinishedListener,
+        authorizationResponse: AuthorizationResponse
+    ) {
         Log.i(TAG, "Exchanging authorization code")
 
         performTokenRequest(
             authorizationResponse.createTokenExchangeRequest(),
             AuthorizationService.TokenResponseCallback { tokenResponse, authException ->
                 this.handleCodeExchangeResponse(
+                    onFinishedListener,
                     tokenResponse,
                     authException
                 )
@@ -125,7 +114,7 @@ class AppAuthHandler(context: Context) {
         // FIT OAuth2 provider requires ClientSecret in Basic Authentication Header
         val clientAuthentication = ClientSecretBasic("eMaDK7iPVDlC09mb70pRc4OMIja37nQY")
 
-        authService.performTokenRequest(
+        appAuthHolder.authService.performTokenRequest(
             request,
             clientAuthentication,
             callback
@@ -133,99 +122,69 @@ class AppAuthHandler(context: Context) {
     }
 
     private fun handleCodeExchangeResponse(
+        onFinishedListener: OnFinishedListener,
         tokenResponse: TokenResponse?,
         authException: AuthorizationException?
     ) {
 
-        authStateManager.updateAfterTokenResponse(tokenResponse, authException)
-        Log.i(TAG, "IsAuth: " + authStateManager.authState!!.isAuthorized)
-        if (!authStateManager.authState!!.isAuthorized) {
+        appAuthHolder.authStateManager.updateAfterTokenResponse(tokenResponse, authException)
+        Log.i(TAG, "IsAuth: " + appAuthHolder.authStateManager.authState!!.isAuthorized)
+        if (!appAuthHolder.authStateManager.authState!!.isAuthorized) {
             val message = "Authorization Code exchange failed" + if (authException != null) authException.error else ""
 
             // WrongThread inference is incorrect for lambdas
             Log.e(TAG, message)
         } else {
             // The Authorization Code exchange was successful
-            Log.i(TAG, "AccessToken: ${authStateManager.authState?.accessToken}")
-            Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
+            Log.i(TAG, "AccessToken: ${appAuthHolder.authStateManager.authState?.accessToken}")
+            Log.i(TAG, "RefreshToken: ${appAuthHolder.authStateManager.authState?.refreshToken}")
+            onFinishedListener.onTokenReceived(appAuthHolder.authStateManager.authState?.accessToken)
         }
     }
 
-    // MARK: Helper methods and flows
+    // MARK: API calls
 
-    fun signOut() {
-        // discard the authorization and token state, but retain the configuration and
-        // dynamic client registration (if applicable), to save from retrieving them again.
-        val currentState = authStateManager.authState
-        val clearedState = AuthState(currentState?.authorizationServiceConfiguration!!)
-        if (currentState.lastRegistrationResponse != null) {
-            clearedState.update(currentState.lastRegistrationResponse)
-        }
-        authStateManager.authState = clearedState
-    }
-
-    /**
-     * Get new access tokens using the refresh token.
-     */
-    fun startRefreshAccessToken() {
-        Log.i(TAG, "Refreshing access token")
-        performTokenRequest(
-            authStateManager.authState!!.createTokenRefreshRequest(),
-            AuthorizationService.TokenResponseCallback { tokenResponse, authException ->
-                authStateManager.updateAfterTokenResponse(tokenResponse, authException)
-                Log.i(TAG, "handleAccessTokenResponse")
-            })
-    }
-
-    fun isAuthorized(): Boolean {
-        return authStateManager.authState!!.isAuthorized
-    }
-
-    /**
-     * Makes using the performActionWithFreshTokens method a bit easier.
-     */
-    fun performActionWithFreshTokens(action: KFunction3<String?, String?, AuthorizationException?, Unit>) {
-        authStateManager.authState?.performActionWithFreshTokens(authService, action)
-    }
-
-    // MARK: API endpoint call methods
-
-    fun getEvents() {
+    fun getEvents(onFinishedListener: OnFinishedListener) {
         Log.i(TAG, "GetEvents")
-        Log.i(TAG, "AccessToken: ${authStateManager.authState?.accessToken}")
-        Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
-        performActionWithFreshTokens(this::fetchCalendarData)
+        Log.i(TAG, "AccessToken: ${appAuthHolder.authStateManager.authState?.accessToken}")
+        Log.i(TAG, "RefreshToken: ${appAuthHolder.authStateManager.authState?.refreshToken}")
+
+        performActionWithFreshTokens(AuthState.AuthStateAction()
+        { accessToken: String?, idToken: String?, ex: AuthorizationException? ->
+            // Check for errors and expired tokens
+            if (accessToken == null) {
+                Log.e(TAG, "Request failed: $ex")
+
+                // Its possible the access token expired
+                startRefreshAccessToken()
+
+            } else {
+                // Call endpoints
+//                testGetEvents(accessToken)
+//                testSearch(accessToken)
+//                testPeopleEvents(accessToken)
+//                testRoomEvents(accessToken)
+                testCourseEvents(onFinishedListener, accessToken)
+
+            }
+
+        })
     }
 
-    private fun fetchCalendarData(accessToken: String?, idToken: String?, ex: AuthorizationException?) {
-        // Check for errors and expired tokens
-        if (ex != null) {
-            Log.e(TAG, "Request failed: $ex")
-
-            // Its possible the access token expired
-            startRefreshAccessToken()
-            return
-        }
-
-        // Call endpoints
-//        testGetEvents(accessToken)
-//        testSearch(accessToken)
-//        testPeopleEvents(accessToken)
-//        testRoomEvents(accessToken)
-        testCourseEvents(accessToken)
-
-    }
-
-    private fun testCourseEvents(accessToken: String?) {
+    private fun testCourseEvents(onFinishedListener: OnFinishedListener, accessToken: String?) {
         disposable = siriusApiServe.getCourseEvents(
             courseCode = "BI-AG2", accessToken = accessToken!!,
-            from = "2019-1-1", to = "2019-4-1", limit = 1000
+            from = "2019-1-1", to = "2019-4-1", limit = 10
         )
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .map { t -> t.events }
+//            .map { t -> t.events }
             .subscribe(
-                { result -> Log.i(TAG, "CourseEvents: $result") },
+                { result ->
+                    Log.i(TAG, "CourseEvents: $result")
+                    onFinishedListener.onEventsResult(result)
+
+                },
                 { error -> Log.e(TAG, "Error: ${error.message}") }
             )
     }

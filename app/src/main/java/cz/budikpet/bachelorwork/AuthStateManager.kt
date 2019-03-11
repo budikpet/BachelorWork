@@ -3,7 +3,6 @@ package cz.budikpet.bachelorwork
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
-import android.util.Log
 import net.openid.appauth.*
 
 

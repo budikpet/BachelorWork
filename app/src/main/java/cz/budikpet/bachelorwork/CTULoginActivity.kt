@@ -1,5 +1,6 @@
 package cz.budikpet.bachelorwork
 
+import android.app.PendingIntent
 import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
@@ -14,25 +15,22 @@ import android.util.Log
  */
 class CTULoginActivity : AppCompatActivity() {
     private val TAG = "MY_MainActivity"
-    private lateinit var appAuthHandler: AppAuthHandler
+    private lateinit var appAuthHolder: AppAuthHolder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        appAuthHandler = AppAuthHandler(this)
+        appAuthHolder = AppAuthHolder(this)
 
         // Use refreshToken to skip authorization
-//        if(!appAuthHandler.isAuthorized() && appAuthHandler.) {
-//
-//        }
 
-        if (appAuthHandler.isAuthorized()) {
+        if (appAuthHolder.isAuthorized()) {
             Log.i(TAG, "User is already authenticated, proceeding to token activity")
             startActivity(Intent(this, MainActivity::class.java))
             finish()
             return
         } else {
-            appAuthHandler.startAuthorization()
+            startAuthorization()
         }
 
 //        setContentView(R.layout.activity_ctu_login)
@@ -40,7 +38,24 @@ class CTULoginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
+        appAuthHolder.close()
+    }
 
-        appAuthHandler.close()
+    // MARK: User authorization
+
+    /**
+     * Starts the authorization flow.
+     *
+     * A user is redirected to CTU login page to provide username and password.
+     */
+    private fun startAuthorization() {
+        var errorIntent = Intent(this, CTULoginActivity::class.java)
+        errorIntent.putExtra("TEST", "error")
+
+        appAuthHolder.authService.performAuthorizationRequest(
+            appAuthHolder.authRequest,
+            PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), 0),
+            PendingIntent.getActivity(this, 0, errorIntent, 0)
+        )
     }
 }
