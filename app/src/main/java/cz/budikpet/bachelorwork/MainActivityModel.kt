@@ -6,8 +6,10 @@ import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.*
+import javax.inject.Inject
+import javax.inject.Named
 
-class MainActivityModel(appAuthHolder: AppAuthHolder) {
+class MainActivityModel() {
     interface Callbacks {
         fun onTokenReceived(accessToken: String?)
         fun onTokenError()
@@ -15,11 +17,17 @@ class MainActivityModel(appAuthHolder: AppAuthHolder) {
     }
 
     private val TAG = "MY_${this.javaClass.simpleName}"
-    private val appAuthHolder = appAuthHolder
+
+    @Inject //@field:Named("ApplicationContext")
+    internal lateinit var appAuthHolder: AppAuthHolder
 
     private var disposable: Disposable? = null
     private val siriusApiServe by lazy {
         SiriusApiService.create()
+    }
+
+    init {
+        MyApplication.appComponent.inject(this)
     }
 
     // MARK: Helper methods and flows

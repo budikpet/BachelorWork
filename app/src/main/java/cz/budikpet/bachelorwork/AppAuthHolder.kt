@@ -4,8 +4,9 @@ import android.content.Context
 import android.net.Uri
 import android.util.Log
 import net.openid.appauth.*
+import javax.inject.Inject
 
-class AppAuthHolder(context: Context) {
+class AppAuthHolder @Inject constructor(context: Context) {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     private val clientId = "1932312b-4981-4224-97b1-b45ad041a4b7"

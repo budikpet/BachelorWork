@@ -2,18 +2,26 @@ package cz.budikpet.bachelorwork
 
 import android.content.Intent
 import android.util.Log
+import javax.inject.Inject
+import javax.inject.Named
 
 class MainActivityPresenter(
-    private var mainActivityInterface: MainActivityInterface?,
-    private var appAuthHolder: AppAuthHolder,
+    private var mainActivityView: MainActivityView?,
     private val mainActivityModel: MainActivityModel
 ) : MainActivityModel.Callbacks {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
+    @Inject
+    internal lateinit var appAuthHolder: AppAuthHolder
+
+    init {
+        MyApplication.appComponent.inject(this)
+    }
+
     fun onDestroy() {
         appAuthHolder.close()
         mainActivityModel.onDestroy()
-        mainActivityInterface = null
+        mainActivityView = null
     }
 
     // MARK: Functions
@@ -39,7 +47,7 @@ class MainActivityPresenter(
     // MARK: interface
 
     override fun onTokenReceived(accessToken: String?) {
-        mainActivityInterface?.showString("AccessToken: ${accessToken}")
+        mainActivityView?.showString("AccessToken: ${accessToken}")
     }
 
     override fun onTokenError() {
@@ -52,6 +60,6 @@ class MainActivityPresenter(
             builder.append("$event\n")
         }
 
-        mainActivityInterface?.showString(builder.toString())
+        mainActivityView?.showString(builder.toString())
     }
 }

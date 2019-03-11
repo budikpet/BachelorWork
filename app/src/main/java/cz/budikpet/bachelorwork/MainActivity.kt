@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
-interface MainActivityInterface {
+interface MainActivityView {
     fun onSignOutClick()
     fun onRefreshClick()
     fun onGetEventsClick()
@@ -15,7 +15,7 @@ interface MainActivityInterface {
 /**
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
-class MainActivity : AppCompatActivity(), MainActivityInterface {
+class MainActivity : AppCompatActivity(), MainActivityView {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     private lateinit var mainActivityPresenter: MainActivityPresenter
@@ -24,8 +24,7 @@ class MainActivity : AppCompatActivity(), MainActivityInterface {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val appAuthHolder = AppAuthHolder(this)
-        mainActivityPresenter = MainActivityPresenter(this, appAuthHolder, MainActivityModel(appAuthHolder))
+        mainActivityPresenter = MainActivityPresenter(this, MainActivityModel())
 
         backBtn.setOnClickListener { onSignOutClick() }
         buttonRefresh.setOnClickListener { onRefreshClick() }
