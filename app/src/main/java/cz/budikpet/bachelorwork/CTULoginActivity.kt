@@ -14,7 +14,7 @@ import android.util.Log
  * If he isn't logged in, the app starts an authorization flow that moves the user to the browser to log in.
  */
 class CTULoginActivity : AppCompatActivity() {
-    private val TAG = "MY_MainActivity"
+    private val TAG = "MY_${this.javaClass.simpleName}"
     private lateinit var appAuthHolder: AppAuthHolder
 
     override fun onCreate(savedInstanceState: Bundle?) {

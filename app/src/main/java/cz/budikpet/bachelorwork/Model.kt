@@ -4,7 +4,7 @@ import com.google.gson.annotations.SerializedName
 import java.util.*
 
 enum class EventType() {
-    @SerializedName("assessment")   // Enables me to use this enum with Retrofit
+    @SerializedName("assessment")   // Makes it possible to use the enum with Retrofit
     ASSESSMENT,
     @SerializedName("course_event")
     COURSE_EVENT,

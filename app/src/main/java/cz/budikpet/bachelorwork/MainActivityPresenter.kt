@@ -7,8 +7,8 @@ class MainActivityPresenter(
     private var mainActivityInterface: MainActivityInterface?,
     private var appAuthHolder: AppAuthHolder,
     private val mainActivityModel: MainActivityModel
-) : MainActivityModel.OnFinishedListener {
-    private val TAG = "MY_Presenter"
+) : MainActivityModel.Callbacks {
+    private val TAG = "MY_${this.javaClass.simpleName}"
 
     fun onDestroy() {
         appAuthHolder.close()
@@ -29,7 +29,7 @@ class MainActivityPresenter(
     }
 
     fun getEvents() {
-        mainActivityModel.getEvents(this)
+        mainActivityModel.callSiriusApiEndpoint(this)
     }
 
     fun signOut() {

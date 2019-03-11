@@ -16,16 +16,15 @@ interface MainActivityInterface {
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
 class MainActivity : AppCompatActivity(), MainActivityInterface {
-    private val TAG = "MY_AppAuthTest"
+    private val TAG = "MY_${this.javaClass.simpleName}"
 
-    private lateinit var appAuthHolder: AppAuthHolder
     private lateinit var mainActivityPresenter: MainActivityPresenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        appAuthHolder = AppAuthHolder(this)
+        val appAuthHolder = AppAuthHolder(this)
         mainActivityPresenter = MainActivityPresenter(this, appAuthHolder, MainActivityModel(appAuthHolder))
 
         backBtn.setOnClickListener { onSignOutClick() }

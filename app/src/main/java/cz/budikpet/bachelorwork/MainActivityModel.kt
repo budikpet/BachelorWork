@@ -8,13 +8,13 @@ import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.*
 
 class MainActivityModel(appAuthHolder: AppAuthHolder) {
-    interface OnFinishedListener {
+    interface Callbacks {
         fun onTokenReceived(accessToken: String?)
         fun onTokenError()
         fun onEventsResult(result: Model.EventsResult)
     }
 
-    private val TAG = "MY_Model"
+    private val TAG = "MY_${this.javaClass.simpleName}"
     private val appAuthHolder = appAuthHolder
 
     private var disposable: Disposable? = null
@@ -66,7 +66,7 @@ class MainActivityModel(appAuthHolder: AppAuthHolder) {
      *
      * @param intent It has the response and exception information of the authorization flow.
      */
-    fun startAuthCodeExchange(onFinishedListener: OnFinishedListener, intent: Intent) {
+    fun startAuthCodeExchange(callbacks: Callbacks, intent: Intent) {
         // We need to complete the authState
         val response = AuthorizationResponse.fromIntent(intent)
         val ex = AuthorizationException.fromIntent(intent)
@@ -78,7 +78,7 @@ class MainActivityModel(appAuthHolder: AppAuthHolder) {
         if (response?.authorizationCode != null) {
             // authorization code exchange is required
             appAuthHolder.authStateManager.updateAfterAuthorization(response, ex)
-            exchangeAuthorizationCode(onFinishedListener, response)
+            exchangeAuthorizationCode(callbacks, response)
         } else if (ex != null) {
             Log.e(TAG, "Authorization flow failed: " + ex.message)
         } else {
@@ -90,7 +90,7 @@ class MainActivityModel(appAuthHolder: AppAuthHolder) {
      * We received authorization code which needs to be exchanged for tokens.
      */
     private fun exchangeAuthorizationCode(
-        onFinishedListener: OnFinishedListener,
+        callbacks: Callbacks,
         authorizationResponse: AuthorizationResponse
     ) {
         Log.i(TAG, "Exchanging authorization code")
@@ -99,7 +99,7 @@ class MainActivityModel(appAuthHolder: AppAuthHolder) {
             authorizationResponse.createTokenExchangeRequest(),
             AuthorizationService.TokenResponseCallback { tokenResponse, authException ->
                 this.handleCodeExchangeResponse(
-                    onFinishedListener,
+                    callbacks,
                     tokenResponse,
                     authException
                 )
@@ -122,7 +122,7 @@ class MainActivityModel(appAuthHolder: AppAuthHolder) {
     }
 
     private fun handleCodeExchangeResponse(
-        onFinishedListener: OnFinishedListener,
+        callbacks: Callbacks,
         tokenResponse: TokenResponse?,
         authException: AuthorizationException?
     ) {
@@ -138,13 +138,13 @@ class MainActivityModel(appAuthHolder: AppAuthHolder) {
             // The Authorization Code exchange was successful
             Log.i(TAG, "AccessToken: ${appAuthHolder.authStateManager.authState?.accessToken}")
             Log.i(TAG, "RefreshToken: ${appAuthHolder.authStateManager.authState?.refreshToken}")
-            onFinishedListener.onTokenReceived(appAuthHolder.authStateManager.authState?.accessToken)
+            callbacks.onTokenReceived(appAuthHolder.authStateManager.authState?.accessToken)
         }
     }
 
     // MARK: API calls
 
-    fun getEvents(onFinishedListener: OnFinishedListener) {
+    fun callSiriusApiEndpoint(callbacks: Callbacks) {
         Log.i(TAG, "GetEvents")
         Log.i(TAG, "AccessToken: ${appAuthHolder.authStateManager.authState?.accessToken}")
         Log.i(TAG, "RefreshToken: ${appAuthHolder.authStateManager.authState?.refreshToken}")
@@ -164,14 +164,14 @@ class MainActivityModel(appAuthHolder: AppAuthHolder) {
 //                testSearch(accessToken)
 //                testPeopleEvents(accessToken)
 //                testRoomEvents(accessToken)
-                testCourseEvents(onFinishedListener, accessToken)
+                testCourseEvents(callbacks, accessToken)
 
             }
 
         })
     }
 
-    private fun testCourseEvents(onFinishedListener: OnFinishedListener, accessToken: String?) {
+    private fun testCourseEvents(callbacks: Callbacks, accessToken: String?) {
         disposable = siriusApiServe.getCourseEvents(
             courseCode = "BI-AG2", accessToken = accessToken!!,
             from = "2019-1-1", to = "2019-4-1", limit = 10
@@ -182,7 +182,7 @@ class MainActivityModel(appAuthHolder: AppAuthHolder) {
             .subscribe(
                 { result ->
                     Log.i(TAG, "CourseEvents: $result")
-                    onFinishedListener.onEventsResult(result)
+                    callbacks.onEventsResult(result)
 
                 },
                 { error -> Log.e(TAG, "Error: ${error.message}") }

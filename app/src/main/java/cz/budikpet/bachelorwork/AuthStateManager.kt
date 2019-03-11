@@ -7,10 +7,10 @@ import net.openid.appauth.*
 
 
 class AuthStateManager(context: Context) {
-    private val TAG = "MY_MainActivity"
+    private val TAG = "MY_${this.javaClass.simpleName}"
 
-    private final val prefPath = "auth"
-    private final val STATE_KEY = "stateJson"
+    private val prefPath = "auth"
+    private val STATE_KEY = "stateJson"
     private val authPrefs: SharedPreferences = context.getSharedPreferences(prefPath, MODE_PRIVATE);
 
     var authState: AuthState? = null

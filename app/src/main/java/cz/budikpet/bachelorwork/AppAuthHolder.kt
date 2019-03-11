@@ -6,7 +6,7 @@ import android.util.Log
 import net.openid.appauth.*
 
 class AppAuthHolder(context: Context) {
-    private val TAG = "MY_AppAuthHolder"
+    private val TAG = "MY_${this.javaClass.simpleName}"
 
     private val clientId = "1932312b-4981-4224-97b1-b45ad041a4b7"
     private val redirectUri = Uri.parse("net.openid.appauthdemo:/oauth2redirect")
