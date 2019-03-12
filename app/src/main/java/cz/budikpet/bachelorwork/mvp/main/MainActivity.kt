@@ -7,18 +7,16 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.dataModel.ItemType
 import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
 import kotlinx.android.synthetic.main.activity_main.*
-
-interface MainActivityView {
-    fun showString(string: String)
-}
+import net.openid.appauth.AuthorizationException
+import net.openid.appauth.AuthorizationResponse
 
 /**
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
-class MainActivity : AppCompatActivity(), MainActivityView {
+class MainActivity : AppCompatActivity(), MainContract.View {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
-    private lateinit var mainActivityPresenter: MainActivityPresenter
+    private lateinit var mainActivityPresenter: MainContract.Presenter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +30,10 @@ class MainActivity : AppCompatActivity(), MainActivityView {
     override fun onStart() {
         super.onStart()
 
-        mainActivityPresenter.checkAuthorization(intent)
+        val response = AuthorizationResponse.fromIntent(intent)
+        val exception = AuthorizationException.fromIntent(intent)
+
+        mainActivityPresenter.checkAuthorization(response, exception)
     }
 
     override fun onDestroy() {
@@ -42,7 +43,7 @@ class MainActivity : AppCompatActivity(), MainActivityView {
 
     private fun initButtons() {
         buttonRefresh.setOnClickListener { TODO("not implemented") }
-        getEventsBtn.setOnClickListener { mainActivityPresenter.getEvents(ItemType.COURSE, "MI-IOS") }
+        getEventsBtn.setOnClickListener { mainActivityPresenter.getSiriusApiEvents(ItemType.COURSE, "MI-IOS") }
 
         backBtn.setOnClickListener {
             mainActivityPresenter.signOut()

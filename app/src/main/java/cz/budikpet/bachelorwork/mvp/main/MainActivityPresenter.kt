@@ -1,6 +1,5 @@
 package cz.budikpet.bachelorwork.mvp.main
 
-import android.content.Intent
 import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
@@ -13,12 +12,13 @@ import io.reactivex.disposables.Disposable
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
+import net.openid.appauth.AuthorizationResponse
 import javax.inject.Inject
 
 class MainActivityPresenter(
-    private var mainActivityView: MainActivityView?,
+    private var mainActivityView: MainContract.View?,
     private val mainActivityModel: MainActivityModel
-) : MainActivityModel.Callbacks {
+) : MainActivityModel.Callbacks, MainContract.Presenter {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject
@@ -32,25 +32,25 @@ class MainActivityPresenter(
         MyApplication.appComponent.inject(this)
     }
 
-    fun onDestroy() {
+    // MARK: @MainContract.Presenter functions
+
+    override fun onDestroy() {
         appAuthManager.close()
         mainActivityModel.onDestroy()
         mainActivityView = null
     }
 
-    // MARK: Functions
-
-    fun checkAuthorization(intent: Intent) {
+    override fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
         if (appAuthManager.isAuthorized()) {
             Log.i(TAG, "Already authorized.")
             // TODO: Check access token to refresh?
         } else {
             Log.i(TAG, "Not authorized")
-            appAuthManager.startAuthCodeExchange(intent)
+            appAuthManager.startAuthCodeExchange(response, exception)
         }
     }
 
-    fun signOut() {
+    override fun signOut() {
         // discard the authorization and token state, but retain the configuration and
         // dynamic client registration (if applicable), to save from retrieving them again.
         val currentState = appAuthManager.authStateManager.authState
@@ -61,7 +61,7 @@ class MainActivityPresenter(
         appAuthManager.authStateManager.authState = clearedState
     }
 
-    fun getEvents(itemType: ItemType, id: String) {
+    override fun getSiriusApiEvents(itemType: ItemType, id: String) {
         performActionWithFreshTokens(
             AuthState.AuthStateAction()
             { accessToken: String?, idToken: String?, ex: AuthorizationException? ->
@@ -79,13 +79,13 @@ class MainActivityPresenter(
                         ItemType.PERSON -> siriusApiServe.getPersonEvents(accessToken = accessToken, id = id)
                         ItemType.ROOM -> siriusApiServe.getRoomEvents(accessToken = accessToken, id = id)
                     }
-                    this.getEvents(observable)
+                    this.getSiriusApiEvents(observable)
                 }
 
             })
     }
 
-    private fun getEvents(observable: Observable<Model.EventsResult>) {
+    private fun getSiriusApiEvents(observable: Observable<Model.EventsResult>) {
         disposable = observable
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

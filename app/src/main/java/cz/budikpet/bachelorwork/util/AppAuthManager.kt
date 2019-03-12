@@ -1,10 +1,8 @@
 package cz.budikpet.bachelorwork.util
 
 import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import cz.budikpet.bachelorwork.mvp.main.MainActivityModel
 import net.openid.appauth.*
 import javax.inject.Inject
 
@@ -16,7 +14,7 @@ class AppAuthManager @Inject constructor(context: Context) {
 
     private val clientId = "1932312b-4981-4224-97b1-b45ad041a4b7"
     private val redirectUri = Uri.parse("net.openid.appauthdemo:/oauth2redirect")
-//    private val scope = "cvut:sirius:limited-by-idm:read" // TODO: Use this scope when available
+    //    private val scope = "cvut:sirius:limited-by-idm:read" // TODO: Use this scope when available
     private val scope = "cvut:sirius:personal:read"
 
     val authStateManager: AuthStateManager = AuthStateManager(context)
@@ -75,23 +73,20 @@ class AppAuthManager @Inject constructor(context: Context) {
     /**
      * We received data from the authorization server.
      *
-     * @param intent It has the response and exception information of the authorization flow.
      */
-    fun startAuthCodeExchange(intent: Intent) {
+    fun startAuthCodeExchange(response: AuthorizationResponse?, exception: AuthorizationException?) {
         // We need to complete the authState
-        val response = AuthorizationResponse.fromIntent(intent)
-        val ex = AuthorizationException.fromIntent(intent)
 
-        if (response != null || ex != null) {
-            authStateManager.updateAfterAuthorization(response, ex)
+        if (response != null || exception != null) {
+            authStateManager.updateAfterAuthorization(response, exception)
         }
 
         if (response?.authorizationCode != null) {
             // authorization code exchange is required
-            authStateManager.updateAfterAuthorization(response, ex)
+            authStateManager.updateAfterAuthorization(response, exception)
             exchangeAuthorizationCode(response)
-        } else if (ex != null) {
-            Log.e(TAG, "Authorization flow failed: " + ex.message)
+        } else if (exception != null) {
+            Log.e(TAG, "Authorization flow failed: " + exception.message)
         } else {
             Log.e(TAG, "No authorization state retained - reauthorization required")
         }
