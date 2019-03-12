@@ -34,7 +34,7 @@ interface SiriusApiService {
      */
     @GET("people/{username}/events")
     fun getPersonEvents(
-        @Path("username") username: String,
+        @Path("username") id: String,
         @Query("access_token") accessToken: String,
         @Query("limit") limit: Int? = 10,
         @Query("offset") offset: Int? = 0,
@@ -51,7 +51,7 @@ interface SiriusApiService {
      */
     @GET("rooms/{kosId}/events")    // kosId = "TH:A-1231"
     fun getRoomEvents(
-        @Path("kosId") roomKosId: String,
+        @Path("kosId") id: String,
         @Query("access_token") accessToken: String,
         @Query("limit") limit: Int? = 10,
         @Query("offset") offset: Int? = 0,
@@ -68,7 +68,7 @@ interface SiriusApiService {
      */
     @GET("courses/{courseCode}/events")   // courseCode = BI-PA1
     fun getCourseEvents(
-        @Path("courseCode") courseCode: String,
+        @Path("courseCode") id: String,
         @Query("access_token") accessToken: String,
         @Query("limit") limit: Int? = 10,
         @Query("offset") offset: Int? = 0,

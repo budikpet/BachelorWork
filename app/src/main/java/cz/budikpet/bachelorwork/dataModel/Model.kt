@@ -25,7 +25,7 @@ enum class EventType() {
 
 }
 
-enum class SearchItemType() {
+enum class ItemType() {
     @SerializedName("course")
     COURSE,
     @SerializedName("room")
@@ -60,7 +60,7 @@ object Model {
     data class SearchItem(
         val id: String,
         val title: String?,
-        val type: SearchItemType
+        val type: ItemType
     )
 
     // TODO: Add remaining values

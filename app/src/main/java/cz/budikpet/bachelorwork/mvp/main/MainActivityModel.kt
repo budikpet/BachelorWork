@@ -4,13 +4,9 @@ import android.content.Intent
 import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
-import cz.budikpet.bachelorwork.dataModel.EventType
 import cz.budikpet.bachelorwork.dataModel.Model
-import cz.budikpet.bachelorwork.dataModel.SearchItemType
 import cz.budikpet.bachelorwork.util.AppAuthHolder
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.*
 import javax.inject.Inject
 
@@ -152,123 +148,5 @@ class MainActivityModel() {
             Log.i(TAG, "RefreshToken: ${appAuthHolder.authStateManager.authState?.refreshToken}")
             callbacks.onTokenReceived(appAuthHolder.authStateManager.authState?.accessToken)
         }
-    }
-
-    // MARK: API calls
-
-    fun callSiriusApiEndpoint(callbacks: Callbacks) {
-        Log.i(TAG, "GetEvents")
-        Log.i(TAG, "AccessToken: ${appAuthHolder.authStateManager.authState?.accessToken}")
-        Log.i(TAG, "RefreshToken: ${appAuthHolder.authStateManager.authState?.refreshToken}")
-
-        performActionWithFreshTokens(AuthState.AuthStateAction()
-        { accessToken: String?, idToken: String?, ex: AuthorizationException? ->
-            // Check for errors and expired tokens
-            if (accessToken == null) {
-                Log.e(TAG, "Request failed: $ex")
-
-                // Its possible the access token expired
-                startRefreshAccessToken()
-
-            } else {
-                // Call endpoints
-//                testGetEvents(accessToken)
-//                testSearch(accessToken)
-//                testPeopleEvents(accessToken)
-//                testRoomEvents(accessToken)
-                testCourseEvents(callbacks, accessToken)
-
-            }
-
-        })
-    }
-
-    private fun testCourseEvents(callbacks: Callbacks, accessToken: String?) {
-        disposable = siriusApiServe.getCourseEvents(
-            courseCode = "BI-AG2", accessToken = accessToken!!,
-            from = "2019-1-1", to = "2019-4-1", limit = 10
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-//            .map { t -> t.events }
-            .subscribe(
-                { result ->
-                    Log.i(TAG, "CourseEvents: $result")
-                    callbacks.onEventsResult(result)
-
-                },
-                { error -> Log.e(TAG, "Error: ${error.message}") }
-            )
-    }
-
-    private fun testRoomEvents(accessToken: String?) {
-        disposable = siriusApiServe.getRoomEvents(
-            roomKosId = "TH:A-1231", accessToken = accessToken!!,
-            from = "2019-1-1", to = "2019-3-1", limit = 1000
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .map { t -> t.events }
-            .subscribe(
-                { result -> Log.i(TAG, "RoomEvents: $result") },
-                { error -> Log.e(TAG, "Error: ${error.message}") }
-            )
-    }
-
-    private fun testPeopleEvents(accessToken: String?) {
-        disposable = siriusApiServe.getPersonEvents(
-            username = "balikm", accessToken = accessToken!!,
-            from = "2019-1-1", to = "2019-3-1", limit = 1000
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .map { t -> t.events }
-            .subscribe(
-                { result -> Log.i(TAG, "PersonEvents: $result") },
-                { error -> Log.e(TAG, "Error: ${error.message}") }
-            )
-    }
-
-    private fun testSearch(accessToken: String?) {
-        disposable = siriusApiServe.search(accessToken = accessToken!!, limit = 200, query = "Th")
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { result ->
-                    val types: MutableSet<SearchItemType> = hashSetOf();
-                    for (item in result.results) {
-                        types.add(item.type)
-                    }
-
-                    for (type in types) {
-                        Log.i(TAG, "SearchItemType: $type")
-                    }
-                },
-                { error -> Log.e(TAG, "Error: ${error.message}") }
-            )
-    }
-
-    private fun testGetEvents(accessToken: String?) {
-        disposable = siriusApiServe.getEvents(
-            accessToken = accessToken!!,
-            from = "2019-1-1", to = "2019-3-1", limit = 1000, event_type = EventType.COURSE_EVENT
-        )
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .map { t -> t.events }
-            .subscribe(
-                { result ->
-                    Log.i(TAG, "Events: $result")
-                    val types: MutableSet<EventType?> = hashSetOf();
-                    for (event in result) {
-                        types.add(event.event_type)
-                    }
-
-                    for (type in types) {
-                        Log.i(TAG, "EventType: $type")
-                    }
-                },
-                { error -> Log.e(TAG, "Error: ${error.message}") }
-            )
     }
 }

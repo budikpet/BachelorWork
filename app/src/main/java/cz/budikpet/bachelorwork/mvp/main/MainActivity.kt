@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.dataModel.ItemType
 import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -39,9 +40,9 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         mainActivityPresenter.onDestroy()
     }
 
-    fun initButtons() {
+    private fun initButtons() {
         buttonRefresh.setOnClickListener { TODO("not implemented") }
-        getEventsBtn.setOnClickListener { mainActivityPresenter.getEvents() }
+        getEventsBtn.setOnClickListener { mainActivityPresenter.getEvents(ItemType.COURSE, "MI-IOS") }
 
         backBtn.setOnClickListener {
             mainActivityPresenter.signOut()
