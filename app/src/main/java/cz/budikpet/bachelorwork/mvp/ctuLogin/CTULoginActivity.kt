@@ -7,7 +7,7 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.mvp.main.MainActivity
-import cz.budikpet.bachelorwork.util.AppAuthHolder
+import cz.budikpet.bachelorwork.util.AppAuthManager
 import javax.inject.Inject
 
 /**
@@ -21,7 +21,7 @@ class CTULoginActivity : AppCompatActivity() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject
-    internal lateinit var appAuthHolder: AppAuthHolder
+    internal lateinit var appAuthManager: AppAuthManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +29,7 @@ class CTULoginActivity : AppCompatActivity() {
 
         // Use refreshToken to skip authorization
 
-        if (appAuthHolder.isAuthorized()) {
+        if (appAuthManager.isAuthorized()) {
             Log.i(TAG, "User is already authenticated, proceeding to token activity")
             startActivity(Intent(this, MainActivity::class.java))
             finish()
@@ -43,7 +43,7 @@ class CTULoginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        appAuthHolder.close()
+        appAuthManager.close()
     }
 
     // MARK: User authorization
@@ -57,8 +57,8 @@ class CTULoginActivity : AppCompatActivity() {
         var errorIntent = Intent(this, CTULoginActivity::class.java)
         errorIntent.putExtra("TEST", "error")
 
-        appAuthHolder.authService.performAuthorizationRequest(
-            appAuthHolder.authRequest,
+        appAuthManager.authService.performAuthorizationRequest(
+            appAuthManager.authRequest,
             PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), 0),
             PendingIntent.getActivity(this, 0, errorIntent, 0)
         )

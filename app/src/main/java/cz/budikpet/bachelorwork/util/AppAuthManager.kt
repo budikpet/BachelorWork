@@ -11,7 +11,7 @@ import javax.inject.Inject
 /**
  * Holds information needed to authorize with OAuth 2.0 server and manage tokens.
  */
-class AppAuthHolder @Inject constructor(context: Context) {
+class AppAuthManager @Inject constructor(context: Context) {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     private val clientId = "1932312b-4981-4224-97b1-b45ad041a4b7"

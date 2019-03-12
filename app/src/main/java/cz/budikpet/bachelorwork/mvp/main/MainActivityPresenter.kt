@@ -6,7 +6,7 @@ import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
 import cz.budikpet.bachelorwork.dataModel.ItemType
 import cz.budikpet.bachelorwork.dataModel.Model
-import cz.budikpet.bachelorwork.util.AppAuthHolder
+import cz.budikpet.bachelorwork.util.AppAuthManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.Disposable
@@ -22,7 +22,7 @@ class MainActivityPresenter(
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject
-    internal lateinit var appAuthHolder: AppAuthHolder
+    internal lateinit var appAuthManager: AppAuthManager
 
     @Inject
     internal lateinit var siriusApiServe: SiriusApiService
@@ -33,7 +33,7 @@ class MainActivityPresenter(
     }
 
     fun onDestroy() {
-        appAuthHolder.close()
+        appAuthManager.close()
         mainActivityModel.onDestroy()
         mainActivityView = null
     }
@@ -41,24 +41,24 @@ class MainActivityPresenter(
     // MARK: Functions
 
     fun checkAuthorization(intent: Intent) {
-        if (appAuthHolder.isAuthorized()) {
+        if (appAuthManager.isAuthorized()) {
             Log.i(TAG, "Already authorized.")
             // TODO: Check access token to refresh?
         } else {
             Log.i(TAG, "Not authorized")
-            appAuthHolder.startAuthCodeExchange(intent)
+            appAuthManager.startAuthCodeExchange(intent)
         }
     }
 
     fun signOut() {
         // discard the authorization and token state, but retain the configuration and
         // dynamic client registration (if applicable), to save from retrieving them again.
-        val currentState = appAuthHolder.authStateManager.authState
+        val currentState = appAuthManager.authStateManager.authState
         val clearedState = AuthState(currentState?.authorizationServiceConfiguration!!)
         if (currentState.lastRegistrationResponse != null) {
             clearedState.update(currentState.lastRegistrationResponse)
         }
-        appAuthHolder.authStateManager.authState = clearedState
+        appAuthManager.authStateManager.authState = clearedState
     }
 
     fun getEvents(itemType: ItemType, id: String) {
@@ -70,7 +70,7 @@ class MainActivityPresenter(
                     Log.e(TAG, "Request failed: $ex")
 
                     // Its possible the access token expired
-                    appAuthHolder.startRefreshAccessToken()
+                    appAuthManager.startRefreshAccessToken()
 
                 } else {
                     // Prepare the endpoint call
@@ -103,7 +103,7 @@ class MainActivityPresenter(
      * Makes using the performActionWithFreshTokens method a bit easier.
      */
     private fun performActionWithFreshTokens(action: AuthState.AuthStateAction) {
-        appAuthHolder.authStateManager.authState?.performActionWithFreshTokens(appAuthHolder.authService, action)
+        appAuthManager.authStateManager.authState?.performActionWithFreshTokens(appAuthManager.authService, action)
     }
 
     // MARK: @MainActivityModel.Callbacks interface implementation

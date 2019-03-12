@@ -1,13 +1,8 @@
 package cz.budikpet.bachelorwork.mvp.main
 
-import android.content.Intent
-import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
-import cz.budikpet.bachelorwork.api.SiriusApiService
 import cz.budikpet.bachelorwork.dataModel.Model
-import cz.budikpet.bachelorwork.util.AppAuthHolder
-import io.reactivex.disposables.Disposable
-import net.openid.appauth.*
+import cz.budikpet.bachelorwork.util.AppAuthManager
 import javax.inject.Inject
 
 class MainActivityModel() {
@@ -20,7 +15,7 @@ class MainActivityModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject
-    internal lateinit var appAuthHolder: AppAuthHolder
+    internal lateinit var appAuthManager: AppAuthManager
 
     init {
         MyApplication.appComponent.inject(this)
