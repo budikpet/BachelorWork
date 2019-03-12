@@ -4,8 +4,8 @@ import android.content.Intent
 import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
-import cz.budikpet.bachelorwork.dataModel.Model
 import cz.budikpet.bachelorwork.dataModel.ItemType
+import cz.budikpet.bachelorwork.dataModel.Model
 import cz.budikpet.bachelorwork.util.AppAuthHolder
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -46,16 +46,23 @@ class MainActivityPresenter(
             // TODO: Check access token to refresh?
         } else {
             Log.i(TAG, "Not authorized")
-            mainActivityModel.startAuthCodeExchange(this, intent)
+            appAuthHolder.startAuthCodeExchange(intent)
         }
     }
 
     fun signOut() {
-        mainActivityModel.signOut()
+        // discard the authorization and token state, but retain the configuration and
+        // dynamic client registration (if applicable), to save from retrieving them again.
+        val currentState = appAuthHolder.authStateManager.authState
+        val clearedState = AuthState(currentState?.authorizationServiceConfiguration!!)
+        if (currentState.lastRegistrationResponse != null) {
+            clearedState.update(currentState.lastRegistrationResponse)
+        }
+        appAuthHolder.authStateManager.authState = clearedState
     }
 
     fun getEvents(itemType: ItemType, id: String) {
-        mainActivityModel.performActionWithFreshTokens(
+        performActionWithFreshTokens(
             AuthState.AuthStateAction()
             { accessToken: String?, idToken: String?, ex: AuthorizationException? ->
                 // Check for errors and expired tokens
@@ -63,11 +70,11 @@ class MainActivityPresenter(
                     Log.e(TAG, "Request failed: $ex")
 
                     // Its possible the access token expired
-                    mainActivityModel.startRefreshAccessToken()
+                    appAuthHolder.startRefreshAccessToken()
 
                 } else {
                     // Prepare the endpoint call
-                    var observable = when(itemType) {
+                    var observable = when (itemType) {
                         ItemType.COURSE -> siriusApiServe.getCourseEvents(accessToken = accessToken, id = id)
                         ItemType.PERSON -> siriusApiServe.getPersonEvents(accessToken = accessToken, id = id)
                         ItemType.ROOM -> siriusApiServe.getRoomEvents(accessToken = accessToken, id = id)
@@ -90,6 +97,13 @@ class MainActivityPresenter(
                 },
                 { error -> Log.e(TAG, "Error: ${error.message}") }
             )
+    }
+
+    /**
+     * Makes using the performActionWithFreshTokens method a bit easier.
+     */
+    private fun performActionWithFreshTokens(action: AuthState.AuthStateAction) {
+        appAuthHolder.authStateManager.authState?.performActionWithFreshTokens(appAuthHolder.authService, action)
     }
 
     // MARK: @MainActivityModel.Callbacks interface implementation

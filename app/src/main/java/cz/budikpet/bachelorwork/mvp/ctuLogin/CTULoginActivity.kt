@@ -5,8 +5,10 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.mvp.main.MainActivity
 import cz.budikpet.bachelorwork.util.AppAuthHolder
+import javax.inject.Inject
 
 /**
  * The activity checks whether a user is already authorized (logged in).
@@ -17,12 +19,13 @@ import cz.budikpet.bachelorwork.util.AppAuthHolder
  */
 class CTULoginActivity : AppCompatActivity() {
     private val TAG = "MY_${this.javaClass.simpleName}"
-    private lateinit var appAuthHolder: AppAuthHolder
+
+    @Inject
+    internal lateinit var appAuthHolder: AppAuthHolder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        appAuthHolder = AppAuthHolder(this)
+        MyApplication.appComponent.inject(this)
 
         // Use refreshToken to skip authorization
 
