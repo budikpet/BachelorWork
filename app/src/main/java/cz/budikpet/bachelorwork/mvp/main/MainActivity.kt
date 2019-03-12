@@ -8,9 +8,6 @@ import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
 interface MainActivityView {
-    fun onSignOutClick()
-    fun onRefreshClick()
-    fun onGetEventsClick()
     fun showString(string: String)
 }
 
@@ -26,15 +23,9 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mainActivityPresenter =
-            MainActivityPresenter(
-                this,
-                MainActivityModel()
-            )
+        mainActivityPresenter = MainActivityPresenter(this, MainActivityModel())
 
-        backBtn.setOnClickListener { onSignOutClick() }
-        buttonRefresh.setOnClickListener { onRefreshClick() }
-        getEventsBtn.setOnClickListener { onGetEventsClick() }
+        initButtons()
     }
 
     override fun onStart() {
@@ -48,24 +39,21 @@ class MainActivity : AppCompatActivity(), MainActivityView {
         mainActivityPresenter.onDestroy()
     }
 
-    // MARK: interface
+    fun initButtons() {
+        buttonRefresh.setOnClickListener { TODO("not implemented") }
+        getEventsBtn.setOnClickListener { mainActivityPresenter.getEvents() }
 
-    override fun onSignOutClick() {
-        mainActivityPresenter.signOut()
+        backBtn.setOnClickListener {
+            mainActivityPresenter.signOut()
 
-        val mainIntent = Intent(this, CTULoginActivity::class.java)
-        mainIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-        startActivity(mainIntent)
-        finish()
+            val mainIntent = Intent(this, CTULoginActivity::class.java)
+            mainIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(mainIntent)
+            finish()
+        }
     }
 
-    override fun onRefreshClick() {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
-
-    override fun onGetEventsClick() {
-        mainActivityPresenter.getEvents()
-    }
+    // MARK: @MainActivityView implementations
 
     override fun showString(string: String) {
         showData.text = string
