@@ -31,8 +31,10 @@ android {
     }
 }
 
-project.ext.glideVersion = '4.7.1'
+project.ext.glideVersion = '4.8.0'
 project.ext.daggerVersion = '2.21'
+def supportVersion = "28.0.0"
+def lifecycle_version = "1.1.1"
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -44,6 +46,12 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
 
+    // Design Support
+    implementation "com.android.support:design:$supportVersion"
+
+    // ViewModel and LiveData
+    implementation "android.arch.lifecycle:extensions:$lifecycle_version"
+
     // Dagger2
     implementation "com.google.dagger:dagger:${project.daggerVersion}"
     kapt "com.google.dagger:dagger-compiler:${project.daggerVersion}"
@@ -52,7 +60,7 @@ dependencies {
     // Retrofit & RxJava
     implementation "com.squareup.retrofit2:retrofit:2.4.0"
     implementation "com.squareup.retrofit2:adapter-rxjava2:2.4.0"
-    implementation "com.squareup.retrofit2:converter-gson:2.3.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.4.0"
     implementation "io.reactivex.rxjava2:rxandroid:2.0.2"
 
     // AppAuth

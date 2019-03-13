@@ -1,8 +1,8 @@
 package cz.budikpet.bachelorwork.di
 
 import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
-import cz.budikpet.bachelorwork.mvp.main.MainActivityModel
-import cz.budikpet.bachelorwork.mvp.main.MainActivityPresenter
+import cz.budikpet.bachelorwork.mvp.main.Repository
+import cz.budikpet.bachelorwork.mvp.main.MainActivityViewModel
 import dagger.Component
 
 /**
@@ -10,7 +10,7 @@ import dagger.Component
  */
 @Component(modules = [AppModule::class])
 internal interface AppComponent {
-    fun inject(mainActivityPresenter: MainActivityPresenter)
-    fun inject(mainActivityModel: MainActivityModel)
+    fun inject(mainActivityViewModel: MainActivityViewModel)
+    fun inject(repository: Repository)
     fun inject(ctuLoginActivity: CTULoginActivity)
 }

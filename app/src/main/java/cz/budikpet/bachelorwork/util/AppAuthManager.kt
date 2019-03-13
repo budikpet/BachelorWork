@@ -47,12 +47,30 @@ class AppAuthManager @Inject constructor(context: Context) {
         return authStateManager.authState!!.isAuthorized
     }
 
-    fun close() {
-        authService.dispose()
-    }
-
     fun getAccessToken(): String? {
         return authStateManager.authState?.accessToken
+    }
+
+    fun signOut() {
+        // discard the authorization and token state, but retain the configuration and
+        // dynamic client registration (if applicable), to save from retrieving them again.
+        val currentState = authStateManager.authState
+        val clearedState = AuthState(currentState?.authorizationServiceConfiguration!!)
+        if (currentState.lastRegistrationResponse != null) {
+            clearedState.update(currentState.lastRegistrationResponse)
+        }
+        authStateManager.authState = clearedState
+        authService.dispose()   // TODO: Is necessery?
+    }
+
+    fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
+        if (isAuthorized()) {
+            Log.i(TAG, "Already authorized.")
+            // TODO: Check access token to refresh?
+        } else {
+            Log.i(TAG, "Not authorized")
+            startAuthCodeExchange(response, exception)
+        }
     }
 
     /**
@@ -142,5 +160,12 @@ class AppAuthManager @Inject constructor(context: Context) {
             Log.i(TAG, "AccessToken: ${getAccessToken()}")
             Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
         }
+    }
+
+    /**
+     * Makes using the performActionWithFreshTokens method a bit easier.
+     */
+    internal fun performActionWithFreshTokens(action: AuthState.AuthStateAction) {
+        authStateManager.authState?.performActionWithFreshTokens(authService, action)
     }
 }
