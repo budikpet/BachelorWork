@@ -45,7 +45,7 @@ class CTULoginActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        appAuthManager.close()
+//        appAuthManager.close()
     }
 
     // MARK: User authorization

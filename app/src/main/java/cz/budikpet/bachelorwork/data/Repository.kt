@@ -58,7 +58,7 @@ class Repository() {
                     Log.e(TAG, "Request failed: $ex")
 
                     // Its possible the access token expired
-//                    appAuthManager.startRefreshAccessToken()
+                    appAuthManager.startRefreshAccessToken()
 
                 } else {
                     // Prepare the endpoint call
