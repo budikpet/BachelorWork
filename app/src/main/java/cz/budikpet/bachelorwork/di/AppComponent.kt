@@ -1,7 +1,7 @@
 package cz.budikpet.bachelorwork.di
 
-import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
 import cz.budikpet.bachelorwork.data.Repository
+import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
 import cz.budikpet.bachelorwork.mvp.main.MainActivityViewModel
 import cz.budikpet.bachelorwork.util.SiriusApiClient
 import dagger.Component

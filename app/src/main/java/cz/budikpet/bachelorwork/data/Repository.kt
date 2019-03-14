@@ -33,9 +33,6 @@ class Repository() {
         appAuthManager.signOut()
     }
 
-    /**
-     * @return Variable that is to be observed. Contains currently selected events.
-     */
     fun getSiriusApiEvents(): LiveData<List<Model.Event>> {
         return siriusApiClient.getSiriusApiEvents()
     }
@@ -43,16 +40,20 @@ class Repository() {
     fun searchSiriusApiEvents(itemType: ItemType, id: String) {
         appAuthManager.performActionWithFreshTokens(
             AuthState.AuthStateAction()
-            { accessToken: String?, idToken: String?, ex: AuthorizationException? ->
-                // Check for errors and expired tokens
-                if (accessToken == null) {
-                    Log.e(TAG, "Request failed: $ex")
+            { accessToken: String?, _: String?, ex: AuthorizationException? ->
+                // Check for errors and expired accessToken
+                if (ex != null) {
+                    Log.e(TAG, "Request failed: $ex.")
 
-                    // Its possible the access token expired
-                    appAuthManager.startRefreshAccessToken()
+                    // 2007 == not fully authorized, accessToken expired
+                    if (ex.code == 2007) {
+                        // Refresh accessToken then search for events
+                        val observable = appAuthManager.startRefreshAccessToken()
+                        siriusApiClient.searchSiriusApiEvents(observable, itemType, id)
+                    }
 
                 } else {
-                    siriusApiClient.searchSiriusApiEvents(accessToken, itemType, id)
+                    siriusApiClient.searchSiriusApiEvents(accessToken!!, itemType, id)
                 }
 
             })
