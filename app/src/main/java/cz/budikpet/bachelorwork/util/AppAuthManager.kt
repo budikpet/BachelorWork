@@ -2,10 +2,12 @@ package cz.budikpet.bachelorwork.util
 
 import android.content.Context
 import android.net.Uri
+import android.system.Os.close
 import android.util.Log
 import net.openid.appauth.*
 import javax.inject.Inject
 
+// TODO: Inject singleton
 /**
  * Holds information needed to authorize with OAuth 2.0 server and manage tokens.
  */
@@ -19,7 +21,7 @@ class AppAuthManager @Inject constructor(context: Context) {
 
     val authStateManager: AuthStateManager = AuthStateManager(context)
     val authService: AuthorizationService
-    var authRequest: AuthorizationRequest
+    val authRequest: AuthorizationRequest
 
     init {
 
@@ -51,6 +53,10 @@ class AppAuthManager @Inject constructor(context: Context) {
         return authStateManager.authState?.accessToken
     }
 
+    fun close() {
+        authService.dispose()
+    }
+
     fun signOut() {
         // discard the authorization and token state, but retain the configuration and
         // dynamic client registration (if applicable), to save from retrieving them again.
@@ -60,7 +66,7 @@ class AppAuthManager @Inject constructor(context: Context) {
             clearedState.update(currentState.lastRegistrationResponse)
         }
         authStateManager.authState = clearedState
-        authService.dispose()   // TODO: Is necessery?
+        close()
     }
 
     fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {

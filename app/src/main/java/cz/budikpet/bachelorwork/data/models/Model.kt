@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork.dataModel
+package cz.budikpet.bachelorwork.data.models
 
 import com.google.gson.annotations.SerializedName
 import java.util.*

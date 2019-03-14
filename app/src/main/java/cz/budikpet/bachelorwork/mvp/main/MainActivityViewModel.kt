@@ -2,20 +2,12 @@ package cz.budikpet.bachelorwork.mvp.main
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.ViewModel
-import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
-import cz.budikpet.bachelorwork.api.SiriusApiService
-import cz.budikpet.bachelorwork.dataModel.ItemType
-import cz.budikpet.bachelorwork.dataModel.Model
-import cz.budikpet.bachelorwork.util.AppAuthManager
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
-import net.openid.appauth.AuthState
+import cz.budikpet.bachelorwork.data.Repository
+import cz.budikpet.bachelorwork.data.models.ItemType
+import cz.budikpet.bachelorwork.data.models.Model
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
-import javax.inject.Inject
 
 class MainActivityViewModel : ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"

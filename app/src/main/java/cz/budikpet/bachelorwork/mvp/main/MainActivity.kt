@@ -7,8 +7,8 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import cz.budikpet.bachelorwork.R
-import cz.budikpet.bachelorwork.dataModel.ItemType
-import cz.budikpet.bachelorwork.dataModel.Model
+import cz.budikpet.bachelorwork.data.models.ItemType
+import cz.budikpet.bachelorwork.data.models.Model
 import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
 import kotlinx.android.synthetic.main.activity_main.*
 import net.openid.appauth.AuthorizationException
@@ -28,33 +28,25 @@ class MainActivity : AppCompatActivity() {
 
         mainActivityViewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java!!)
 
+        val response = AuthorizationResponse.fromIntent(intent)
+        val exception = AuthorizationException.fromIntent(intent)
+        mainActivityViewModel.checkAuthorization(response, exception)
+
         initButtons()
         subscribeObservers()
 
+        // TODO: Fix - Called before being authorized. Need to be called one after the other.
         if(savedInstanceState == null) {
             // TODO: Get users name from somewhere
             mainActivityViewModel.searchSiriusApiEvents(ItemType.PERSON, "budikpet")
         }
     }
 
-    override fun onStart() {
-        super.onStart()
-
-        val response = AuthorizationResponse.fromIntent(intent)
-        val exception = AuthorizationException.fromIntent(intent)
-
-        mainActivityViewModel.checkAuthorization(response, exception)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mainActivityViewModel.onDestroy()
-    }
-
     private fun initButtons() {
         buttonRefresh.setOnClickListener { TODO("not implemented") }
         getEventsBtn.setOnClickListener {
-            mainActivityViewModel.getSiriusApiEvents()
+//            mainActivityViewModel.getSiriusApiEvents()
+            mainActivityViewModel.searchSiriusApiEvents(ItemType.PERSON, "budikpet")
         }
 
         backBtn.setOnClickListener {

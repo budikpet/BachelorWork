@@ -5,7 +5,7 @@ import android.content.Context.MODE_PRIVATE
 import android.content.SharedPreferences
 import net.openid.appauth.*
 
-
+// TODO: Inject singleton
 class AuthStateManager(context: Context) {
     private val TAG = "MY_${this.javaClass.simpleName}"
 

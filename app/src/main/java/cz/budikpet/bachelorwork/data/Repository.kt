@@ -1,13 +1,12 @@
-package cz.budikpet.bachelorwork.mvp.main
+package cz.budikpet.bachelorwork.data
 
 import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MediatorLiveData
 import android.arch.lifecycle.MutableLiveData
 import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
-import cz.budikpet.bachelorwork.dataModel.ItemType
-import cz.budikpet.bachelorwork.dataModel.Model
+import cz.budikpet.bachelorwork.data.models.ItemType
+import cz.budikpet.bachelorwork.data.models.Model
 import cz.budikpet.bachelorwork.util.AppAuthManager
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -36,7 +35,7 @@ class Repository() {
     }
 
     fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
-        appAuthManager.isAuthorized()
+        appAuthManager.checkAuthorization(response, exception)
     }
 
     fun signOut() {
@@ -59,13 +58,13 @@ class Repository() {
                     Log.e(TAG, "Request failed: $ex")
 
                     // Its possible the access token expired
-                    appAuthManager.startRefreshAccessToken()
+//                    appAuthManager.startRefreshAccessToken()
 
                 } else {
                     // Prepare the endpoint call
                     var endpoint = when (itemType) {
                         ItemType.COURSE -> siriusApiServe.getCourseEvents(accessToken = accessToken, id = id)
-                        ItemType.PERSON -> siriusApiServe.getPersonEvents(accessToken = accessToken, id = id)
+                        ItemType.PERSON -> siriusApiServe.getPersonEvents(accessToken = accessToken, id = id, from = "2019-3-1")
                         ItemType.ROOM -> siriusApiServe.getRoomEvents(accessToken = accessToken, id = id)
                     }
                     this.getSiriusApiEvents(endpoint)

@@ -8,6 +8,7 @@ import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.mvp.main.MainActivity
 import cz.budikpet.bachelorwork.util.AppAuthManager
+import net.openid.appauth.AuthorizationService
 import javax.inject.Inject
 
 /**
@@ -20,6 +21,7 @@ import javax.inject.Inject
 class CTULoginActivity : AppCompatActivity() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
+    // TODO: Do StartAuthorization better
     @Inject
     internal lateinit var appAuthManager: AppAuthManager
 
@@ -57,7 +59,8 @@ class CTULoginActivity : AppCompatActivity() {
         var errorIntent = Intent(this, CTULoginActivity::class.java)
         errorIntent.putExtra("TEST", "error")
 
-        appAuthManager.authService.performAuthorizationRequest(
+        val authService = AuthorizationService(this) // TODO: No way to fix this better?
+        authService.performAuthorizationRequest(
             appAuthManager.authRequest,
             PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), 0),
             PendingIntent.getActivity(this, 0, errorIntent, 0)
