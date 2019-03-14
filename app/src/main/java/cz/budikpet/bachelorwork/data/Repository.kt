@@ -1,17 +1,12 @@
 package cz.budikpet.bachelorwork.data
 
 import android.arch.lifecycle.LiveData
-import android.arch.lifecycle.MutableLiveData
 import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
-import cz.budikpet.bachelorwork.api.SiriusApiService
 import cz.budikpet.bachelorwork.data.models.ItemType
 import cz.budikpet.bachelorwork.data.models.Model
 import cz.budikpet.bachelorwork.util.AppAuthManager
-import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
-import io.reactivex.schedulers.Schedulers
+import cz.budikpet.bachelorwork.util.SiriusApiClient
 import net.openid.appauth.AuthState
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -20,15 +15,11 @@ import javax.inject.Inject
 class Repository() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
-    // TODO: Change to MediatorLiveData
-    private val events = MutableLiveData<List<Model.Event>>()
-
     @Inject
     internal lateinit var appAuthManager: AppAuthManager
 
     @Inject
-    internal lateinit var siriusApiServe: SiriusApiService
-    private var disposable: Disposable? = null
+    internal lateinit var siriusApiClient: SiriusApiClient
 
     init {
         MyApplication.appComponent.inject(this)
@@ -43,10 +34,10 @@ class Repository() {
     }
 
     /**
-     * Return currently selected events
+     * @return Variable that is to be observed. Contains currently selected events.
      */
     fun getSiriusApiEvents(): LiveData<List<Model.Event>> {
-        return events
+        return siriusApiClient.getSiriusApiEvents()
     }
 
     fun searchSiriusApiEvents(itemType: ItemType, id: String) {
@@ -61,29 +52,9 @@ class Repository() {
                     appAuthManager.startRefreshAccessToken()
 
                 } else {
-                    // Prepare the endpoint call
-                    var endpoint = when (itemType) {
-                        ItemType.COURSE -> siriusApiServe.getCourseEvents(accessToken = accessToken, id = id)
-                        ItemType.PERSON -> siriusApiServe.getPersonEvents(accessToken = accessToken, id = id, from = "2019-3-1")
-                        ItemType.ROOM -> siriusApiServe.getRoomEvents(accessToken = accessToken, id = id)
-                    }
-                    this.getSiriusApiEvents(endpoint)
+                    siriusApiClient.searchSiriusApiEvents(accessToken, itemType, id)
                 }
 
             })
-    }
-
-    private fun getSiriusApiEvents(endpoint: Observable<Model.EventsResult>) {
-        disposable = endpoint
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-//            .map { t -> t.events }
-            .subscribe(
-                { result ->
-                    Log.i(TAG, "Events: $result")
-                    events.postValue(result.events)
-                },
-                { error -> Log.e(TAG, "Error: ${error.message}") }
-            )
     }
 }

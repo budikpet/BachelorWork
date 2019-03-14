@@ -63,7 +63,6 @@ object Model {
         val type: ItemType
     )
 
-    // TODO: Add remaining values
     // Event type
     data class Event(
         val id: Int,

@@ -66,13 +66,12 @@ class AppAuthManager @Inject constructor(context: Context) {
             clearedState.update(currentState.lastRegistrationResponse)
         }
         authStateManager.authState = clearedState
-        close()
     }
 
     fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
         if (isAuthorized()) {
             Log.i(TAG, "Already authorized.")
-            // TODO: Check access token to refresh?
+            startRefreshAccessToken()
         } else {
             Log.i(TAG, "Not authorized")
             startAuthCodeExchange(response, exception)

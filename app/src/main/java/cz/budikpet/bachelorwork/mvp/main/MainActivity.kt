@@ -46,7 +46,6 @@ class MainActivity : AppCompatActivity() {
     private fun initButtons() {
         buttonRefresh.setOnClickListener { TODO("not implemented") }
         getEventsBtn.setOnClickListener {
-//            mainActivityViewModel.getSiriusApiEvents()
             mainActivityViewModel.searchSiriusApiEvents(ItemType.PERSON, "budikpet")
         }
 
