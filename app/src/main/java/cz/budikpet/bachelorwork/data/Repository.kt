@@ -32,6 +32,11 @@ class Repository() {
         appAuthManager.signOut()
     }
 
+    /**
+     * Provide course, person and room events endpoints.
+     *
+     * @return An observable @Model.EventsResult endpoint.
+     */
     fun searchSiriusApiEvents(itemType: ItemType, id: String): Observable<Model.EventsResult> {
         return appAuthManager.getFreshAccessToken()
             .toObservable()
@@ -56,9 +61,9 @@ class Repository() {
         id: String
     ): Observable<Model.EventsResult> {
         return when (itemType) {
-            ItemType.COURSE -> siriusApiService.getCourseEvents(accessToken = accessToken, id = id)
+            ItemType.COURSE -> siriusApiService.getCourseEvents(accessToken = accessToken, id = id, from = "2019-3-2")
             ItemType.PERSON -> siriusApiService.getPersonEvents(accessToken = accessToken, id = id, from = "2019-3-2")
-            ItemType.ROOM -> siriusApiService.getRoomEvents(accessToken = accessToken, id = id)
+            ItemType.ROOM -> siriusApiService.getRoomEvents(accessToken = accessToken, id = id, from = "2019-3-2")
         }
     }
 }

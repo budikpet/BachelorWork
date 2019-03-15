@@ -95,8 +95,6 @@ interface SiriusApiService {
 
     companion object {
         fun create(): SiriusApiService {
-
-            // TODO: Add the header here using Interceptor from OkHttpClient
             val retrofit = Retrofit.Builder()
                 .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
                 .addConverterFactory(GsonConverterFactory.create())

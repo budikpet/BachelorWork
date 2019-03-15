@@ -6,6 +6,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.widget.RadioGroup
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.models.ItemType
 import cz.budikpet.bachelorwork.data.models.Model
@@ -26,7 +27,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        mainActivityViewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java!!)
+        mainActivityViewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
 
         val response = AuthorizationResponse.fromIntent(intent)
         val exception = AuthorizationException.fromIntent(intent)
@@ -43,13 +44,29 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        mainActivityViewModel.onDestroy()
+    }
+
     private fun initButtons() {
-        buttonRefresh.setOnClickListener { TODO("not implemented") }
         getEventsBtn.setOnClickListener {
-            mainActivityViewModel.searchSiriusApiEvents(ItemType.PERSON, "budikpet")
+//            mainActivityViewModel.searchSiriusApiEvents(ItemType.PERSON, "budikpet")
+            val itemType = when {
+                personBtn.isChecked -> {
+                    ItemType.PERSON
+                }
+                courseBtn.isChecked -> {
+                    ItemType.COURSE
+                }
+                else -> {
+                    ItemType.ROOM
+                }
+            }
+            mainActivityViewModel.searchSiriusApiEvents(itemType, providedId.text.toString())
         }
 
-        backBtn.setOnClickListener {
+        signoutBtn.setOnClickListener {
             mainActivityViewModel.signOut()
 
             val mainIntent = Intent(this, CTULoginActivity::class.java)
@@ -57,12 +74,14 @@ class MainActivity : AppCompatActivity() {
             startActivity(mainIntent)
             finish()
         }
+
+        personBtn.isChecked = true
     }
 
     private fun subscribeObservers() {
         mainActivityViewModel.getSiriusApiEvents().observe(this, Observer { eventsList ->
             if (eventsList != null) {
-                Log.i(TAG, "Observing events")
+                Log.i(TAG, "Observing events from LiveData.")
                 showString(eventsList)
             }
         })

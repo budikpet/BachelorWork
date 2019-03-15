@@ -8,25 +8,18 @@
         tools:context=".mvp.main.MainActivity">
 
     <Button
-            android:text="Back"
+            android:text="Sign out"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintStart_toStartOf="parent" android:layout_marginTop="16dp"
-            android:layout_marginStart="16dp" android:id="@+id/backBtn"/>
+            android:layout_marginStart="16dp" android:id="@+id/signoutBtn"/>
     <Button
             android:text="Get_Events"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="16dp"
+            app:layout_constraintStart_toStartOf="parent" android:layout_marginStart="8dp"
             android:id="@+id/getEventsBtn"
-            android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/backBtn"/>
-    <Button
-            android:text="RefreshTokens"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:id="@+id/buttonRefresh"
-            app:layout_constraintStart_toEndOf="@+id/backBtn" android:layout_marginStart="8dp"
-            app:layout_constraintBaseline_toBaselineOf="@+id/backBtn"/>
+            android:layout_marginTop="8dp" app:layout_constraintTop_toBottomOf="@+id/providedId"/>
     <TextView
             android:text="TextView"
             android:layout_width="0dp"
@@ -36,4 +29,33 @@
             android:layout_marginStart="8dp" android:layout_marginTop="8dp"
             app:layout_constraintTop_toBottomOf="@+id/getEventsBtn" app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginEnd="8dp"/>
+    <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="text"
+            android:ems="10"
+            android:id="@+id/providedId"
+            android:hint="Provide id string" android:layout_marginTop="8dp"
+            app:layout_constraintTop_toBottomOf="@+id/signoutBtn" android:layout_marginStart="8dp"
+            app:layout_constraintStart_toStartOf="parent"/>
+    <RadioGroup
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            app:layout_constraintEnd_toEndOf="parent" android:layout_marginEnd="8dp"
+            app:layout_constraintStart_toEndOf="@+id/providedId"
+            android:layout_marginStart="8dp" android:layout_marginTop="8dp"
+            app:layout_constraintTop_toTopOf="@+id/providedId">
+        <RadioButton
+                android:text="Person"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/personBtn" android:layout_weight="1"/>
+        <RadioButton
+                android:text="Course"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/courseBtn" android:layout_weight="1"/>
+        <RadioButton
+                android:text="Room"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" android:id="@+id/toomBtn" android:layout_weight="1"/>
+    </RadioGroup>
 </android.support.constraint.ConstraintLayout>

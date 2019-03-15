@@ -9,7 +9,7 @@ import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.models.ItemType
 import cz.budikpet.bachelorwork.data.models.Model
 import io.reactivex.android.schedulers.AndroidSchedulers
-import io.reactivex.disposables.Disposable
+import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -23,10 +23,14 @@ class MainActivityViewModel : ViewModel() {
     @Inject
     internal lateinit var repository: Repository
 
-    private var disposable: Disposable? = null
+    private var compositeDisposable = CompositeDisposable()
 
     init {
         MyApplication.appComponent.inject(this)
+    }
+
+    fun onDestroy() {
+        compositeDisposable.clear()
     }
 
     fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
@@ -42,7 +46,7 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun searchSiriusApiEvents(itemType: ItemType, id: String) {
-        disposable = repository.searchSiriusApiEvents(itemType, id)
+        val disposable = repository.searchSiriusApiEvents(itemType, id)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
@@ -52,5 +56,7 @@ class MainActivityViewModel : ViewModel() {
                 },
                 { error -> Log.e(TAG, "Error: ${error}") }
             )
+
+        compositeDisposable.add(disposable)
     }
 }
