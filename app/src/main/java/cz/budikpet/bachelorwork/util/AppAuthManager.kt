@@ -96,10 +96,10 @@ class AppAuthManager @Inject constructor(context: Context) {
                     Log.e(TAG, "Request failed: $ex.")
                     // Need to refresh the accessToken
                     emitter.onError(UserNotAuthenticatedException())
+                } else {
+                    // AccessToken is fresh
+                    emitter.onSuccess(accessToken!!)
                 }
-
-                // AccessToken is fresh
-                emitter.onSuccess(accessToken!!)
             })
         }.onErrorResumeNext {
             // Refresh accessToken then search for events
@@ -202,7 +202,7 @@ class AppAuthManager @Inject constructor(context: Context) {
     /**
      * Makes using the performActionWithFreshTokens method a bit easier.
      */
-    internal fun performActionWithFreshTokens(action: AuthState.AuthStateAction) {
+    private fun performActionWithFreshTokens(action: AuthState.AuthStateAction) {
         authStateManager.authState?.performActionWithFreshTokens(authService, action)
     }
 }
