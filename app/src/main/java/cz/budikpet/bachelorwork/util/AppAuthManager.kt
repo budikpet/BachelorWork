@@ -2,6 +2,7 @@ package cz.budikpet.bachelorwork.util
 
 import android.content.Context
 import android.net.Uri
+import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import io.reactivex.Single
 import net.openid.appauth.*
@@ -79,9 +80,37 @@ class AppAuthManager @Inject constructor(context: Context) {
     }
 
     /**
+     * Wraps the performActionWithFreshTokens as an observable.
+     *
+     * If accessToken is fresh, it is used directly.
+     *
+     * If accessToken isn't fresh, the startRefreshAccessToken observable is used.
+     *
+     * @return An observable with fresh accessToken.
+     */
+    internal fun getFreshAccessToken(): Single<String> {
+
+        return Single.create<String> { emitter ->
+            performActionWithFreshTokens(AuthState.AuthStateAction { accessToken, _, ex ->
+                if (ex != null) {
+                    Log.e(TAG, "Request failed: $ex.")
+                    // Need to refresh the accessToken
+                    emitter.onError(UserNotAuthenticatedException())
+                }
+
+                // AccessToken is fresh
+                emitter.onSuccess(accessToken!!)
+            })
+        }.onErrorResumeNext {
+            // Refresh accessToken then search for events
+            return@onErrorResumeNext startRefreshAccessToken()
+        }
+    }
+
+    /**
      * Get new access tokens using the refresh token.
      */
-    fun startRefreshAccessToken(): Single<String> {
+    private fun startRefreshAccessToken(): Single<String> {
         Log.i(TAG, "PRE_RefreshToken: ${getAccessToken()}")
         return Single.create { emitter ->
             performTokenRequest(

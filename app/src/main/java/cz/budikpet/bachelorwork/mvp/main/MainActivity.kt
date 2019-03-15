@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
 
         // TODO: Fix - Called before being authorized. Need to be called one after the other.
         // Should get user list from Google Calendar, not Sirius API
-        if(savedInstanceState == null) {
+        if (savedInstanceState == null) {
             // TODO: Get users name from somewhere
 //            mainActivityViewModel.searchSiriusApiEvents(ItemType.PERSON, "budikpet")
         }
