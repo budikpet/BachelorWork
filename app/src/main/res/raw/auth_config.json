@@ -1,0 +1,11 @@
+{
+  "client_id": "1932312b-4981-4224-97b1-b45ad041a4b7",
+  "redirect_uri": "net.openid.appauthdemo:/oauth2redirect",
+  "authorization_scope": "cvut:sirius:personal:read",
+  "discovery_uri": "",
+  "authorization_endpoint_uri": "https://auth.fit.cvut.cz/oauth/authorize",
+  "token_endpoint_uri": "https://auth.fit.cvut.cz/oauth/token",
+  "registration_endpoint_uri": "",
+  "user_info_endpoint_uri": "https://sirius.fit.cvut.cz/api/v1/people/budikpet/events",
+  "https_required": true
+}
