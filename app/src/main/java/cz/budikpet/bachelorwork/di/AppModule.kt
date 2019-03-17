@@ -12,7 +12,7 @@ import javax.inject.Singleton
  * Provides @Context through dependency injection.
  */
 @Module
-internal class AppModule(val context: Context) {
+internal class AppModule(private val context: Context) {
 
     @Provides
     fun provideContext(): Context {
@@ -20,19 +20,8 @@ internal class AppModule(val context: Context) {
     }
 
     @Provides
+    @Singleton
     fun providesSiriusApiService(): SiriusApiService {
         return SiriusApiService.create()
-    }
-
-    @Provides
-    @Singleton
-    fun providesAppAuthManager(): AppAuthManager {
-        return AppAuthManager(context)
-    }
-
-    @Provides
-    @Singleton
-    fun providesRepository(): Repository {
-        return Repository()
     }
 }

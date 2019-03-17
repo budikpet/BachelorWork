@@ -10,8 +10,10 @@ import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import javax.inject.Inject
+import javax.inject.Singleton
 
-class Repository() {
+@Singleton
+class Repository @Inject constructor() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject

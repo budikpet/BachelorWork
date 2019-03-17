@@ -7,11 +7,13 @@ import android.util.Log
 import io.reactivex.Single
 import net.openid.appauth.*
 import javax.inject.Inject
+import javax.inject.Singleton
 
 // TODO: Inject singleton
 /**
  * Holds information needed to authorize with OAuth 2.0 server and manage tokens.
  */
+@Singleton
 class AppAuthManager @Inject constructor(context: Context) {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
@@ -20,8 +22,8 @@ class AppAuthManager @Inject constructor(context: Context) {
     //    private val scope = "cvut:sirius:limited-by-idm:read" // TODO: Use this scope when available
     private val scope = "cvut:sirius:personal:read"
 
-    val authStateManager: AuthStateManager = AuthStateManager(context)
-    val authService: AuthorizationService
+    private val authStateManager: AuthStateManager = AuthStateManager(context)
+    private val authService: AuthorizationService
     val authRequest: AuthorizationRequest
 
     init {

@@ -51,7 +51,6 @@ class MainActivity : AppCompatActivity() {
 
     private fun initButtons() {
         getEventsBtn.setOnClickListener {
-//            mainActivityViewModel.searchSiriusApiEvents(ItemType.PERSON, "budikpet")
             val itemType = when {
                 personBtn.isChecked -> {
                     ItemType.PERSON
