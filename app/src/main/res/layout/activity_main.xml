@@ -48,14 +48,20 @@
         <RadioButton
                 android:text="Person"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/personBtn" android:layout_weight="1"/>
+                android:layout_height="wrap_content" android:id="@+id/personRadioBtn" android:layout_weight="1"/>
         <RadioButton
                 android:text="Course"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/courseBtn" android:layout_weight="1"/>
+                android:layout_height="wrap_content" android:id="@+id/courseRadioBtn" android:layout_weight="1"/>
         <RadioButton
                 android:text="Room"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" android:id="@+id/toomBtn" android:layout_weight="1"/>
+                android:layout_height="wrap_content" android:id="@+id/roomRadioBtn" android:layout_weight="1"/>
     </RadioGroup>
+    <Button
+            android:text="Get_Calendars"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/getCalendarsBtn" app:layout_constraintStart_toEndOf="@+id/signoutBtn"
+            android:layout_marginStart="8dp" app:layout_constraintBaseline_toBaselineOf="@+id/signoutBtn"/>
 </android.support.constraint.ConstraintLayout>

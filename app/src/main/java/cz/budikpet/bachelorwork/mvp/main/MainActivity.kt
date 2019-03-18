@@ -1,19 +1,25 @@
 package cz.budikpet.bachelorwork.mvp.main
 
+import android.Manifest
+import android.accounts.AccountManager
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
-import android.widget.RadioGroup
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.models.ItemType
 import cz.budikpet.bachelorwork.data.models.Model
 import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
+import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import kotlinx.android.synthetic.main.activity_main.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
+import javax.inject.Inject
 
 /**
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
@@ -21,17 +27,29 @@ import net.openid.appauth.AuthorizationResponse
 class MainActivity : AppCompatActivity() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
+    private val CODE_GOOGLE_LOGIN = 0
+    private val CODE_REQUEST_PERMISSIONS = 1
+
     private lateinit var mainActivityViewModel: MainActivityViewModel
+
+    @Inject
+    internal lateinit var credential: GoogleAccountCredential
+
+    @Inject
+    internal lateinit var preferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        MyApplication.appComponent.inject(this)
         mainActivityViewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
 
         val response = AuthorizationResponse.fromIntent(intent)
         val exception = AuthorizationException.fromIntent(intent)
         mainActivityViewModel.checkAuthorization(response, exception)
+
+        checkGoogleLogin()
 
         initButtons()
         subscribeObservers()
@@ -52,10 +70,10 @@ class MainActivity : AppCompatActivity() {
     private fun initButtons() {
         getEventsBtn.setOnClickListener {
             val itemType = when {
-                personBtn.isChecked -> {
+                personRadioBtn.isChecked -> {
                     ItemType.PERSON
                 }
-                courseBtn.isChecked -> {
+                courseRadioBtn.isChecked -> {
                     ItemType.COURSE
                 }
                 else -> {
@@ -74,7 +92,12 @@ class MainActivity : AppCompatActivity() {
             finish()
         }
 
-        personBtn.isChecked = true
+        personRadioBtn.isChecked = true
+
+        getCalendarsBtn.setOnClickListener {
+            Log.i(TAG, "Selected account: ${credential.selectedAccount}")
+            mainActivityViewModel.getCalendarEvents()
+        }
     }
 
     private fun subscribeObservers() {
@@ -84,16 +107,75 @@ class MainActivity : AppCompatActivity() {
                 showString(eventsList)
             }
         })
+
+
     }
 
-    // MARK: @MainActivityView implementations
-
-    fun showString(result: List<Model.Event>) {
+    private fun showString(result: List<Model.Event>) {
         var builder = StringBuilder()
         for (event in result) {
             builder.append("${event.links.course} ${event.event_type}: ${event.starts_at}\n")
         }
 
         showData.text = builder.toString()
+    }
+
+    // MARK: Google account
+
+    private fun checkGoogleLogin() {
+        if (preferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), null) == null) {
+            // Ask a user to log into a Google account once after he logged into CTU
+            // TODO: Enable
+//            if(!preferences.getBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), false)) {
+            // Ask a user to log into a Google account
+            Log.i(TAG, "Logging into Google")
+            checkPermissions()
+
+            val editor = preferences.edit()
+            editor.putBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), true)
+            editor.apply()
+//            }
+        }
+    }
+
+    private fun checkPermissions() {
+        val array: Array<String> = arrayOf(
+            Manifest.permission.READ_CALENDAR,
+            Manifest.permission.WRITE_CALENDAR,
+            Manifest.permission.READ_CONTACTS,
+            Manifest.permission.WRITE_CONTACTS,
+            Manifest.permission.GET_ACCOUNTS,
+            Manifest.permission.INTERNET
+        )
+
+        requestPermissions(
+            array,
+            CODE_REQUEST_PERMISSIONS
+        )
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        Log.i(TAG, "RequestPermsResult")
+
+        if (requestCode == CODE_REQUEST_PERMISSIONS) {
+            if (!grantResults.contains(-1)) {
+                startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
+            }
+        }
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        Log.i(TAG, "OnActivityResult")
+
+        if (requestCode == CODE_GOOGLE_LOGIN) {
+            // Store google account name
+            val accountName = data?.extras!!.getString(AccountManager.KEY_ACCOUNT_NAME)
+            val editor = preferences.edit()
+            editor.putString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), accountName)
+            editor.apply()
+            credential.selectedAccountName = accountName
+        }
     }
 }

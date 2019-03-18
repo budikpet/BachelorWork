@@ -2,6 +2,7 @@ package cz.budikpet.bachelorwork.di
 
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
+import cz.budikpet.bachelorwork.mvp.main.MainActivity
 import cz.budikpet.bachelorwork.mvp.main.MainActivityViewModel
 import dagger.Component
 import javax.inject.Singleton
@@ -15,4 +16,5 @@ internal interface AppComponent {
     fun inject(mainActivityViewModel: MainActivityViewModel)
     fun inject(repository: Repository)
     fun inject(ctuLoginActivity: CTULoginActivity)
+    fun inject(mainActivity: MainActivity)
 }

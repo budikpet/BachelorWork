@@ -51,12 +51,15 @@ class MainActivityViewModel : ViewModel() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
-                    //                    Log.i(TAG, "Events_AccessToken: $result")
                     events.postValue(result.events)
                 },
                 { error -> Log.e(TAG, "Error: ${error}") }
             )
 
         compositeDisposable.add(disposable)
+    }
+
+    fun getCalendarEvents() {
+
     }
 }
