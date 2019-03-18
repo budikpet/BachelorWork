@@ -4,6 +4,7 @@ import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.util.Log
+import com.google.api.services.calendar.model.Calendar
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.models.ItemType
@@ -76,11 +77,43 @@ class MainActivityViewModel : ViewModel() {
                 { result ->
                     Log.i(TAG, "GetCalendarEvents")
                     for (item in result.items) {
-                        Log.i(TAG, item.id)
+                        Log.i(TAG, "Name: ${item.summary}")
                     }
                 },
                 { error ->
-                    Log.e(TAG, "Error: ${error}")
+                    Log.e(TAG, "GetCalendarEvents: $error")
+                }
+            )
+
+        compositeDisposable.add(disposable)
+    }
+
+    fun addGoogleCalendar(name: String) {
+        val FIELDS = "id,summary"
+        val FEED_FIELDS = "items($FIELDS)"
+
+        val calendarModel = Calendar()
+        calendarModel.summary = name
+
+        val disposable = repository.getGoogleCalendarObservable()
+            .flatMap { calendar ->
+                Log.i(TAG, "AddingCalendar")
+                Single.fromCallable {
+                    calendar.calendars()
+                        .insert(calendarModel)
+                        .setFields(FIELDS)
+                        .execute()
+                }
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result ->
+                    Log.i(TAG, "AddGoogleCalendar")
+                    Log.i(TAG, result.id)
+                },
+                { error ->
+                    Log.e(TAG, "AddGoogleCalendar: ${error}")
                 }
             )
 
