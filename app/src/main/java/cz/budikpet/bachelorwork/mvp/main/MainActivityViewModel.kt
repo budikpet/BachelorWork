@@ -5,6 +5,7 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.util.Log
 import com.google.api.services.calendar.model.Calendar
+import com.google.api.services.calendar.model.CalendarListEntry
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.models.ItemType
@@ -65,7 +66,7 @@ class MainActivityViewModel : ViewModel() {
         val FIELDS = "id,summary"
         val FEED_FIELDS = "items($FIELDS)"
 
-        val disposable = repository.getGoogleCalendarObservable()
+        val disposable = repository.getGoogleCalendarServiceObservable()
             .flatMap { calendar ->
                 Single.fromCallable {
                     calendar.calendarList().list().setFields(FEED_FIELDS).execute()
@@ -95,22 +96,33 @@ class MainActivityViewModel : ViewModel() {
         val calendarModel = Calendar()
         calendarModel.summary = name
 
-        val disposable = repository.getGoogleCalendarObservable()
-            .flatMap { calendar ->
+        val disposable = repository.getGoogleCalendarServiceObservable()
+            .flatMap { calendarService ->
                 Log.i(TAG, "AddingCalendar")
                 Single.fromCallable {
-                    calendar.calendars()
+                    calendarService.calendars()
                         .insert(calendarModel)
                         .setFields(FIELDS)
                         .execute()
                 }
+                    .subscribeOn(Schedulers.io())
+                    .observeOn(Schedulers.io())
+                    .flatMap { createdCalendar ->
+                        val entry: CalendarListEntry = createCalendarEntry(createdCalendar)
+                        Single.fromCallable {
+                            calendarService.calendarList()
+                                .update(createdCalendar.id, entry)
+                                .setColorRgbFormat(true)
+                                .execute()
+                        }
+                    }
             }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
                     Log.i(TAG, "AddGoogleCalendar")
-                    Log.i(TAG, result.id)
+                    Log.i(TAG, result.summary)
                 },
                 { error ->
                     Log.e(TAG, "AddGoogleCalendar: ${error}")
@@ -118,5 +130,15 @@ class MainActivityViewModel : ViewModel() {
             )
 
         compositeDisposable.add(disposable)
+    }
+
+    private fun createCalendarEntry(calendar: Calendar): CalendarListEntry {
+        val entry = CalendarListEntry()
+        entry.id = calendar.id
+        entry.hidden = true
+        entry.foregroundColor = "#000000"
+        entry.backgroundColor = "#d3d3d3"
+
+        return entry
     }
 }

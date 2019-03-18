@@ -3,6 +3,7 @@ package cz.budikpet.bachelorwork.data
 import android.content.Context
 import android.security.keystore.UserNotAuthenticatedException
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.calendar.Calendar
@@ -19,6 +20,7 @@ import net.openid.appauth.AuthorizationResponse
 import javax.inject.Inject
 import javax.inject.Singleton
 
+
 @Singleton
 class Repository @Inject constructor(context: Context) {
     private val TAG = "MY_${this.javaClass.simpleName}"
@@ -32,17 +34,20 @@ class Repository @Inject constructor(context: Context) {
     @Inject
     internal lateinit var credential: GoogleAccountCredential
 
-    private lateinit var calendar: Calendar
+    private lateinit var calendarService: Calendar
 
     init {
         MyApplication.appComponent.inject(this)
 
-        // Calendar calendar
+        // Calendar calendarService
         val transport = NetHttpTransport.Builder().build()
 
-        calendar = Calendar.Builder(transport, GsonFactory.getDefaultInstance(), credential)
+//        val transport = AndroidHttp.newCompatibleTransport();
+
+        calendarService = Calendar.Builder(transport, GsonFactory.getDefaultInstance(), setHttpTimeout(credential))
             .setApplicationName("BachelorWork")
             .build()
+
     }
 
     // MARK: Sirius API
@@ -92,13 +97,24 @@ class Repository @Inject constructor(context: Context) {
 
     // MARK: Google Calendar API
 
-    fun getGoogleCalendarObservable(): Single<Calendar> {
+    fun getGoogleCalendarServiceObservable(): Single<Calendar> {
         return Single.create<Calendar> { emitter ->
             if (credential.selectedAccountName != null) {
-                emitter.onSuccess(calendar)
+                emitter.onSuccess(calendarService)
             } else {
                 emitter.onError(UserNotAuthenticatedException())
             }
+        }
+    }
+
+    /**
+     * Increases timeouts for the Google service requests.
+     */
+    private fun setHttpTimeout(requestInitializer: HttpRequestInitializer): HttpRequestInitializer {
+        return HttpRequestInitializer { httpRequest ->
+            requestInitializer.initialize(httpRequest)
+            httpRequest.connectTimeout = 3 * 60000  // 3 minutes connect timeout
+            httpRequest.readTimeout = 3 * 60000  // 3 minutes read timeout
         }
     }
 }
