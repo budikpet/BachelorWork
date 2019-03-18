@@ -40,6 +40,8 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.android.support:appcompat-v7:28.0.0'
+    implementation 'com.android.support:support-media-compat:28.0.0'
+    implementation 'com.android.support:support-v4:28.0.0'
     implementation 'com.android.support:customtabs:28.0.0'
     implementation 'com.android.support.constraint:constraint-layout:1.1.3'
     testImplementation 'junit:junit:4.12'
@@ -69,4 +71,16 @@ dependencies {
     implementation 'com.squareup.okio:okio:1.14.1'
     implementation "com.github.bumptech.glide:glide:${project.glideVersion}"
     annotationProcessor "com.github.bumptech.glide:compiler:${project.glideVersion}"
+
+    // Added dependencies for the google calendar api
+//    implementation 'com.google.apis:google-api-services-calendar:v3-rev370-1.25.0'
+    implementation 'com.google.android.gms:play-services-auth:16.0.1'
+//    implementation 'pub.devrel:easypermissions:2.0.0'
+    implementation('com.google.api-client:google-api-client-android:1.28.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    implementation('com.google.apis:google-api-services-calendar:v3-rev20181125-1.27.0') {
+        exclude group: 'org.apache.httpcomponents'
+    }
+    implementation 'com.google.http-client:google-http-client-gson:1.28.0' exclude module: 'httpclient'
 }
