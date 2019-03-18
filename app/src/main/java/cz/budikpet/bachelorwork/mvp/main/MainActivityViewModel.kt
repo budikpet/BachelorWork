@@ -8,6 +8,7 @@ import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.models.ItemType
 import cz.budikpet.bachelorwork.data.models.Model
+import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -60,6 +61,29 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun getCalendarEvents() {
+        val FIELDS = "id,summary"
+        val FEED_FIELDS = "items($FIELDS)"
 
+        val disposable = repository.getGoogleCalendarObservable()
+            .flatMap { calendar ->
+                Single.fromCallable {
+                    calendar.calendarList().list().setFields(FEED_FIELDS).execute()
+                }
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result ->
+                    Log.i(TAG, "GetCalendarEvents")
+                    for (item in result.items) {
+                        Log.i(TAG, item.id)
+                    }
+                },
+                { error ->
+                    Log.e(TAG, "Error: ${error}")
+                }
+            )
+
+        compositeDisposable.add(disposable)
     }
 }

@@ -1,11 +1,18 @@
 package cz.budikpet.bachelorwork.data
 
+import android.content.Context
+import android.security.keystore.UserNotAuthenticatedException
+import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.http.javanet.NetHttpTransport
+import com.google.api.client.json.gson.GsonFactory
+import com.google.api.services.calendar.Calendar
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
 import cz.budikpet.bachelorwork.data.models.ItemType
 import cz.budikpet.bachelorwork.data.models.Model
 import cz.budikpet.bachelorwork.util.AppAuthManager
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -13,7 +20,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class Repository @Inject constructor() {
+class Repository @Inject constructor(context: Context) {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject
@@ -22,9 +29,23 @@ class Repository @Inject constructor() {
     @Inject
     internal lateinit var siriusApiService: SiriusApiService
 
+    @Inject
+    internal lateinit var credential: GoogleAccountCredential
+
+    private lateinit var calendar: Calendar
+
     init {
         MyApplication.appComponent.inject(this)
+
+        // Calendar calendar
+        val transport = NetHttpTransport.Builder().build()
+
+        calendar = Calendar.Builder(transport, GsonFactory.getDefaultInstance(), credential)
+            .setApplicationName("BachelorWork")
+            .build()
     }
+
+    // MARK: Sirius API
 
     fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
         appAuthManager.checkAuthorization(response, exception)
@@ -66,6 +87,18 @@ class Repository @Inject constructor() {
             ItemType.COURSE -> siriusApiService.getCourseEvents(accessToken = accessToken, id = id, from = "2019-3-2")
             ItemType.PERSON -> siriusApiService.getPersonEvents(accessToken = accessToken, id = id, from = "2019-3-2")
             ItemType.ROOM -> siriusApiService.getRoomEvents(accessToken = accessToken, id = id, from = "2019-3-2")
+        }
+    }
+
+    // MARK: Google Calendar API
+
+    fun getGoogleCalendarObservable(): Single<Calendar> {
+        return Single.create<Calendar> { emitter ->
+            if (credential.selectedAccountName != null) {
+                emitter.onSuccess(calendar)
+            } else {
+                emitter.onError(UserNotAuthenticatedException())
+            }
         }
     }
 }
