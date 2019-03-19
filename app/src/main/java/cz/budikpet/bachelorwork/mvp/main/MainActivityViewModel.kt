@@ -62,7 +62,7 @@ class MainActivityViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    fun getCalendarEvents() {
+    fun getCalendarList() {
         val FIELDS = "id,summary"
         val FEED_FIELDS = "items($FIELDS)"
 
@@ -108,7 +108,7 @@ class MainActivityViewModel : ViewModel() {
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
                     .flatMap { createdCalendar ->
-                        val entry: CalendarListEntry = createCalendarEntry(createdCalendar)
+                        val entry: CalendarListEntry = createdCalendar.createMyEntry()
                         Single.fromCallable {
                             calendarService.calendarList()
                                 .update(createdCalendar.id, entry)
@@ -132,13 +132,28 @@ class MainActivityViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    private fun createCalendarEntry(calendar: Calendar): CalendarListEntry {
-        val entry = CalendarListEntry()
-        entry.id = calendar.id
-        entry.hidden = true
-        entry.foregroundColor = "#000000"
-        entry.backgroundColor = "#d3d3d3"
-
-        return entry
+    fun getGoogleCalendarEntries(name: String) {
+        val disposable = repository.getCalendarEventsObservable(name)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result ->
+                    Log.i(TAG, "AddGoogleCalendar")
+                    Log.i(TAG, result.toString())
+                },
+                { error ->
+                    Log.e(TAG, "AddGoogleCalendar: ${error}")
+                })
+        compositeDisposable.add(disposable)
     }
+}
+
+private fun Calendar.createMyEntry(): CalendarListEntry {
+    val entry = CalendarListEntry()
+    entry.id = id
+    entry.hidden = true
+    entry.foregroundColor = "#000000"
+    entry.backgroundColor = "#d3d3d3"
+
+    return entry
 }

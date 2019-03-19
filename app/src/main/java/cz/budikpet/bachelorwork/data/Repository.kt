@@ -1,7 +1,10 @@
 package cz.budikpet.bachelorwork.data
 
 import android.content.Context
+import android.net.Uri
+import android.provider.CalendarContract
 import android.security.keystore.UserNotAuthenticatedException
+import android.util.Log
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
@@ -9,6 +12,7 @@ import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.calendar.Calendar
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
+import cz.budikpet.bachelorwork.data.models.EventType
 import cz.budikpet.bachelorwork.data.models.ItemType
 import cz.budikpet.bachelorwork.data.models.Model
 import cz.budikpet.bachelorwork.util.AppAuthManager
@@ -17,12 +21,13 @@ import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
+import java.util.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
 
 @Singleton
-class Repository @Inject constructor(context: Context) {
+class Repository @Inject constructor(private val context: Context) {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject
@@ -115,6 +120,46 @@ class Repository @Inject constructor(context: Context) {
             requestInitializer.initialize(httpRequest)
             httpRequest.connectTimeout = 3 * 60000  // 3 minutes connect timeout
             httpRequest.readTimeout = 3 * 60000  // 3 minutes read timeout
+        }
+    }
+
+    fun getCalendarEventsObservable(name: String): Observable<Model.Event> {
+        val EVENT_PROJECTION: Array<String> = arrayOf(
+            CalendarContract.Events.CALENDAR_DISPLAY_NAME,
+            CalendarContract.Events.TITLE,
+            CalendarContract.Events.DTSTART,
+            CalendarContract.Events.DTEND
+        )
+
+        val PROJECTION_DISPNAME_INDEX = 0
+        val PROJECTION_TITLE_INDEX = 1
+        val PROJECTION_DTSTART_INDEX = 2
+        val PROJECTION_DTEND_INDEX = 3
+
+        val uri: Uri = CalendarContract.Events.CONTENT_URI
+        val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_DISPLAY_NAME} = ?))"
+        val selectionArgs: Array<String> = arrayOf("${Date().time - 48*60*60*1000}", name)
+
+        return Observable.create<Model.Event> { emitter ->
+            val cur = context.contentResolver.query(uri, EVENT_PROJECTION, selection, selectionArgs, null)
+
+            // Use the cursor to step through the returned records
+            while (cur.moveToNext()) {
+                // Get the field values
+                val displayName = cur.getString(PROJECTION_DISPNAME_INDEX)
+                val title = cur.getString(PROJECTION_TITLE_INDEX)
+                val dtstart = Date(cur.getLong(PROJECTION_DTSTART_INDEX))
+                val dtend = Date(cur.getLong(PROJECTION_DTEND_INDEX))
+
+                val event = Model.Event(0, starts_at = dtstart, ends_at = dtend,
+                    event_type = EventType.COURSE_EVENT, capacity = 90, occupied = 0,
+                    links = Model.Links("TK:BS", title, arrayListOf("balikm")))
+                emitter.onNext(event)
+
+//                Log.i(TAG, " \ndisplayName: $displayName\ntitle: $title\nstart: $dtstart")
+//                Log.e(TAG, "#####################")
+            }
+            emitter.onComplete()
         }
     }
 }

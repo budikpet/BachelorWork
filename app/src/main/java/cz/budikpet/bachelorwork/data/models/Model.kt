@@ -73,7 +73,7 @@ object Model {
         val capacity: Int,
         val occupied: Int = 0,
         val event_type: EventType?,
-        val original_data: OriginalData,
+        val original_data: OriginalData? = null,
         val links: Links
     )
 
@@ -88,6 +88,6 @@ object Model {
         val room: String,
         val course: String,
         val teachers: List<String>,
-        val students: List<String>
+        val students: List<String>? = null
     )
 }

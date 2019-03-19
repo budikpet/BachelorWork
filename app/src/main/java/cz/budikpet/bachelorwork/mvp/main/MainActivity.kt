@@ -6,7 +6,9 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.content.SharedPreferences
+import android.net.Uri
 import android.os.Bundle
+import android.provider.CalendarContract
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -19,6 +21,7 @@ import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import kotlinx.android.synthetic.main.activity_main.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
+import java.util.*
 import javax.inject.Inject
 
 /**
@@ -97,8 +100,9 @@ class MainActivity : AppCompatActivity() {
         getCalendarsBtn.setOnClickListener {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             // TODO: Change
-//            mainActivityViewModel.getCalendarEvents()
-            mainActivityViewModel.addGoogleCalendar("test_BachelorWork")
+//            mainActivityViewModel.getCalendarList()
+//            mainActivityViewModel.addGoogleCalendar("used_BachelorWork")
+            mainActivityViewModel.getGoogleCalendarEntries("used_BachelorWork")
         }
     }
 
