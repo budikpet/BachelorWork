@@ -8,8 +8,8 @@ import com.google.api.services.calendar.model.Calendar
 import com.google.api.services.calendar.model.CalendarListEntry
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.Repository
-import cz.budikpet.bachelorwork.data.models.ItemType
-import cz.budikpet.bachelorwork.data.models.Model
+import cz.budikpet.bachelorwork.data.enums.ItemType
+import cz.budikpet.bachelorwork.data.models.Event
 import io.reactivex.Single
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -21,7 +21,7 @@ import javax.inject.Inject
 class MainActivityViewModel : ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
-    private val events = MutableLiveData<List<Model.Event>>()
+    private val events = MutableLiveData<List<Event>>()
 
     @Inject
     internal lateinit var repository: Repository
@@ -44,7 +44,7 @@ class MainActivityViewModel : ViewModel() {
         repository.signOut()
     }
 
-    fun getSiriusApiEvents(): LiveData<List<Model.Event>> {
+    fun getSiriusApiEvents(): LiveData<List<Event>> {
         return events
     }
 

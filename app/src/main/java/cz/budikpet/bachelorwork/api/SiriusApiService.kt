@@ -1,7 +1,8 @@
 package cz.budikpet.bachelorwork.api
 
-import cz.budikpet.bachelorwork.data.models.EventType
-import cz.budikpet.bachelorwork.data.models.Model
+import cz.budikpet.bachelorwork.data.enums.EventType
+import cz.budikpet.bachelorwork.data.models.EventsResult
+import cz.budikpet.bachelorwork.data.models.SearchResult
 import io.reactivex.Observable
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
@@ -27,7 +28,7 @@ interface SiriusApiService {
         @Query("from") from: String? = null,        // ex. 2018-3-13
         @Query("to") to: String? = null,
         @Query("with_original_date") withOriginalDate: Boolean = false
-    ): Observable<Model.EventsResult>
+    ): Observable<EventsResult>
 
     /**
      * Get events of a specific person.
@@ -44,7 +45,7 @@ interface SiriusApiService {
         @Query("from") from: String? = null,        // ex. 2018-3-13
         @Query("to") to: String? = null,
         @Query("with_original_date") withOriginalDate: Boolean = false
-    ): Observable<Model.EventsResult>
+    ): Observable<EventsResult>
 
     /**
      * Get events of a specific room.
@@ -61,7 +62,7 @@ interface SiriusApiService {
         @Query("from") from: String? = null,        // ex. 2018-3-13
         @Query("to") to: String? = null,
         @Query("with_original_date") withOriginalDate: Boolean = false
-    ): Observable<Model.EventsResult>
+    ): Observable<EventsResult>
 
     /**
      * Get events of a specific course.
@@ -78,7 +79,7 @@ interface SiriusApiService {
         @Query("from") from: String? = null,        // ex. 2018-3-13
         @Query("to") to: String? = null,
         @Query("with_original_date") withOriginalDate: Boolean = false
-    ): Observable<Model.EventsResult>
+    ): Observable<EventsResult>
 
     /**
      * Get results of a search from a query.
@@ -91,7 +92,7 @@ interface SiriusApiService {
         @Query("limit") limit: Int? = 10,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("q") query: String
-    ): Observable<Model.SearchResult>
+    ): Observable<SearchResult>
 
     companion object {
         fun create(): SiriusApiService {

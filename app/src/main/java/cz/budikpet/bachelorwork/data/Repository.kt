@@ -4,17 +4,17 @@ import android.content.Context
 import android.net.Uri
 import android.provider.CalendarContract
 import android.security.keystore.UserNotAuthenticatedException
-import android.util.Log
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.calendar.Calendar
+import com.google.gson.Gson
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
-import cz.budikpet.bachelorwork.data.models.EventType
-import cz.budikpet.bachelorwork.data.models.ItemType
-import cz.budikpet.bachelorwork.data.models.Model
+import cz.budikpet.bachelorwork.data.enums.EventType
+import cz.budikpet.bachelorwork.data.enums.ItemType
+import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.AppAuthManager
 import io.reactivex.Observable
 import io.reactivex.Single
@@ -68,9 +68,9 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Provide course, person and room events endpoints.
      *
-     * @return An observable @Model.EventsResult endpoint.
+     * @return An observable @SiriusApi.EventsResult endpoint.
      */
-    fun searchSiriusApiEvents(itemType: ItemType, id: String): Observable<Model.EventsResult> {
+    fun searchSiriusApiEvents(itemType: ItemType, id: String): Observable<EventsResult> {
         return appAuthManager.getFreshAccessToken()
             .toObservable()
             .subscribeOn(Schedulers.io())
@@ -92,7 +92,7 @@ class Repository @Inject constructor(private val context: Context) {
         accessToken: String,
         itemType: ItemType,
         id: String
-    ): Observable<Model.EventsResult> {
+    ): Observable<EventsResult> {
         return when (itemType) {
             ItemType.COURSE -> siriusApiService.getCourseEvents(accessToken = accessToken, id = id, from = "2019-3-2")
             ItemType.PERSON -> siriusApiService.getPersonEvents(accessToken = accessToken, id = id, from = "2019-3-2")
@@ -123,40 +123,52 @@ class Repository @Inject constructor(private val context: Context) {
         }
     }
 
-    fun getCalendarEventsObservable(name: String): Observable<Model.Event> {
+    fun getCalendarEventsObservable(name: String): Observable<Event> {
         val EVENT_PROJECTION: Array<String> = arrayOf(
             CalendarContract.Events.CALENDAR_DISPLAY_NAME,
             CalendarContract.Events.TITLE,
             CalendarContract.Events.DTSTART,
-            CalendarContract.Events.DTEND
+            CalendarContract.Events.DTEND,
+            CalendarContract.Events.DESCRIPTION,
+            CalendarContract.Events.EVENT_LOCATION
         )
 
         val PROJECTION_DISPNAME_INDEX = 0
         val PROJECTION_TITLE_INDEX = 1
         val PROJECTION_DTSTART_INDEX = 2
         val PROJECTION_DTEND_INDEX = 3
+        val PROJECTION_DESC_INDEX = 4
+        val PROJECTION_LOCATION_INDEX = 5
 
         val uri: Uri = CalendarContract.Events.CONTENT_URI
-        val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_DISPLAY_NAME} = ?))"
-        val selectionArgs: Array<String> = arrayOf("${Date().time - 48*60*60*1000}", name)
+        val selection =
+            "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_DISPLAY_NAME} = ?))"
+        val selectionArgs: Array<String> = arrayOf("${Date().time - 48 * 60 * 60 * 1000}", name)
 
-        return Observable.create<Model.Event> { emitter ->
-            val cur = context.contentResolver.query(uri, EVENT_PROJECTION, selection, selectionArgs, null)
+        return Observable.create<Event> { emitter ->
+            val cursor = context.contentResolver.query(uri, EVENT_PROJECTION, selection, selectionArgs, null)
 
             // Use the cursor to step through the returned records
-            while (cur.moveToNext()) {
+            while (cursor.moveToNext()) {
                 // Get the field values
-                val displayName = cur.getString(PROJECTION_DISPNAME_INDEX)
-                val title = cur.getString(PROJECTION_TITLE_INDEX)
-                val dtstart = Date(cur.getLong(PROJECTION_DTSTART_INDEX))
-                val dtend = Date(cur.getLong(PROJECTION_DTEND_INDEX))
+                val displayName = cursor.getString(PROJECTION_DISPNAME_INDEX)
+                val title = cursor.getString(PROJECTION_TITLE_INDEX)
+                val desc = cursor.getString(PROJECTION_DESC_INDEX)
+                val location = cursor.getString(PROJECTION_LOCATION_INDEX)
+                val dateStart = Date(cursor.getLong(PROJECTION_DTSTART_INDEX))
+                val dateEnd = Date(cursor.getLong(PROJECTION_DTEND_INDEX))
 
-                val event = Model.Event(0, starts_at = dtstart, ends_at = dtend,
+                val metadata = Gson().fromJson(desc, CalendarMetadata::class.java)
+
+                val event = Event(
+                    metadata.id, starts_at = dateStart, ends_at = dateEnd,
                     event_type = EventType.COURSE_EVENT, capacity = 90, occupied = 0,
-                    links = Model.Links("TK:BS", title, arrayListOf("balikm")))
+                    links = Links(location, title, metadata.teachers, metadata.students)
+                )
                 emitter.onNext(event)
 
 //                Log.i(TAG, " \ndisplayName: $displayName\ntitle: $title\nstart: $dtstart")
+//                Log.i(TAG, " \n$desc")
 //                Log.e(TAG, "#####################")
             }
             emitter.onComplete()
