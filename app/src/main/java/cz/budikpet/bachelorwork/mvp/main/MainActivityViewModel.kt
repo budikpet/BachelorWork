@@ -4,18 +4,18 @@ import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.util.Log
-import com.google.api.services.calendar.model.Calendar
-import com.google.api.services.calendar.model.CalendarListEntry
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.Repository
+import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
-import io.reactivex.Single
+import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
+import org.joda.time.DateTime
 import javax.inject.Inject
 
 class MainActivityViewModel : ViewModel() {
@@ -62,16 +62,10 @@ class MainActivityViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    fun getCalendarList() {
-        val FIELDS = "id,summary"
-        val FEED_FIELDS = "items($FIELDS)"
+    // MARK: Google Calendar
 
-        val disposable = repository.getGoogleCalendarServiceObservable()
-            .flatMap { calendar ->
-                Single.fromCallable {
-                    calendar.calendarList().list().setFields(FEED_FIELDS).execute()
-                }
-            }
+    fun getGoogleCalendarList() {
+        val disposable = repository.getGoogleCalendarList()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
@@ -89,51 +83,28 @@ class MainActivityViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    fun addGoogleCalendar(name: String) {
-        val FIELDS = "id,summary"
-        val FEED_FIELDS = "items($FIELDS)"
-
-        val calendarModel = Calendar()
-        calendarModel.summary = name
-
-        val disposable = repository.getGoogleCalendarServiceObservable()
-            .flatMap { calendarService ->
-                Log.i(TAG, "AddingCalendar")
-                Single.fromCallable {
-                    calendarService.calendars()
-                        .insert(calendarModel)
-                        .setFields(FIELDS)
-                        .execute()
-                }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
-                    .flatMap { createdCalendar ->
-                        val entry: CalendarListEntry = createdCalendar.createMyEntry()
-                        Single.fromCallable {
-                            calendarService.calendarList()
-                                .update(createdCalendar.id, entry)
-                                .setColorRgbFormat(true)
-                                .execute()
-                        }
-                    }
-            }
+    /**
+     * Gets a list of calendar display names and ids using the android calendar provider.
+     */
+    fun getLocalCalendarList() {
+        val disposable = repository.getLocalCalendarList()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
-                    Log.i(TAG, "AddGoogleCalendar")
-                    Log.i(TAG, result.summary)
+                    Log.i(TAG, "GetCalendarEvents")
+                    Log.i(TAG, "$result")
                 },
                 { error ->
-                    Log.e(TAG, "AddGoogleCalendar: ${error}")
+                    Log.e(TAG, "GetCalendarEvents: $error")
                 }
             )
 
         compositeDisposable.add(disposable)
     }
 
-    fun getGoogleCalendarEntries(name: String) {
-        val disposable = repository.getCalendarEventsObservable(name)
+    fun getGoogleCalendarEvents(name: String) {
+        val disposable = repository.getGoogleCalendarEvents(name)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
@@ -146,14 +117,28 @@ class MainActivityViewModel : ViewModel() {
                 })
         compositeDisposable.add(disposable)
     }
-}
 
-private fun Calendar.createMyEntry(): CalendarListEntry {
-    val entry = CalendarListEntry()
-    entry.id = id
-    entry.hidden = true
-    entry.foregroundColor = "#000000"
-    entry.backgroundColor = "#d3d3d3"
+    fun addSecondaryGoogleCalendar(name: String) {
+        val disposable = repository.addSecondaryGoogleCalendar(name)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                Log.i(TAG, "Calendar added successfuly.")
+            }
 
-    return entry
+        compositeDisposable.add(disposable)
+    }
+
+    fun addGoogleCalendarEvent() {
+        val dateStart = DateTime().withDate(2019, 3, 18).withTime(10, 0, 0, 0)
+        val dateEnd = DateTime().withDate(2019, 3, 18).withTime(11, 30, 0, 0)
+
+        val timetableEvent = TimetableEvent(
+            3, "T9:105", acronym = "BI-AND", capacity = 180,
+            event_type = EventType.LECTURE, fullName = "Android", teachers = arrayListOf("balikm"),
+            starts_at = dateStart, ends_at = dateEnd
+        )
+
+        repository.addGoogleCalendarEvent(3, timetableEvent)
+    }
 }

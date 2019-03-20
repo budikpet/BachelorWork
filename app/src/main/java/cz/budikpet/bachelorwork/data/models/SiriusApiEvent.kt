@@ -1,13 +1,13 @@
 package cz.budikpet.bachelorwork.data.models
 
 import cz.budikpet.bachelorwork.data.enums.EventType
-import java.util.*
+import org.joda.time.DateTime
 
 data class Event(
     val id: Int,
     val name: EventName? = null,
-    val starts_at: Date,
-    val ends_at: Date,
+    val starts_at: DateTime,
+    val ends_at: DateTime,
     val deleted: Boolean = false,
     val capacity: Int,
     val occupied: Int = 0,
@@ -18,8 +18,8 @@ data class Event(
 
 data class EventName(val cs: String? = null)
 data class OriginalData(
-    val starts_at: Date,
-    val ends_at: Date,
+    val starts_at: DateTime,
+    val ends_at: DateTime,
     val room_id: String
 )
 

@@ -97,9 +97,11 @@ class MainActivity : AppCompatActivity() {
         getCalendarsBtn.setOnClickListener {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             // TODO: Change
-//            mainActivityViewModel.getCalendarList()
-//            mainActivityViewModel.addGoogleCalendar("used_BachelorWork")
-            mainActivityViewModel.getGoogleCalendarEntries("used_BachelorWork")
+//            mainActivityViewModel.getGoogleCalendarList()
+            mainActivityViewModel.addSecondaryGoogleCalendar("used_BachelorWork2")
+//            mainActivityViewModel.getGoogleCalendarEvents("used_BachelorWork")
+//            mainActivityViewModel.getLocalCalendarList()
+//            mainActivityViewModel.addGoogleCalendarEvent()
         }
     }
 
