@@ -18,7 +18,6 @@ import com.google.api.services.calendar.model.CalendarListEntry
 import com.google.gson.Gson
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
-import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.EventsResult
 import cz.budikpet.bachelorwork.data.models.GoogleCalendarListItem
@@ -32,8 +31,8 @@ import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
+import org.joda.time.DateTimeConstants
 import java.util.*
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -173,12 +172,11 @@ class Repository @Inject constructor(private val context: Context) {
                     }
                 }
 
-                if(!refreshStarted && restarted && loopCnt >= timeout) {
+                if (!refreshStarted && restarted && loopCnt >= timeout) {
                     // Restart didn't help, throw timeout exception
                     emitter.onError(TimeoutException("Could not refresh the calendar."))
                     break
-                }
-                else if (!restarted && loopCnt >= timeout / 2) {
+                } else if (!restarted && loopCnt >= timeout / 2) {
                     // Sometimes refresh doesn't start and needs to be restarted
                     Log.i(TAG, "Restarting calendar refresh")
                     loopCnt = 0
@@ -198,6 +196,7 @@ class Repository @Inject constructor(private val context: Context) {
         val FIELDS = "id,summary"
         val FEED_FIELDS = "items($FIELDS)"
 
+        // TODO: Filter only used calendars
         return getGoogleCalendarServiceObservable()
             .flatMap { calendar ->
                 Single.fromCallable {
@@ -263,13 +262,17 @@ class Repository @Inject constructor(private val context: Context) {
         val projectionDescIndex = 4
         val projectionLocationIndex = 5
 
-        val uri: Uri = CalendarContract.Events.CONTENT_URI
-        val selection =
-            "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?))"
-        val selectionArgs: Array<String> = arrayOf("${Date().time - 48 * 60 * 60 * 1000}", "$calId")
+        val mondayDate = DateTime().withDayOfWeek(DateTimeConstants.MONDAY)
+            .withTime(0, 0, 0, 0)
 
-        return Observable.create<TimetableEvent> { emitter ->
+        val uri: Uri = CalendarContract.Events.CONTENT_URI
+        val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?))"
+
+        val selectionArgs: Array<String> = arrayOf("${mondayDate.millis}", "$calId")
+
+        val obs = Observable.create<TimetableEvent> { emitter ->
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
+            Log.i(TAG, "getGoogleCalendarEvents: received ${cursor.count}")
 
             // Use the cursor to step through the returned records
             while (cursor.moveToNext()) {
@@ -285,17 +288,20 @@ class Repository @Inject constructor(private val context: Context) {
 
                 val event = TimetableEvent(
                     metadata.id, starts_at = dateStart, ends_at = dateEnd,
-                    event_type = EventType.COURSE_EVENT, capacity = 90, occupied = 0,
-                    acronym = title, room = location, teachers = metadata.teachers,
+                    event_type = metadata.eventType, capacity = metadata.capacity,
+                    occupied = metadata.occupied, acronym = title, room = location, teachers = metadata.teachers,
                     students = metadata.students
                 )
                 emitter.onNext(event)
 
-//                Log.i(TAG, " \n$desc")
+//                Log.e(TAG, "$dateStart > $mondayDate == ${dateStart > mondayDate}")
 //                Log.e(TAG, "#####################")
             }
             emitter.onComplete()
         }
+
+        return refreshCalendars()
+            .andThen(obs)
     }
 
     /**
@@ -305,7 +311,11 @@ class Repository @Inject constructor(private val context: Context) {
      * @param event event to be added into the calendar.
      */
     fun addGoogleCalendarEvent(calId: Int, event: TimetableEvent) {
-        val calendarMetadata = GoogleCalendarMetadata(event.id, event.teachers, event.students)
+        // TODO: Make observable
+        val calendarMetadata = GoogleCalendarMetadata(
+            event.id, event.teachers, event.students, event.capacity,
+            event.occupied, event.event_type
+        )
         val timezone = TimeZone.getDefault().toString()
 
         val values = ContentValues().apply {
@@ -344,6 +354,7 @@ class Repository @Inject constructor(private val context: Context) {
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
                     .flatMap { createdCalendar ->
+                        Log.i(TAG, "Calendar created, changing its settings.")
                         val entry: CalendarListEntry = createdCalendar.createMyEntry()
                         Single.fromCallable {
                             calendarService.calendarList()

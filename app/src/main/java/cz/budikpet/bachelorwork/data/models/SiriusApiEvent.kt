@@ -1,7 +1,6 @@
 package cz.budikpet.bachelorwork.data.models
 
 import cz.budikpet.bachelorwork.data.enums.EventType
-import org.joda.time.DateTime
 import java.util.*
 
 data class Event(

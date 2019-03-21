@@ -16,6 +16,7 @@ import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
+import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 
 class MainActivityViewModel : ViewModel() {
@@ -125,8 +126,12 @@ class MainActivityViewModel : ViewModel() {
         val disposable = repository.addSecondaryGoogleCalendar(name)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .onErrorComplete { exception ->
+                Log.e(TAG, "AddSecondaryCalendar: $exception")
+                exception is TimeoutException
+            }
             .subscribe {
-                Log.i(TAG, "Calendar added successfuly.")
+                Log.i(TAG, "Calendar added successfully.")
             }
 
         compositeDisposable.add(disposable)

@@ -65,10 +65,15 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        mainActivityViewModel.onDestroy()
+        // TODO: Needs to be disposed
+//        mainActivityViewModel.onDestroy()
     }
 
     private fun initButtons() {
+        disposeBtn.setOnClickListener {
+            mainActivityViewModel.onDestroy()
+        }
+
         getEventsBtn.setOnClickListener {
             val itemType = when {
                 personRadioBtn.isChecked -> {
@@ -102,17 +107,17 @@ class MainActivity : AppCompatActivity() {
             // TODO: Change
 //            mainActivityViewModel.getGoogleCalendarList()
 //            mainActivityViewModel.addSecondaryGoogleCalendar("krbilkat_BachelorWork")
-//            mainActivityViewModel.getGoogleCalendarEvents("budikpet_BachelorWork")
 //            mainActivityViewModel.getLocalCalendarList()
+            mainActivityViewModel.getGoogleCalendarEvents(3)
 //            mainActivityViewModel.addGoogleCalendarEvent()
 //            mainActivityViewModel.updateAllCalendars()
 
-            if (test) {
-                test = false
-                mainActivityViewModel.addSecondaryGoogleCalendar("krbilkat4_BachelorWork")
-            } else {
-                mainActivityViewModel.getLocalCalendarList()
-            }
+//            if (test) {
+//                test = false
+////                mainActivityViewModel.addSecondaryGoogleCalendar("krbilkat4_BachelorWork")
+//            } else {
+//                mainActivityViewModel.getLocalCalendarList()
+//            }
         }
     }
 

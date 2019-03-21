@@ -8,7 +8,7 @@ data class TimetableEvent(
     val room: String,
     val acronym: String,
     val fullName: String = acronym,
-    val event_type: EventType?,
+    val event_type: EventType,
     val starts_at: DateTime,
     val ends_at: DateTime,
     val deleted: Boolean = false,
