@@ -64,6 +64,10 @@ class MainActivityViewModel : ViewModel() {
 
     // MARK: Google Calendar
 
+    fun updateAllCalendars() {
+
+    }
+
     fun getGoogleCalendarList() {
         val disposable = repository.getGoogleCalendarList()
             .subscribeOn(Schedulers.io())
@@ -92,7 +96,6 @@ class MainActivityViewModel : ViewModel() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
-                    Log.i(TAG, "GetCalendarEvents")
                     Log.i(TAG, "$result")
                 },
                 { error ->

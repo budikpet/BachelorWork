@@ -9,7 +9,6 @@ import net.openid.appauth.*
 import javax.inject.Inject
 import javax.inject.Singleton
 
-// TODO: Inject singleton
 /**
  * Holds information needed to authorize with OAuth 2.0 server and manage tokens.
  */

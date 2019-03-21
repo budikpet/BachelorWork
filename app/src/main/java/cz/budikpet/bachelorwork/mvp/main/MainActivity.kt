@@ -21,6 +21,7 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import javax.inject.Inject
 
+
 /**
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
@@ -94,14 +95,24 @@ class MainActivity : AppCompatActivity() {
 
         personRadioBtn.isChecked = true
 
+        var test = true
+
         getCalendarsBtn.setOnClickListener {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             // TODO: Change
 //            mainActivityViewModel.getGoogleCalendarList()
-            mainActivityViewModel.addSecondaryGoogleCalendar("used_BachelorWork2")
-//            mainActivityViewModel.getGoogleCalendarEvents("used_BachelorWork")
+//            mainActivityViewModel.addSecondaryGoogleCalendar("krbilkat_BachelorWork")
+//            mainActivityViewModel.getGoogleCalendarEvents("budikpet_BachelorWork")
 //            mainActivityViewModel.getLocalCalendarList()
 //            mainActivityViewModel.addGoogleCalendarEvent()
+//            mainActivityViewModel.updateAllCalendars()
+
+            if (test) {
+                test = false
+                mainActivityViewModel.addSecondaryGoogleCalendar("krbilkat4_BachelorWork")
+            } else {
+                mainActivityViewModel.getLocalCalendarList()
+            }
         }
     }
 
@@ -150,7 +161,8 @@ class MainActivity : AppCompatActivity() {
             Manifest.permission.READ_CONTACTS,
             Manifest.permission.WRITE_CONTACTS,
             Manifest.permission.GET_ACCOUNTS,
-            Manifest.permission.INTERNET
+            Manifest.permission.INTERNET,
+            Manifest.permission.READ_SYNC_STATS
         )
 
         requestPermissions(

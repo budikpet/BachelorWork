@@ -1,8 +1,10 @@
 package cz.budikpet.bachelorwork.data
 
+import android.content.ContentResolver
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
+import android.os.Bundle
 import android.provider.CalendarContract
 import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
@@ -31,6 +33,7 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -53,15 +56,22 @@ class Repository @Inject constructor(private val context: Context) {
     init {
         MyApplication.appComponent.inject(this)
 
-        // Calendar calendarService
         val transport = NetHttpTransport.Builder().build()
-
-//        val transport = AndroidHttp.newCompatibleTransport();
-
         calendarService = Calendar.Builder(transport, GsonFactory.getDefaultInstance(), setHttpTimeout(credential))
             .setApplicationName("BachelorWork")
             .build()
 
+    }
+
+    /**
+     * Increases timeouts for the Google service requests.
+     */
+    private fun setHttpTimeout(requestInitializer: HttpRequestInitializer): HttpRequestInitializer {
+        return HttpRequestInitializer { httpRequest ->
+            requestInitializer.initialize(httpRequest)
+            httpRequest.connectTimeout = 3 * 60000  // 3 minutes connect timeout
+            httpRequest.readTimeout = 3 * 60000  // 3 minutes read timeout
+        }
     }
 
     // MARK: Sirius API
@@ -122,14 +132,56 @@ class Repository @Inject constructor(private val context: Context) {
     }
 
     /**
-     * Increases timeouts for the Google service requests.
+     * Refreshes local copies of all calendars of the account the app is using.
+     *
+     * @return A completable which completes when the refresh finishes.
      */
-    private fun setHttpTimeout(requestInitializer: HttpRequestInitializer): HttpRequestInitializer {
-        return HttpRequestInitializer { httpRequest ->
-            requestInitializer.initialize(httpRequest)
-            httpRequest.connectTimeout = 3 * 60000  // 3 minutes connect timeout
-            httpRequest.readTimeout = 3 * 60000  // 3 minutes read timeout
-        }
+    fun refreshCalendars(): Completable {
+        val authority = CalendarContract.Calendars.CONTENT_URI.authority
+        Log.d(TAG, "Refreshing calendars for: " + credential.selectedAccount)
+
+        val extras = Bundle()
+        extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
+        extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true)
+
+        // Start refresh
+        ContentResolver.requestSync(credential.selectedAccount, authority, extras)
+
+        val timeout: Long = 30
+        return Completable.create { emitter ->
+            var refreshStarted = false  // set to true when refresh starts
+            var loopCnt = 0             // number of loops made without refresh being started
+
+            // Wait until refresh ends (when no items are being synchronized)
+            while (true) {
+                val sync = ContentResolver.getCurrentSyncs()
+                if (sync.size > 0) {
+                    for (info in sync) {
+                        if (info.account == credential.selectedAccount && info.authority == authority) {
+                            refreshStarted = true
+                            Log.i(TAG, "Calendar refresh running")
+                        }
+                    }
+                } else {
+                    if (refreshStarted) {
+                        Log.i(TAG, "Finished calendar refresh")
+                        break
+                    } else {
+                        loopCnt++
+                    }
+                }
+
+                if (!refreshStarted && loopCnt >= timeout / 2) {
+                    // Sometimes refresh doesn't start and needs to be restarted
+                    Log.i(TAG, "Restarting calendar refresh")
+                    loopCnt = 0
+                    ContentResolver.requestSync(credential.selectedAccount, authority, extras)
+                }
+
+                Thread.sleep(1000)
+            }
+            emitter.onComplete()
+        }.timeout(timeout, TimeUnit.SECONDS)
     }
 
     fun getGoogleCalendarList(): Single<CalendarList> {
@@ -158,7 +210,8 @@ class Repository @Inject constructor(private val context: Context) {
             "${CalendarContract.Events.CALENDAR_DISPLAY_NAME} LIKE ?"
         val selectionArgs: Array<String> = arrayOf("%_BachelorWork%")
 
-        return Observable.create<GoogleCalendarListItem> { emitter ->
+        val obs = Observable.create<GoogleCalendarListItem> { emitter ->
+            Log.i(TAG, "Checking local calendars")
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
 
             // Use the cursor to step through the returned records
@@ -171,6 +224,8 @@ class Repository @Inject constructor(private val context: Context) {
             }
             emitter.onComplete()
         }
+
+        return refreshCalendars().andThen(obs)
     }
 
     fun getGoogleCalendarEvents(name: String): Observable<TimetableEvent> {
@@ -260,7 +315,6 @@ class Repository @Inject constructor(private val context: Context) {
                     .subscribeOn(Schedulers.io())
                     .observeOn(Schedulers.io())
                     .flatMap { createdCalendar ->
-                        // Make the calendar hidden
                         val entry: CalendarListEntry = createdCalendar.createMyEntry()
                         Single.fromCallable {
                             calendarService.calendarList()
@@ -270,6 +324,7 @@ class Repository @Inject constructor(private val context: Context) {
                         }
                     }
             }.toCompletable()
+            .andThen(refreshCalendars())
     }
 }
 
@@ -279,7 +334,7 @@ class Repository @Inject constructor(private val context: Context) {
 fun com.google.api.services.calendar.model.Calendar.createMyEntry(): CalendarListEntry {
     val entry = CalendarListEntry()
     entry.id = id
-    entry.hidden = true
+//    entry.hidden = true
     entry.foregroundColor = "#000000"
     entry.backgroundColor = "#d3d3d3"
 
