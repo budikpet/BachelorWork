@@ -138,15 +138,27 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun addGoogleCalendarEvent() {
-        val dateStart = DateTime().withDate(2019, 3, 18).withTime(10, 0, 0, 0)
-        val dateEnd = DateTime().withDate(2019, 3, 18).withTime(11, 30, 0, 0)
+        val dateStart = DateTime().withDate(2019, 3, 20).withTime(10, 0, 0, 0)
+        val dateEnd = DateTime().withDate(2019, 3, 20).withTime(11, 30, 0, 0)
 
         val timetableEvent = TimetableEvent(
-            3, "T9:105", acronym = "BI-AND", capacity = 180,
-            event_type = EventType.LECTURE, fullName = "Android", teachers = arrayListOf("balikm"),
+            5, "T9:105", acronym = "BI-BIJ", capacity = 180,
+            event_type = EventType.LECTURE, fullName = "Bijec", teachers = arrayListOf("kalvotom"),
             starts_at = dateStart, ends_at = dateEnd
         )
 
-        repository.addGoogleCalendarEvent(3, timetableEvent)
+        val disposable = repository.addGoogleCalendarEvent(3, timetableEvent)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result ->
+                    Log.i(TAG, "addGoogleCalendarEvent")
+                    Log.i(TAG, "Event id: $result")
+                },
+                { error ->
+                    Log.e(TAG, "addGoogleCalendarEvent: ${error}")
+                })
+
+        compositeDisposable.add(disposable)
     }
 }

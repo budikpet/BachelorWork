@@ -284,6 +284,7 @@ class Repository @Inject constructor(private val context: Context) {
                 val dateStart = DateTime(cursor.getLong(projectionDTStartIndex))
                 val dateEnd = DateTime(cursor.getLong(projectionDTEndIndex))
 
+                // TODO: Check metadata if they are what they should be
                 val metadata = Gson().fromJson(desc, GoogleCalendarMetadata::class.java)
 
                 val event = TimetableEvent(
@@ -310,8 +311,7 @@ class Repository @Inject constructor(private val context: Context) {
      * @param calId id of the calendar we add event to. Received from a list of calendars using Android Calendar provider.
      * @param event event to be added into the calendar.
      */
-    fun addGoogleCalendarEvent(calId: Int, event: TimetableEvent) {
-        // TODO: Make observable
+    fun addGoogleCalendarEvent(calId: Int, event: TimetableEvent): Single<Long> {
         val calendarMetadata = GoogleCalendarMetadata(
             event.id, event.teachers, event.students, event.capacity,
             event.occupied, event.event_type
@@ -326,11 +326,11 @@ class Repository @Inject constructor(private val context: Context) {
             put(CalendarContract.Events.DESCRIPTION, Gson().toJson(calendarMetadata))
             put(CalendarContract.Events.EVENT_TIMEZONE, timezone)
         }
-        val uri: Uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
-
-        val eventID: Long = uri.lastPathSegment.toLong()
-
-        Log.i(TAG, eventID.toString())
+        return Single.fromCallable {
+            // TODO: Make safe
+            val uri: Uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
+            uri.lastPathSegment.toLong()
+        }
     }
 
     /**
