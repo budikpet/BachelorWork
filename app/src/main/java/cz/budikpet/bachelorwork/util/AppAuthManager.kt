@@ -18,8 +18,7 @@ class AppAuthManager @Inject constructor(context: Context) {
 
     private val clientId = "1932312b-4981-4224-97b1-b45ad041a4b7"
     private val redirectUri = Uri.parse("net.openid.appauthdemo:/oauth2redirect")
-    //    private val scope = "cvut:sirius:limited-by-idm:read" // TODO: Use this scope when available
-    private val scope = "cvut:sirius:personal:read"
+    private val scope = "cvut:sirius:limited-by-idm:read"
 
     private val authStateManager: AuthStateManager = AuthStateManager(context)
     private val authService: AuthorizationService
