@@ -50,7 +50,7 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun searchSiriusApiEvents(itemType: ItemType, id: String) {
-        val disposable = repository.searchSiriusApiEvents(itemType, id)
+        val disposable = repository.getSiriusEvents(itemType, id)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
@@ -66,7 +66,16 @@ class MainActivityViewModel : ViewModel() {
     // MARK: Google Calendar
 
     fun updateAllCalendars() {
+        repository.getLocalCalendarList()
+            .flatMap { calendarListItem ->
+                val name = calendarListItem.displayName.substringBefore("_")
+                repository.searchSirius(name)
+                    .flatMap { list ->
+                        repository.
+                    }
 
+                repository.getGoogleCalendarEvents(calendarListItem.id)
+            }
     }
 
     fun getGoogleCalendarList() {

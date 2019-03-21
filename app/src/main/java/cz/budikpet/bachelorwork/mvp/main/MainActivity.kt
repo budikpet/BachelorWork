@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         // Should get user list from Google Calendar, not Sirius API
         if (savedInstanceState == null) {
             // TODO: Get users name from somewhere
-//            mainActivityViewModel.searchSiriusApiEvents(ItemType.PERSON, "budikpet")
+//            mainActivityViewModel.getSiriusEvents(ItemType.PERSON, "budikpet")
         }
     }
 
@@ -108,9 +108,9 @@ class MainActivity : AppCompatActivity() {
 //            mainActivityViewModel.getGoogleCalendarList()
 //            mainActivityViewModel.addSecondaryGoogleCalendar("krbilkat_BachelorWork")
 //            mainActivityViewModel.getLocalCalendarList()
-            mainActivityViewModel.getGoogleCalendarEvents(3)
+//            mainActivityViewModel.getGoogleCalendarEvents(3)
 //            mainActivityViewModel.addGoogleCalendarEvent()
-//            mainActivityViewModel.updateAllCalendars()
+            mainActivityViewModel.updateAllCalendars()
 
 //            if (test) {
 //                test = false

@@ -19,10 +19,7 @@ import com.google.gson.Gson
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
 import cz.budikpet.bachelorwork.data.enums.ItemType
-import cz.budikpet.bachelorwork.data.models.EventsResult
-import cz.budikpet.bachelorwork.data.models.GoogleCalendarListItem
-import cz.budikpet.bachelorwork.data.models.GoogleCalendarMetadata
-import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.AppAuthManager
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -85,17 +82,30 @@ class Repository @Inject constructor(private val context: Context) {
     }
 
     /**
-     * Provide course, person and room events endpoints.
-     *
-     * @return An observable @SiriusApi.EventsResult endpoint.
+     * Uses search endpoint.
      */
-    fun searchSiriusApiEvents(itemType: ItemType, id: String): Observable<EventsResult> {
+    fun searchSirius(query: String): Observable<SearchResult> {
+        return appAuthManager.getFreshAccessToken()
+            .toObservable()
+            .observeOn(Schedulers.io())
+            .flatMap { accessToken ->
+                siriusApiService.search(accessToken, 100, query = query)
+//                    .collect({ArrayList<SearchResult>()}, {arrayList, item: SearchResult -> arrayList.add(item) } )
+            }
+    }
+
+    /**
+     * Provides events endpoints of courses, people and rooms.
+     *
+     * @return An observable @EventsResult endpoint.
+     */
+    fun getSiriusEvents(itemType: ItemType, id: String): Observable<EventsResult> {
         return appAuthManager.getFreshAccessToken()
             .toObservable()
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io()) // Observe the refreshAccessToken operation on a non-main thread.
             .flatMap { accessToken ->
-                getEventsObservable(accessToken, itemType, id)
+                getSiriusEvents(accessToken, itemType, id)
             }
     }
 
@@ -107,7 +117,7 @@ class Repository @Inject constructor(private val context: Context) {
      *
      * @return Observable SiriusApi endpoint data.
      */
-    private fun getEventsObservable(
+    private fun getSiriusEvents(
         accessToken: String,
         itemType: ItemType,
         id: String
@@ -230,7 +240,7 @@ class Repository @Inject constructor(private val context: Context) {
             while (cursor.moveToNext()) {
                 // Get the field values
                 val displayName = cursor.getString(projectionDisplayNameIndex)
-                val id = cursor.getString(projectionIdIndex)
+                val id = cursor.getInt(projectionIdIndex)
 
                 emitter.onNext(GoogleCalendarListItem(id, displayName))
             }

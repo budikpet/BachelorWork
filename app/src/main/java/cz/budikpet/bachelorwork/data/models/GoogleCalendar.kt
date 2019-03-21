@@ -11,4 +11,4 @@ data class GoogleCalendarMetadata(
     val eventType: EventType
 )
 
-data class GoogleCalendarListItem(val id: String, val displayName: String)
+data class GoogleCalendarListItem(val id: Int, val displayName: String)
