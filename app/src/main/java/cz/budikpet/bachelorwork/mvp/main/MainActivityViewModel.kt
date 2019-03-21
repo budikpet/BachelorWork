@@ -106,8 +106,8 @@ class MainActivityViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    fun getGoogleCalendarEvents(name: String) {
-        val disposable = repository.getGoogleCalendarEvents(name)
+    fun getGoogleCalendarEvents(calId: Int) {
+        val disposable = repository.getGoogleCalendarEvents(calId)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(

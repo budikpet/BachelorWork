@@ -34,6 +34,7 @@ import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import java.util.*
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -138,7 +139,6 @@ class Repository @Inject constructor(private val context: Context) {
      */
     fun refreshCalendars(): Completable {
         val authority = CalendarContract.Calendars.CONTENT_URI.authority
-        Log.d(TAG, "Refreshing calendars for: " + credential.selectedAccount)
 
         val extras = Bundle()
         extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
@@ -147,10 +147,11 @@ class Repository @Inject constructor(private val context: Context) {
         // Start refresh
         ContentResolver.requestSync(credential.selectedAccount, authority, extras)
 
-        val timeout: Long = 30
         return Completable.create { emitter ->
             var refreshStarted = false  // set to true when refresh starts
+            var restarted = false
             var loopCnt = 0             // number of loops made without refresh being started
+            val timeout: Long = 30       // how many seconds can the loop keep going
 
             // Wait until refresh ends (when no items are being synchronized)
             while (true) {
@@ -165,25 +166,34 @@ class Repository @Inject constructor(private val context: Context) {
                 } else {
                     if (refreshStarted) {
                         Log.i(TAG, "Finished calendar refresh")
+                        emitter.onComplete()
                         break
                     } else {
                         loopCnt++
                     }
                 }
 
-                if (!refreshStarted && loopCnt >= timeout / 2) {
+                if(!refreshStarted && restarted && loopCnt >= timeout) {
+                    // Restart didn't help, throw timeout exception
+                    emitter.onError(TimeoutException("Could not refresh the calendar."))
+                    break
+                }
+                else if (!restarted && loopCnt >= timeout / 2) {
                     // Sometimes refresh doesn't start and needs to be restarted
                     Log.i(TAG, "Restarting calendar refresh")
                     loopCnt = 0
+                    restarted = true
                     ContentResolver.requestSync(credential.selectedAccount, authority, extras)
                 }
 
                 Thread.sleep(1000)
             }
-            emitter.onComplete()
-        }.timeout(timeout, TimeUnit.SECONDS)
+        }
     }
 
+    /**
+     * Gets a list of calendars used by this application using Google Calendar API.
+     */
     fun getGoogleCalendarList(): Single<CalendarList> {
         val FIELDS = "id,summary"
         val FEED_FIELDS = "items($FIELDS)"
@@ -196,6 +206,9 @@ class Repository @Inject constructor(private val context: Context) {
             }
     }
 
+    /**
+     * Gets a list of calendars used by this application using Android calendar provider.
+     */
     fun getLocalCalendarList(): Observable<GoogleCalendarListItem> {
         val eventProjection: Array<String> = arrayOf(
             CalendarContract.Calendars._ID,
@@ -228,7 +241,12 @@ class Repository @Inject constructor(private val context: Context) {
         return refreshCalendars().andThen(obs)
     }
 
-    fun getGoogleCalendarEvents(name: String): Observable<TimetableEvent> {
+    /**
+     * Gets calendar events from a calendar using Android calendar provider.
+     *
+     * @param calId id of the calendar we add event to. Received from a list of calendars using Android Calendar provider.
+     */
+    fun getGoogleCalendarEvents(calId: Int): Observable<TimetableEvent> {
         val eventProjection: Array<String> = arrayOf(
             CalendarContract.Events.CALENDAR_DISPLAY_NAME,
             CalendarContract.Events.TITLE,
@@ -247,8 +265,8 @@ class Repository @Inject constructor(private val context: Context) {
 
         val uri: Uri = CalendarContract.Events.CONTENT_URI
         val selection =
-            "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_DISPLAY_NAME} = ?))"
-        val selectionArgs: Array<String> = arrayOf("${Date().time - 48 * 60 * 60 * 1000}", name)
+            "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?))"
+        val selectionArgs: Array<String> = arrayOf("${Date().time - 48 * 60 * 60 * 1000}", "$calId")
 
         return Observable.create<TimetableEvent> { emitter ->
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
@@ -280,6 +298,12 @@ class Repository @Inject constructor(private val context: Context) {
         }
     }
 
+    /**
+     * Add a new event into a calendar using Android Calendar provider.
+     *
+     * @param calId id of the calendar we add event to. Received from a list of calendars using Android Calendar provider.
+     * @param event event to be added into the calendar.
+     */
     fun addGoogleCalendarEvent(calId: Int, event: TimetableEvent) {
         val calendarMetadata = GoogleCalendarMetadata(event.id, event.teachers, event.students)
         val timezone = TimeZone.getDefault().toString()
@@ -299,6 +323,11 @@ class Repository @Inject constructor(private val context: Context) {
         Log.i(TAG, eventID.toString())
     }
 
+    /**
+     * Create and add a new secondary Google calendar using GoogleCalendar API.
+     *
+     * @param name name of the new calendar.
+     */
     fun addSecondaryGoogleCalendar(name: String): Completable {
         return getGoogleCalendarServiceObservable()
             .flatMap { calendarService ->
@@ -334,7 +363,7 @@ class Repository @Inject constructor(private val context: Context) {
 fun com.google.api.services.calendar.model.Calendar.createMyEntry(): CalendarListEntry {
     val entry = CalendarListEntry()
     entry.id = id
-//    entry.hidden = true
+    entry.hidden = false
     entry.foregroundColor = "#000000"
     entry.backgroundColor = "#d3d3d3"
 
