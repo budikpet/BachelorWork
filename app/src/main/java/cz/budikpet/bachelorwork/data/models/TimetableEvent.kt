@@ -16,4 +16,13 @@ data class TimetableEvent(
     val occupied: Int = 0,
     val teachers: ArrayList<String>,
     val students: ArrayList<String>? = null
-)
+) {
+    companion object {
+        fun from(event: Event): TimetableEvent {
+            return TimetableEvent(event.id, event.links.room, event.links.course, event_type = event.event_type,
+                starts_at = DateTime(event.starts_at), ends_at = DateTime(event.ends_at), deleted = event.deleted,
+                capacity = event.capacity, occupied = event.occupied, teachers = event.links.teachers,
+                students = event.links.students)
+        }
+    }
+}

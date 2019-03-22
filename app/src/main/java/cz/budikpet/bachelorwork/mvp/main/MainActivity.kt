@@ -59,7 +59,7 @@ class MainActivity : AppCompatActivity() {
         // Should get user list from Google Calendar, not Sirius API
         if (savedInstanceState == null) {
             // TODO: Get users name from somewhere
-//            mainActivityViewModel.getSiriusEvents(ItemType.PERSON, "budikpet")
+//            mainActivityViewModel.getSiriusEventsOf(ItemType.PERSON, "budikpet")
         }
     }
 
@@ -86,7 +86,7 @@ class MainActivity : AppCompatActivity() {
                     ItemType.ROOM
                 }
             }
-            mainActivityViewModel.searchSiriusApiEvents(itemType, providedId.text.toString())
+            mainActivityViewModel.getSiriusEventsOf(itemType, providedId.text.toString())
         }
 
         signoutBtn.setOnClickListener {

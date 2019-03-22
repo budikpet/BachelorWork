@@ -10,6 +10,7 @@ import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.schedulers.Schedulers
@@ -49,8 +50,8 @@ class MainActivityViewModel : ViewModel() {
         return events
     }
 
-    fun searchSiriusApiEvents(itemType: ItemType, id: String) {
-        val disposable = repository.getSiriusEvents(itemType, id)
+    fun getSiriusEventsOf(itemType: ItemType, id: String) {
+        val disposable = repository.getSiriusEventsOf(itemType, id)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
@@ -66,13 +67,17 @@ class MainActivityViewModel : ViewModel() {
     // MARK: Google Calendar
 
     fun updateAllCalendars() {
-        repository.getLocalCalendarList()
+        val disposable = repository.getLocalCalendarList()
             .flatMap { calendarListItem ->
-                val name = calendarListItem.displayName.substringBefore("_")
-                repository.searchSirius(name)
-                    .flatMap { list ->
-                        repository.
+                val id = calendarListItem.displayName.substringBefore("_")
+                val siriusObs = repository.searchSirius(id)
+                    .filter { searchItem -> searchItem.id == id }
+                    .flatMap { searchItem ->
+                        repository.getSiriusEventsOf(searchItem.type, searchItem.id)
                     }
+                    .flatMap { Observable.fromIterable(it.events) }
+                    .map { event -> TimetableEvent.from(event) }
+                    .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
 
                 repository.getGoogleCalendarEvents(calendarListItem.id)
             }

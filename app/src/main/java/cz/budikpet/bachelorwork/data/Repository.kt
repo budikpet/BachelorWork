@@ -50,6 +50,9 @@ class Repository @Inject constructor(private val context: Context) {
 
     private lateinit var calendarService: Calendar
 
+    private val mondayDate = DateTime().withDayOfWeek(DateTimeConstants.MONDAY)
+        .withTime(0, 0, 0, 0)
+
     init {
         MyApplication.appComponent.inject(this)
 
@@ -84,12 +87,15 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Uses search endpoint.
      */
-    fun searchSirius(query: String): Observable<SearchResult> {
+    fun searchSirius(query: String): Observable<SearchItem> {
         return appAuthManager.getFreshAccessToken()
             .toObservable()
             .observeOn(Schedulers.io())
             .flatMap { accessToken ->
                 siriusApiService.search(accessToken, 100, query = query)
+                    .flatMap { searchResult ->
+                        Observable.fromIterable(searchResult.results)
+                    }
 //                    .collect({ArrayList<SearchResult>()}, {arrayList, item: SearchResult -> arrayList.add(item) } )
             }
     }
@@ -99,13 +105,13 @@ class Repository @Inject constructor(private val context: Context) {
      *
      * @return An observable @EventsResult endpoint.
      */
-    fun getSiriusEvents(itemType: ItemType, id: String): Observable<EventsResult> {
+    fun getSiriusEventsOf(itemType: ItemType, id: String): Observable<EventsResult> {
         return appAuthManager.getFreshAccessToken()
             .toObservable()
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io()) // Observe the refreshAccessToken operation on a non-main thread.
             .flatMap { accessToken ->
-                getSiriusEvents(accessToken, itemType, id)
+                getSiriusEventsOf(accessToken, itemType, id)
             }
     }
 
@@ -117,15 +123,16 @@ class Repository @Inject constructor(private val context: Context) {
      *
      * @return Observable SiriusApi endpoint data.
      */
-    private fun getSiriusEvents(
+    private fun getSiriusEventsOf(
         accessToken: String,
         itemType: ItemType,
         id: String
     ): Observable<EventsResult> {
+        val dateString = mondayDate.toString("YYYY-MM-dd")
         return when (itemType) {
-            ItemType.COURSE -> siriusApiService.getCourseEvents(accessToken = accessToken, id = id, from = "2019-3-2")
-            ItemType.PERSON -> siriusApiService.getPersonEvents(accessToken = accessToken, id = id, from = "2019-3-2")
-            ItemType.ROOM -> siriusApiService.getRoomEvents(accessToken = accessToken, id = id, from = "2019-3-2")
+            ItemType.COURSE -> siriusApiService.getCourseEvents(accessToken = accessToken, id = id, from = dateString)
+            ItemType.PERSON -> siriusApiService.getPersonEvents(accessToken = accessToken, id = id, from = dateString)
+            ItemType.ROOM -> siriusApiService.getRoomEvents(accessToken = accessToken, id = id, from = dateString)
         }
     }
 
@@ -271,9 +278,6 @@ class Repository @Inject constructor(private val context: Context) {
         val projectionDTEndIndex = 3
         val projectionDescIndex = 4
         val projectionLocationIndex = 5
-
-        val mondayDate = DateTime().withDayOfWeek(DateTimeConstants.MONDAY)
-            .withTime(0, 0, 0, 0)
 
         val uri: Uri = CalendarContract.Events.CONTENT_URI
         val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?))"

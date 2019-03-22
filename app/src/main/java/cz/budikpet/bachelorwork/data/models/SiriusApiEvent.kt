@@ -11,7 +11,7 @@ data class Event(
     val deleted: Boolean = false,
     val capacity: Int,
     val occupied: Int = 0,
-    val event_type: EventType?,
+    val event_type: EventType,
     val original_data: OriginalData? = null,
     val links: Links
 )
@@ -26,6 +26,6 @@ data class OriginalData(
 data class Links(
     val room: String,
     val course: String,
-    val teachers: List<String>,
-    val students: List<String>? = null
+    val teachers: ArrayList<String>,
+    val students: ArrayList<String>? = null
 )
