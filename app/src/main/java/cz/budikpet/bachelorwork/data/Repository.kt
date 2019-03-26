@@ -327,7 +327,7 @@ class Repository @Inject constructor(private val context: Context) {
      */
     fun addGoogleCalendarEvent(calId: Int, event: TimetableEvent): Single<Long> {
         val calendarMetadata = GoogleCalendarMetadata(
-            event.id, event.teachers, event.students, event.capacity,
+            event.siriusId, event.teachers, event.students, event.capacity,
             event.occupied, event.event_type
         )
         val timezone = TimeZone.getDefault().toString()
