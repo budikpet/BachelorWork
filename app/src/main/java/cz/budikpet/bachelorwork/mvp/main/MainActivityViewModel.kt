@@ -9,6 +9,7 @@ import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
+import cz.budikpet.bachelorwork.data.models.GoogleCalendarListItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -22,6 +23,12 @@ import java.util.*
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 import kotlin.collections.ArrayList
+
+enum class Check() {
+    DELETE,
+    UPDATE,
+    CREATE
+}
 
 class MainActivityViewModel : ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
@@ -72,58 +79,76 @@ class MainActivityViewModel : ViewModel() {
     fun updateAllCalendars() {
         val disposable = repository.getLocalCalendarList()
             .flatMap { calendarListItem ->
-                val id = calendarListItem.displayName.substringBefore("_")
-                val siriusObs = repository.searchSirius(id)
-                    .filter { searchItem -> searchItem.id == id }
-                    .flatMap { searchItem ->
-                        repository.getSiriusEventsOf(searchItem.type, searchItem.id)
-                    }
-                    .flatMap { Observable.fromIterable(it.events) }
-                    .map { event -> TimetableEvent.from(event) }
-                    .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
-                    .map { list ->
-                        list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
-                        return@map list
-                    }.toObservable()
+                val siriusObs = getSiriusEventsList(calendarListItem)
 
-                val calendarObs = repository.getGoogleCalendarEvents(calendarListItem.id)
-                    .filter { event -> event.siriusId != null }
-                    .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
-                    .map { list ->
-                        list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
-                        return@map list
-                    }.toObservable()
+                val calendarObs = getGoogleCalendarEventsList(calendarListItem)
 
                 val updateObs = Observable.zip(siriusObs, calendarObs,
                     BiFunction { siriusEvents: ArrayList<TimetableEvent>, calendarEvents: ArrayList<TimetableEvent> ->
                         Pair(siriusEvents, calendarEvents)
                     })
                     .flatMap {
-                        Observable.create<TimetableEvent> { emitter ->
-                            for(event in it.first) {
-                                val new = it.first.minus(it.second)
-                                val delete = it.second.minus(it.first)
-                                val intersectSirius = it.first.intersect(it.second)
-                                val intersectGoogleCalendar = it.second.intersect(it.first)
+                        Observable.create<Pair<Check, List<TimetableEvent>>> { emitter ->
+                            val new = it.first.minus(it.second)
+                            val deleted = it.second.minus(it.first)
+                            val changed = it.first.intersect(it.second)
+                                .filter { it.changed }
 
-                                // Check if the events that may have changed changed
+                            // Emit events with information about what to do with them
+                            emitter.onNext(Pair(Check.CREATE, new))
+                            emitter.onNext(Pair(Check.UPDATE, changed))
+                            emitter.onNext(Pair(Check.DELETE, deleted))
 
-                                // Emit events with information about what to do with them
-
-                                emitter.onComplete()
-                            }
+                            emitter.onComplete()
                         }
                     }
 
                 return@flatMap updateObs
-            }.observeOn(Schedulers.io())
-            .subscribeOn(AndroidSchedulers.mainThread())
+            }
+            .flatMap {
+                when (it.first) {
+                    Check.CREATE -> Log.i(TAG, "Create: ${it.second.count()} ${it.second}")
+                    Check.UPDATE -> Log.i(TAG, "Update: ${it.second.count()} ${it.second}")
+                    Check.DELETE -> Log.i(TAG, "Delete: ${it.second.count()} ${it.second}")
+                }
+                Observable.fromIterable(it.second)
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
-                    Log.i(TAG, result.toString())
+                    Log.i(TAG, "Ended")
                 },
                 { error -> Log.e(TAG, "Error: ${error}") }
             )
+    }
+
+    private fun getSiriusEventsList(calendarListItem: GoogleCalendarListItem): Observable<ArrayList<TimetableEvent>> {
+        val id = calendarListItem.displayName.substringBefore("_")
+        return repository.searchSirius(id)
+            .filter { searchItem -> searchItem.id == id }
+            .flatMap { searchItem ->
+                repository.getSiriusEventsOf(searchItem.type, searchItem.id)
+            }
+            .flatMap { Observable.fromIterable(it.events) }
+            .map { event -> TimetableEvent.from(event) }
+            .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
+            .map { list ->
+                list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
+                return@map list
+            }
+            .toObservable()
+    }
+
+    private fun getGoogleCalendarEventsList(calendarListItem: GoogleCalendarListItem): Observable<ArrayList<TimetableEvent>> {
+        return repository.getGoogleCalendarEvents(calendarListItem.id)
+            .filter { event -> event.siriusId != null && !event.deleted }
+            .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
+            .map { list ->
+                list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
+                return@map list
+            }
+            .toObservable()
     }
 
     fun getGoogleCalendarList() {

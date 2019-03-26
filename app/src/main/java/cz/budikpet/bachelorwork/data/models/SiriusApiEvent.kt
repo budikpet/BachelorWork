@@ -12,7 +12,7 @@ data class Event(
     val capacity: Int,
     val occupied: Int = 0,
     val event_type: EventType,
-    val original_data: OriginalData? = null,
+    val original_data: OriginalData,
     val links: Links
 )
 

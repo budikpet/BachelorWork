@@ -280,9 +280,11 @@ class Repository @Inject constructor(private val context: Context) {
         val projectionLocationIndex = 5
 
         val uri: Uri = CalendarContract.Events.CONTENT_URI
-        val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?))"
+        val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?)" +
+                "AND (${CalendarContract.Events.DTEND} < ?))"
 
-        val selectionArgs: Array<String> = arrayOf("${mondayDate.millis}", "$calId")
+        val dateEnd = DateTime().withDate(2019, 3, 31)  // TODO: Remove
+        val selectionArgs: Array<String> = arrayOf("${mondayDate.millis}", "$calId", "${dateEnd.millis}")
 
         val obs = Observable.create<TimetableEvent> { emitter ->
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)

@@ -21,10 +21,22 @@ data class TimetableEvent(
 ) {
     companion object {
         fun from(event: Event): TimetableEvent {
-            return TimetableEvent(event.id, event.links.room, event.links.course, event_type = event.event_type,
+            return TimetableEvent(
+                event.id, event.links.room, event.links.course, event_type = event.event_type,
                 starts_at = DateTime(event.starts_at), ends_at = DateTime(event.ends_at), deleted = event.deleted,
-                changed = event.original_data != null, capacity = event.capacity, occupied = event.occupied,
-                teachers = event.links.teachers, students = event.links.students)
+                changed = hasEventChanged(event), capacity = event.capacity, occupied = event.occupied,
+                teachers = event.links.teachers, students = event.links.students
+            )
+        }
+
+        private fun hasEventChanged(event: Event): Boolean {
+            if(event.id == 521654319) { // TODO: Remove
+                return true
+            }
+
+            return event.original_data.ends_at != null ||
+                    event.original_data.starts_at != null ||
+                    event.original_data.room_id != null
         }
     }
 
@@ -33,7 +45,7 @@ data class TimetableEvent(
     }
 
     override fun equals(other: Any?): Boolean {
-        if(other is TimetableEvent) {
+        if (other is TimetableEvent) {
             return siriusId == other.siriusId
         }
 
