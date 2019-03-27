@@ -23,6 +23,7 @@ import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.AppAuthManager
 import io.reactivex.Completable
+import io.reactivex.CompletableEmitter
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
@@ -134,9 +135,24 @@ class Repository @Inject constructor(private val context: Context) {
         // TODO: Remove
         val endDateString = DateTime().withDate(2019, 3, 31).toString("YYYY-MM-dd")
         return when (itemType) {
-            ItemType.COURSE -> siriusApiService.getCourseEvents(accessToken = accessToken, id = id, from = dateString, to = endDateString)
-            ItemType.PERSON -> siriusApiService.getPersonEvents(accessToken = accessToken, id = id, from = dateString, to = endDateString)
-            ItemType.ROOM -> siriusApiService.getRoomEvents(accessToken = accessToken, id = id, from = dateString, to = endDateString)
+            ItemType.COURSE -> siriusApiService.getCourseEvents(
+                accessToken = accessToken,
+                id = id,
+                from = dateString,
+                to = endDateString
+            )
+            ItemType.PERSON -> siriusApiService.getPersonEvents(
+                accessToken = accessToken,
+                id = id,
+                from = dateString,
+                to = endDateString
+            )
+            ItemType.ROOM -> siriusApiService.getRoomEvents(
+                accessToken = accessToken,
+                id = id,
+                from = dateString,
+                to = endDateString
+            )
         }
     }
 
@@ -155,58 +171,72 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Refreshes local copies of all calendars of the account the app is using.
      *
+     * @throws TimeoutException thrown using the emitter when the refresh reaches specified timeout
      * @return A completable which completes when the refresh finishes.
      */
     fun refreshCalendars(): Completable {
-        val authority = CalendarContract.Calendars.CONTENT_URI.authority
-
-        val extras = Bundle()
-        extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
-        extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true)
-
-        // Start refresh
-        ContentResolver.requestSync(credential.selectedAccount, authority, extras)
-
         return Completable.create { emitter ->
-            var refreshStarted = false  // set to true when refresh starts
-            var restarted = false
-            var loopCnt = 0             // number of loops made without refresh being started
-            val timeout: Long = 30       // how many seconds can the loop keep going
+            // Start refresh
+            val authority = CalendarContract.Calendars.CONTENT_URI.authority
+            val extras = Bundle()
+            extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
+            extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true)
 
-            // Wait until refresh ends (when no items are being synchronized)
-            while (true) {
-                val sync = ContentResolver.getCurrentSyncs()
-                if (sync.size > 0) {
-                    for (info in sync) {
-                        if (info.account == credential.selectedAccount && info.authority == authority) {
-                            refreshStarted = true
-                            Log.i(TAG, "Calendar refresh running")
-                        }
-                    }
-                } else {
-                    if (refreshStarted) {
-                        Log.i(TAG, "Finished calendar refresh")
-                        emitter.onComplete()
-                        break
-                    } else {
-                        loopCnt++
+            ContentResolver.requestSync(credential.selectedAccount, authority, extras)
+
+            waitRefreshEnd(emitter, authority, extras)
+        }
+    }
+
+    /**
+     * Checks status of a refresh in a while loop. The loop either ends with timeout or when refresh ends.
+     */
+    private fun waitRefreshEnd(
+        emitter: CompletableEmitter,
+        authority: String?,
+        extras: Bundle
+    ) {
+        var refreshStarted = false  // set to true when refresh starts
+        var restarted = false
+        var loopCnt = 0             // number of loops made without refresh being started
+        val timeout: Long = 30       // how many loops can we make (30s when refresh started, 3s when it didn't)
+
+        Log.i(TAG, "Refresh started")
+
+        // Wait until refresh ends (when no items are being synchronized)
+        while (true) {
+            val sync = ContentResolver.getCurrentSyncs()
+            if (sync.size > 0) {
+                for (info in sync) {
+                    if (info.account == credential.selectedAccount && info.authority == authority) {
+                        refreshStarted = true
+                        Log.i(TAG, "Calendar refresh running")
                     }
                 }
-
-                if (!refreshStarted && restarted && loopCnt >= timeout) {
-                    // Restart didn't help, throw timeout exception
-                    emitter.onError(TimeoutException("Could not refresh the calendar."))
+            } else {
+                if (refreshStarted) {
+                    Log.i(TAG, "Finished calendar refresh")
+                    emitter.onComplete()
                     break
-                } else if (!restarted && loopCnt >= timeout / 2) {
-                    // Sometimes refresh doesn't start and needs to be restarted
-                    Log.i(TAG, "Restarting calendar refresh")
-                    loopCnt = 0
-                    restarted = true
-                    ContentResolver.requestSync(credential.selectedAccount, authority, extras)
+                } else {
+                    loopCnt++
                 }
-
-                Thread.sleep(1000)
             }
+
+            if (!refreshStarted && restarted && loopCnt >= timeout) {
+                // Restart didn't help, throw timeout exception
+                emitter.onError(TimeoutException("Could not refresh the calendar."))
+                break
+            } else if (!restarted && loopCnt >= timeout / 2) {
+                // Sometimes refresh doesn't start and needs to be restarted
+                Log.i(TAG, "Restarting calendar refresh")
+                loopCnt = 0
+                restarted = true
+                ContentResolver.requestSync(credential.selectedAccount, authority, extras)
+            }
+
+            // Lower sleep needed when we're waiting for refresh to start
+            Thread.sleep(if (refreshStarted) 1000 else 100)
         }
     }
 
@@ -258,7 +288,7 @@ class Repository @Inject constructor(private val context: Context) {
             emitter.onComplete()
         }
 
-        return refreshCalendars().andThen(obs)
+        return obs
     }
 
     /**
@@ -324,8 +354,7 @@ class Repository @Inject constructor(private val context: Context) {
             emitter.onComplete()
         }
 
-        return refreshCalendars()
-            .andThen(obs)
+        return obs
     }
 
     fun updateGoogleCalendarEvent(eventId: Long, event: TimetableEvent): Single<Int> {
@@ -406,7 +435,6 @@ class Repository @Inject constructor(private val context: Context) {
                         }
                     }
             }.toCompletable()
-            .andThen(refreshCalendars())
     }
 }
 

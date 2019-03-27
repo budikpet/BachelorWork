@@ -72,7 +72,9 @@ class MainActivityViewModel : ViewModel() {
     // MARK: Google Calendar
 
     fun updateAllCalendars() {
-        val disposable = repository.getLocalCalendarList()
+        val disposable = repository.refreshCalendars()
+            .observeOn(Schedulers.io())
+            .andThen(repository.getLocalCalendarList())
             .flatMapCompletable { calendarListItem ->
                 val siriusObs = getSiriusEventsList(calendarListItem)
 
@@ -83,47 +85,12 @@ class MainActivityViewModel : ViewModel() {
                         Pair(siriusEvents, calendarEvents)
                     })
                     .flatMapCompletable { pair ->
-                        val new = pair.first.minus(pair.second)
-                        val deleted = pair.second.minus(pair.first)
-                            .filter { !it.deleted }
-                        val changed = pair.first.intersect(pair.second)
-                            .filter { it.changed }
-
-                        // Get google event Ids of changed events
-                        for(event in changed) {
-                            val eventFromGoogleCalendar = pair.second.find { it.siriusId == event.siriusId }
-                            event.googleId = eventFromGoogleCalendar?.googleId
-                        }
-
-                        val createObs = Observable.fromIterable(new)
-                            .flatMap { currEvent ->
-                                repository.addGoogleCalendarEvent(calendarListItem.id, currEvent).toObservable()
-                            }
-                            .ignoreElements()
-
-                        val deleteObs = Observable.fromIterable(deleted)
-                            .map {
-                                it.deleted = true
-                                return@map it
-                            }
-                            .flatMap { currEvent ->
-                                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
-                            }
-                            .ignoreElements()
-
-
-                        val changedObs = Observable.fromIterable(changed)
-                            .flatMap { currEvent ->
-                                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
-                            }
-                            .ignoreElements()
-
-                        return@flatMapCompletable Completable.mergeArray(createObs, deleteObs, changedObs)
+                        return@flatMapCompletable getActionsCompletable(calendarListItem.id, pair)
                     }
 
                 return@flatMapCompletable updateObs
             }
-            .andThen { repository.refreshCalendars() }  // TODO: Remove?
+            .andThen(repository.refreshCalendars()) // TODO: Remove?
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
@@ -164,6 +131,50 @@ class MainActivityViewModel : ViewModel() {
                 return@map list
             }
             .toObservable()
+    }
+
+    private fun getActionsCompletable(
+        id: Int,
+        pair: Pair<ArrayList<TimetableEvent>, ArrayList<TimetableEvent>>
+    ): Completable {
+        // Sort events out into lists by what action they should be used for
+        val new = pair.first.minus(pair.second)
+        val deleted = pair.second.minus(pair.first)
+            .filter { !it.deleted }
+        val changed = pair.first.intersect(pair.second)
+            .filter { it.changed }
+
+        // Get google event Ids of changed events
+        for (event in changed) {
+            val eventFromGoogleCalendar = pair.second.find { it.siriusId == event.siriusId }
+            event.googleId = eventFromGoogleCalendar?.googleId
+        }
+
+        // Create action observables
+        val createObs = Observable.fromIterable(new)
+            .flatMap { currEvent ->
+                repository.addGoogleCalendarEvent(id, currEvent).toObservable()
+            }
+            .ignoreElements()
+
+        val deleteObs = Observable.fromIterable(deleted)
+            .map {
+                it.deleted = true
+                return@map it
+            }
+            .flatMap { currEvent ->
+                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
+            }
+            .ignoreElements()
+
+
+        val changedObs = Observable.fromIterable(changed)
+            .flatMap { currEvent ->
+                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
+            }
+            .ignoreElements()
+
+        return Completable.mergeArray(createObs, deleteObs, changedObs)
     }
 
     fun getGoogleCalendarList() {
@@ -239,7 +250,7 @@ class MainActivityViewModel : ViewModel() {
         val dateEnd = DateTime().withDate(2019, 3, 20).withTime(11, 30, 0, 0)
 
         val timetableEvent = TimetableEvent(
-            5, null,"T9:105", acronym = "BI-BIJ", capacity = 180,
+            5, null, "T9:105", acronym = "BI-BIJ", capacity = 180,
             event_type = EventType.LECTURE, fullName = "Bijec", teachers = arrayListOf("kalvotom"),
             starts_at = dateStart, ends_at = dateEnd
         )
