@@ -11,6 +11,7 @@ import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.data.models.GoogleCalendarListItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -23,12 +24,6 @@ import java.util.*
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 import kotlin.collections.ArrayList
-
-enum class Check() {
-    DELETE,
-    UPDATE,
-    CREATE
-}
 
 class MainActivityViewModel : ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
@@ -78,7 +73,7 @@ class MainActivityViewModel : ViewModel() {
 
     fun updateAllCalendars() {
         val disposable = repository.getLocalCalendarList()
-            .flatMap { calendarListItem ->
+            .flatMapCompletable { calendarListItem ->
                 val siriusObs = getSiriusEventsList(calendarListItem)
 
                 val calendarObs = getGoogleCalendarEventsList(calendarListItem)
@@ -87,40 +82,54 @@ class MainActivityViewModel : ViewModel() {
                     BiFunction { siriusEvents: ArrayList<TimetableEvent>, calendarEvents: ArrayList<TimetableEvent> ->
                         Pair(siriusEvents, calendarEvents)
                     })
-                    .flatMap {
-                        Observable.create<Pair<Check, List<TimetableEvent>>> { emitter ->
-                            val new = it.first.minus(it.second)
-                            val deleted = it.second.minus(it.first)
-                            val changed = it.first.intersect(it.second)
-                                .filter { it.changed }
+                    .flatMapCompletable { pair ->
+                        val new = pair.first.minus(pair.second)
+                        val deleted = pair.second.minus(pair.first)
+                            .filter { !it.deleted }
+                        val changed = pair.first.intersect(pair.second)
+                            .filter { it.changed }
 
-                            // Emit events with information about what to do with them
-                            emitter.onNext(Pair(Check.CREATE, new))
-                            emitter.onNext(Pair(Check.UPDATE, changed))
-                            emitter.onNext(Pair(Check.DELETE, deleted))
+                        val createObs = Observable.fromIterable(new)
+                            .flatMap { currEvent ->
+                                repository.addGoogleCalendarEvent(calendarListItem.id, currEvent).toObservable()
+                            }
+                            .ignoreElements()
 
-                            emitter.onComplete()
-                        }
+                        val deleteObs = Observable.fromIterable(deleted)
+                            .map {
+                                it.deleted = true
+                                return@map it
+                            }
+                            .flatMap { currEvent ->
+                                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
+                            }
+                            .ignoreElements()
+
+
+                        val changedObs = Observable.fromIterable(changed)
+                            .flatMap { currEvent ->
+                                repository.updateGoogleCalendarEvent(28, currEvent).toObservable()
+                            }
+                            .ignoreElements()
+
+                        return@flatMapCompletable Completable.mergeArray(createObs, deleteObs, changedObs)
                     }
 
-                return@flatMap updateObs
+                return@flatMapCompletable updateObs
             }
-            .flatMap {
-                when (it.first) {
-                    Check.CREATE -> Log.i(TAG, "Create: ${it.second.count()} ${it.second}")
-                    Check.UPDATE -> Log.i(TAG, "Update: ${it.second.count()} ${it.second}")
-                    Check.DELETE -> Log.i(TAG, "Delete: ${it.second.count()} ${it.second}")
-                }
-                Observable.fromIterable(it.second)
-            }
+            .andThen { repository.refreshCalendars() }  // TODO: Remove?
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { result ->
-                    Log.i(TAG, "Ended")
-                },
-                { error -> Log.e(TAG, "Error: ${error}") }
-            )
+            .onErrorComplete { exception ->
+                Log.e(TAG, "Update: $exception")
+                exception is TimeoutException
+            }
+            .subscribe {
+                Log.i(TAG, "Update done")
+            }
+
+
+        compositeDisposable.add(disposable)
     }
 
     private fun getSiriusEventsList(calendarListItem: GoogleCalendarListItem): Observable<ArrayList<TimetableEvent>> {
@@ -131,6 +140,7 @@ class MainActivityViewModel : ViewModel() {
                 repository.getSiriusEventsOf(searchItem.type, searchItem.id)
             }
             .flatMap { Observable.fromIterable(it.events) }
+            .filter { !it.deleted }
             .map { event -> TimetableEvent.from(event) }
             .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
             .map { list ->
@@ -224,7 +234,7 @@ class MainActivityViewModel : ViewModel() {
         val dateEnd = DateTime().withDate(2019, 3, 20).withTime(11, 30, 0, 0)
 
         val timetableEvent = TimetableEvent(
-            5, "T9:105", acronym = "BI-BIJ", capacity = 180,
+            5, null,"T9:105", acronym = "BI-BIJ", capacity = 180,
             event_type = EventType.LECTURE, fullName = "Bijec", teachers = arrayListOf("kalvotom"),
             starts_at = dateStart, ends_at = dateEnd
         )

@@ -6,13 +6,14 @@ import java.util.*
 
 data class TimetableEvent(
     val siriusId: Int?,
+    val googleId: Long? = null,
     val room: String,
     val acronym: String,
     val fullName: String = acronym,
     val event_type: EventType,
     val starts_at: DateTime,
     val ends_at: DateTime,
-    val deleted: Boolean = false,
+    var deleted: Boolean = false,
     val changed: Boolean = false,
     val capacity: Int,
     val occupied: Int = 0,
@@ -22,7 +23,7 @@ data class TimetableEvent(
     companion object {
         fun from(event: Event): TimetableEvent {
             return TimetableEvent(
-                event.id, event.links.room, event.links.course, event_type = event.event_type,
+                event.id, room = event.links.room, acronym = event.links.course, event_type = event.event_type,
                 starts_at = DateTime(event.starts_at), ends_at = DateTime(event.ends_at), deleted = event.deleted,
                 changed = hasEventChanged(event), capacity = event.capacity, occupied = event.occupied,
                 teachers = event.links.teachers, students = event.links.students

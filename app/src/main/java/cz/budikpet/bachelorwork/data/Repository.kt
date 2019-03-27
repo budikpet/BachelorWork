@@ -1,6 +1,7 @@
 package cz.budikpet.bachelorwork.data
 
 import android.content.ContentResolver
+import android.content.ContentUris
 import android.content.ContentValues
 import android.content.Context
 import android.net.Uri
@@ -129,10 +130,13 @@ class Repository @Inject constructor(private val context: Context) {
         id: String
     ): Observable<EventsResult> {
         val dateString = mondayDate.toString("YYYY-MM-dd")
+
+        // TODO: Remove
+        val endDateString = DateTime().withDate(2019, 3, 31).toString("YYYY-MM-dd")
         return when (itemType) {
-            ItemType.COURSE -> siriusApiService.getCourseEvents(accessToken = accessToken, id = id, from = dateString)
-            ItemType.PERSON -> siriusApiService.getPersonEvents(accessToken = accessToken, id = id, from = dateString)
-            ItemType.ROOM -> siriusApiService.getRoomEvents(accessToken = accessToken, id = id, from = dateString)
+            ItemType.COURSE -> siriusApiService.getCourseEvents(accessToken = accessToken, id = id, from = dateString, to = endDateString)
+            ItemType.PERSON -> siriusApiService.getPersonEvents(accessToken = accessToken, id = id, from = dateString, to = endDateString)
+            ItemType.ROOM -> siriusApiService.getRoomEvents(accessToken = accessToken, id = id, from = dateString, to = endDateString)
         }
     }
 
@@ -269,7 +273,8 @@ class Repository @Inject constructor(private val context: Context) {
             CalendarContract.Events.DTSTART,
             CalendarContract.Events.DTEND,
             CalendarContract.Events.DESCRIPTION,
-            CalendarContract.Events.EVENT_LOCATION
+            CalendarContract.Events.EVENT_LOCATION,
+            CalendarContract.Events._ID
         )
 
         val projectionDisplayNameIndex = 0
@@ -278,6 +283,7 @@ class Repository @Inject constructor(private val context: Context) {
         val projectionDTEndIndex = 3
         val projectionDescIndex = 4
         val projectionLocationIndex = 5
+        val projectionIdIndex = 6
 
         val uri: Uri = CalendarContract.Events.CONTENT_URI
         val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?)" +
@@ -299,15 +305,16 @@ class Repository @Inject constructor(private val context: Context) {
                 val location = cursor.getString(projectionLocationIndex)
                 val dateStart = DateTime(cursor.getLong(projectionDTStartIndex))
                 val dateEnd = DateTime(cursor.getLong(projectionDTEndIndex))
+                val id = cursor.getLong(projectionIdIndex)
 
                 // TODO: Check metadata if they are what they should be
                 val metadata = Gson().fromJson(desc, GoogleCalendarMetadata::class.java)
 
                 val event = TimetableEvent(
-                    metadata.id, starts_at = dateStart, ends_at = dateEnd,
+                    metadata.id, googleId = id, starts_at = dateStart, ends_at = dateEnd,
                     event_type = metadata.eventType, capacity = metadata.capacity,
                     occupied = metadata.occupied, acronym = title, room = location, teachers = metadata.teachers,
-                    students = metadata.students
+                    students = metadata.students, deleted = metadata.deleted
                 )
                 emitter.onNext(event)
 
@@ -319,6 +326,25 @@ class Repository @Inject constructor(private val context: Context) {
 
         return refreshCalendars()
             .andThen(obs)
+    }
+
+    fun updateGoogleCalendarEvent(eventId: Long, event: TimetableEvent): Single<Int> {
+        val calendarMetadata = GoogleCalendarMetadata(
+            event.siriusId, event.teachers, event.students, event.capacity,
+            event.occupied, event.event_type, deleted = event.deleted
+        )
+        val values = ContentValues().apply {
+            put(CalendarContract.Events.TITLE, event.acronym)
+            put(CalendarContract.Events.DTSTART, event.starts_at.millis)
+            put(CalendarContract.Events.DTEND, event.ends_at.millis)
+            put(CalendarContract.Events.DESCRIPTION, Gson().toJson(calendarMetadata))
+        }
+        val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
+        return Single.fromCallable {
+            val rows: Int = context.contentResolver.update(updateUri, values, null, null)
+            Log.i(TAG, "Rows updated: $rows")
+            return@fromCallable rows
+        }
     }
 
     /**
