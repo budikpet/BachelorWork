@@ -71,8 +71,43 @@ class MainActivityViewModel : ViewModel() {
 
     // MARK: Google Calendar
 
+    fun firstCalendarsUpdate() {
+        val disposable = updateAllCalendarsFlow()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorComplete { exception ->
+                Log.e(TAG, "Update: $exception")
+                exception is TimeoutException
+            }
+            .subscribe {
+                Log.i(TAG, "Update done")
+            }
+
+        compositeDisposable.add(disposable)
+    }
+
     fun updateAllCalendars() {
-        val disposable = repository.refreshCalendars()
+        val disposable = updateAllCalendarsFlow()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorComplete { exception ->
+                Log.e(TAG, "Update: $exception")
+                exception is TimeoutException
+            }
+            .subscribe {
+                Log.i(TAG, "Update done")
+            }
+
+        compositeDisposable.add(disposable)
+    }
+
+    /**
+     * General flow which updates all used calendars.
+     *
+     * Gets Sirius API events of all saved calendars and updates them.
+     */
+    private fun updateAllCalendarsFlow(): Completable {
+        return repository.refreshCalendars()
             .observeOn(Schedulers.io())
             .andThen(repository.getLocalCalendarList())
             .flatMapCompletable { calendarListItem ->
@@ -91,19 +126,12 @@ class MainActivityViewModel : ViewModel() {
                 return@flatMapCompletable updateObs
             }
             .andThen(repository.refreshCalendars()) // TODO: Remove?
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .onErrorComplete { exception ->
-                Log.e(TAG, "Update: $exception")
-                exception is TimeoutException
-            }
-            .subscribe {
-                Log.i(TAG, "Update done")
-            }
-
-        compositeDisposable.add(disposable)
     }
 
+    /**
+     * Gets Sirius API events of the selected calendar.
+     * @return An observable holding a list of TimetableEvents.
+     */
     private fun getSiriusEventsList(calendarListItem: GoogleCalendarListItem): Observable<ArrayList<TimetableEvent>> {
         val id = calendarListItem.displayName.substringBefore("_")
         return repository.searchSirius(id)
@@ -122,6 +150,10 @@ class MainActivityViewModel : ViewModel() {
             .toObservable()
     }
 
+    /**
+     * Gets events from the selected Google calendar.
+     * @return An observable holding a list of TimetableEvents.
+     */
     private fun getGoogleCalendarEventsList(calendarListItem: GoogleCalendarListItem): Observable<ArrayList<TimetableEvent>> {
         return repository.getGoogleCalendarEvents(calendarListItem.id)
             .filter { event -> event.siriusId != null && !event.deleted }
@@ -133,8 +165,14 @@ class MainActivityViewModel : ViewModel() {
             .toObservable()
     }
 
+    /**
+     * Creates and uses completables to update a calendar.
+     *
+     * @param pair a pair containing a list of events from Sirius and a list of events from Google Calendar
+     * @param calendarId an id of the calendar to update
+     */
     private fun getActionsCompletable(
-        id: Int,
+        calendarId: Int,
         pair: Pair<ArrayList<TimetableEvent>, ArrayList<TimetableEvent>>
     ): Completable {
         // Sort events out into lists by what action they should be used for
@@ -144,7 +182,7 @@ class MainActivityViewModel : ViewModel() {
         val changed = pair.first.intersect(pair.second)
             .filter { it.changed }
 
-        // Get google event Ids of changed events
+        // Get google event IDs of changed events
         for (event in changed) {
             val eventFromGoogleCalendar = pair.second.find { it.siriusId == event.siriusId }
             event.googleId = eventFromGoogleCalendar?.googleId
@@ -153,7 +191,7 @@ class MainActivityViewModel : ViewModel() {
         // Create action observables
         val createObs = Observable.fromIterable(new)
             .flatMap { currEvent ->
-                repository.addGoogleCalendarEvent(id, currEvent).toObservable()
+                repository.addGoogleCalendarEvent(calendarId, currEvent).toObservable()
             }
             .ignoreElements()
 
@@ -174,6 +212,7 @@ class MainActivityViewModel : ViewModel() {
             }
             .ignoreElements()
 
+        // Create a completable which starts all actions
         return Completable.mergeArray(createObs, deleteObs, changedObs)
     }
 

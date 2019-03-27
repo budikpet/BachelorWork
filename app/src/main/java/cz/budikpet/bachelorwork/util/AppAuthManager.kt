@@ -20,6 +20,9 @@ class AppAuthManager @Inject constructor(context: Context) {
     private val redirectUri = Uri.parse("net.openid.appauthdemo:/oauth2redirect")
     private val scope = "cvut:sirius:limited-by-idm:read"
 
+    private val authEndpoint = "https://auth.fit.cvut.cz/oauth/authorize"
+    private val tokenEndpoint = "https://auth.fit.cvut.cz/oauth/token"
+
     private val authStateManager: AuthStateManager = AuthStateManager(context)
     private val authService: AuthorizationService
     val authRequest: AuthorizationRequest
@@ -29,8 +32,8 @@ class AppAuthManager @Inject constructor(context: Context) {
         if (authStateManager.authState!!.authorizationServiceConfiguration == null) {
             Log.i(TAG, "auth config needs to be established")
             val serviceConfig = AuthorizationServiceConfiguration(
-                Uri.parse("https://auth.fit.cvut.cz/oauth/authorize"), // authorization endpoint
-                Uri.parse("https://auth.fit.cvut.cz/oauth/token") // token endpoint
+                Uri.parse(authEndpoint), // authorization endpoint
+                Uri.parse(tokenEndpoint) // token endpoint
             )
             authStateManager.authState = AuthState(serviceConfig)
         }

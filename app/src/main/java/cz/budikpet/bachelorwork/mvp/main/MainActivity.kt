@@ -163,8 +163,6 @@ class MainActivity : AppCompatActivity() {
         val array: Array<String> = arrayOf(
             Manifest.permission.READ_CALENDAR,
             Manifest.permission.WRITE_CALENDAR,
-            Manifest.permission.READ_CONTACTS,
-            Manifest.permission.WRITE_CONTACTS,
             Manifest.permission.GET_ACCOUNTS,
             Manifest.permission.INTERNET,
             Manifest.permission.READ_SYNC_STATS
@@ -198,6 +196,8 @@ class MainActivity : AppCompatActivity() {
             editor.putString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), accountName)
             editor.apply()
             credential.selectedAccountName = accountName
+
+            mainActivityViewModel.firstCalendarsUpdate()
         }
     }
 }
