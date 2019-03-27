@@ -6,7 +6,7 @@ import java.util.*
 
 data class TimetableEvent(
     val siriusId: Int?,
-    val googleId: Long? = null,
+    var googleId: Long? = null,
     val room: String,
     val acronym: String,
     val fullName: String = acronym,

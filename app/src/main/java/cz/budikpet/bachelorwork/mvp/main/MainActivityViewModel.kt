@@ -89,6 +89,12 @@ class MainActivityViewModel : ViewModel() {
                         val changed = pair.first.intersect(pair.second)
                             .filter { it.changed }
 
+                        // Get google event Ids of changed events
+                        for(event in changed) {
+                            val eventFromGoogleCalendar = pair.second.find { it.siriusId == event.siriusId }
+                            event.googleId = eventFromGoogleCalendar?.googleId
+                        }
+
                         val createObs = Observable.fromIterable(new)
                             .flatMap { currEvent ->
                                 repository.addGoogleCalendarEvent(calendarListItem.id, currEvent).toObservable()
@@ -108,7 +114,7 @@ class MainActivityViewModel : ViewModel() {
 
                         val changedObs = Observable.fromIterable(changed)
                             .flatMap { currEvent ->
-                                repository.updateGoogleCalendarEvent(28, currEvent).toObservable()
+                                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
                             }
                             .ignoreElements()
 
@@ -127,7 +133,6 @@ class MainActivityViewModel : ViewModel() {
             .subscribe {
                 Log.i(TAG, "Update done")
             }
-
 
         compositeDisposable.add(disposable)
     }
