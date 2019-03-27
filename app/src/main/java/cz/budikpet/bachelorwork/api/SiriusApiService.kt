@@ -20,7 +20,7 @@ interface SiriusApiService {
     @GET("events")
     fun getEvents(
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 10,
+        @Query("limit") limit: Int? = 100,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("include") include: String? = null,
         @Query("event_type") event_type: EventType? = null,
@@ -33,11 +33,11 @@ interface SiriusApiService {
     /**
      * Get events of a specific person.
      */
-    @GET("people/{username}/events")
+    @GET("people/{username}/events")        // username = budikpet (case-sensitive)
     fun getPersonEvents(
         @Path("username") id: String,
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 10,
+        @Query("limit") limit: Int? = 100,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("include") include: String? = null,
         @Query("event_type") event_type: EventType? = null,
@@ -50,11 +50,11 @@ interface SiriusApiService {
     /**
      * Get events of a specific room.
      */
-    @GET("rooms/{kosId}/events")    // kosId = "TH:A-1231"
+    @GET("rooms/{kosId}/events")    // kosId = "TH:A-1231" (case-sensitive)
     fun getRoomEvents(
         @Path("kosId") id: String,
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 10,
+        @Query("limit") limit: Int? = 100,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("include") include: String? = null,
         @Query("event_type") event_type: EventType? = null,
@@ -67,11 +67,11 @@ interface SiriusApiService {
     /**
      * Get events of a specific course.
      */
-    @GET("courses/{courseCode}/events")   // courseCode = BI-PA1
+    @GET("courses/{courseCode}/events")   // courseCode = BI-PA1 (case-sensitive)
     fun getCourseEvents(
         @Path("courseCode") id: String,
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 10,
+        @Query("limit") limit: Int? = 100,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("include") include: String? = null,
         @Query("event_type") event_type: EventType? = null,
@@ -89,7 +89,7 @@ interface SiriusApiService {
     @GET("search")
     fun search(
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 10,    // <1; 1000>
+        @Query("limit") limit: Int? = 100,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("q") query: String
     ): Observable<SearchResult>
