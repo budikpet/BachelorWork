@@ -249,10 +249,7 @@ class MainActivityViewModel : ViewModel() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
-                    Log.i(TAG, "GetCalendarEvents")
-                    for (item in result.items) {
-                        Log.i(TAG, "Name: ${item.summary}")
-                    }
+                    Log.i(TAG, "CalendarName: ${result.summary}")
                 },
                 { error ->
                     Log.e(TAG, "GetCalendarEvents: $error")

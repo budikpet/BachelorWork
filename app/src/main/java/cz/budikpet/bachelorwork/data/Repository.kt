@@ -14,7 +14,6 @@ import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.calendar.Calendar
-import com.google.api.services.calendar.model.CalendarList
 import com.google.api.services.calendar.model.CalendarListEntry
 import com.google.gson.Gson
 import cz.budikpet.bachelorwork.MyApplication
@@ -54,7 +53,14 @@ class Repository @Inject constructor(private val context: Context) {
     @Inject
     internal lateinit var credential: GoogleAccountCredential
 
-    private lateinit var calendarService: Calendar
+    private val calendarService: Calendar
+        get() {
+            if (credential.selectedAccountName != null) {
+                return field
+            } else {
+                throw UserNotAuthenticatedException()
+            }
+        }
 
     private val mondayDate = DateTime().withDayOfWeek(DateTimeConstants.MONDAY)
         .withTime(0, 0, 0, 0)
@@ -166,16 +172,6 @@ class Repository @Inject constructor(private val context: Context) {
 
     // MARK: Google Calendar API
 
-    fun getGoogleCalendarServiceObservable(): Single<Calendar> {
-        return Single.create<Calendar> { emitter ->
-            if (credential.selectedAccountName != null) {
-                emitter.onSuccess(calendarService)
-            } else {
-                emitter.onError(UserNotAuthenticatedException())
-            }
-        }
-    }
-
     /**
      * Refreshes local copies of all calendars of the account the app is using.
      *
@@ -249,19 +245,20 @@ class Repository @Inject constructor(private val context: Context) {
     }
 
     /**
-     * Gets a list of calendars used by this application using Google Calendar API.
+     * Gets a list of calendars used by the application using Google Calendar API.
      */
-    fun getGoogleCalendarList(): Single<CalendarList> {
-        val FIELDS = "id,summary"
+    fun getGoogleCalendarList(): Observable<CalendarListEntry> {
+        val FIELDS = "summary,hidden"
         val FEED_FIELDS = "items($FIELDS)"
 
         // TODO: Filter only used calendars
-        return getGoogleCalendarServiceObservable()
-            .flatMap { calendar ->
-                Single.fromCallable {
-                    calendar.calendarList().list().setFields(FEED_FIELDS).execute()
-                }
-            }
+        return Single.fromCallable {
+            calendarService.calendarList().list()
+                .setFields(FEED_FIELDS).setShowHidden(true).setMaxResults(240)
+                .execute()
+        }
+            .flatMapObservable { Observable.fromIterable(it.items) }
+            .filter { it.summary.contains(MyApplication.calendarsName) }
     }
 
     /**
@@ -416,31 +413,29 @@ class Repository @Inject constructor(private val context: Context) {
      * @param name name of the new calendar.
      */
     fun addSecondaryGoogleCalendar(name: String): Completable {
-        return getGoogleCalendarServiceObservable()
-            .flatMap { calendarService ->
-                Single.fromCallable {
-                    // Create the calendar
-                    val calendarModel = com.google.api.services.calendar.model.Calendar()
-                    calendarModel.summary = name
+        return Single.fromCallable {
+            // Create the calendar
+            val calendarModel = com.google.api.services.calendar.model.Calendar()
+            calendarModel.summary = name
 
-                    calendarService.calendars()
-                        .insert(calendarModel)
-                        .setFields("id,summary")
+            calendarService.calendars()
+                .insert(calendarModel)
+                .setFields("id,summary")
+                .execute()
+        }
+            .subscribeOn(Schedulers.io())
+            .observeOn(Schedulers.io())
+            .flatMap { createdCalendar ->
+                Log.i(TAG, "Calendar created, changing its settings.")
+                val entry: CalendarListEntry = createdCalendar.createMyEntry()
+                Single.fromCallable {
+                    calendarService.calendarList()
+                        .update(createdCalendar.id, entry)
+                        .setColorRgbFormat(true)
                         .execute()
                 }
-                    .subscribeOn(Schedulers.io())
-                    .observeOn(Schedulers.io())
-                    .flatMap { createdCalendar ->
-                        Log.i(TAG, "Calendar created, changing its settings.")
-                        val entry: CalendarListEntry = createdCalendar.createMyEntry()
-                        Single.fromCallable {
-                            calendarService.calendarList()
-                                .update(createdCalendar.id, entry)
-                                .setColorRgbFormat(true)
-                                .execute()
-                        }
-                    }
-            }.toCompletable()
+            }
+            .toCompletable()
     }
 }
 
