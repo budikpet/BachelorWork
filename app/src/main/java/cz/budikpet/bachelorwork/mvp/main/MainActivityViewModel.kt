@@ -5,6 +5,7 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.content.SharedPreferences
 import android.util.Log
+import com.google.api.services.calendar.model.CalendarListEntry
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.EventType
@@ -48,12 +49,20 @@ class MainActivityViewModel : ViewModel() {
         compositeDisposable.clear()
     }
 
+    /**
+     * Checks whether a user is fully authorized in Sirius API.
+     *
+     * If the user isn't fully authorized, authorization code exchange proceeds.
+     *
+     * If the user is fully authorized, tokens are refreshed.
+     */
     fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
         val disposable = repository.checkAuthorization(response, exception)
             .observeOn(Schedulers.io())
             .flatMapObservable { accessToken -> repository.getLoggedUserInfo(accessToken) }
             .flatMapCompletable { userInfo ->
-                if (sharedPreferences.contains(SharedPreferencesKeys.SIRIUS_USERNAME.toString())) {
+                if (!sharedPreferences.contains(SharedPreferencesKeys.SIRIUS_USERNAME.toString())) {
+                    // Store the Sirius username
                     val editor = sharedPreferences.edit()
                     editor.putString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), userInfo.username)
                     editor.apply()
@@ -64,7 +73,7 @@ class MainActivityViewModel : ViewModel() {
             .observeOn(Schedulers.io())
             .subscribeOn(Schedulers.io())
             .onErrorComplete { exception ->
-                Log.e(TAG, "Update: $exception")
+                Log.e(TAG, "Authorization: $exception")
                 false
             }
             .subscribe {
@@ -82,6 +91,12 @@ class MainActivityViewModel : ViewModel() {
         return events
     }
 
+    /**
+     * Uses Sirius API to get events of the specified thing.
+     *
+     * @param id identification of the item whose events we want.
+     * @param itemType type of the item whose events we want.
+     */
     fun getSiriusEventsOf(itemType: ItemType, id: String) {
         val disposable = repository.getSiriusEventsOf(itemType, id)
             .subscribeOn(Schedulers.io())
@@ -98,44 +113,14 @@ class MainActivityViewModel : ViewModel() {
 
     // MARK: Google Calendar
 
-    fun firstCalendarsUpdate() {
-        val disposable = updateAllCalendarsFlow()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .onErrorComplete { exception ->
-                Log.e(TAG, "Update: $exception")
-                exception is TimeoutException
-            }
-            .subscribe {
-                Log.i(TAG, "Update done")
-            }
-
-        compositeDisposable.add(disposable)
-    }
-
-    fun updateAllCalendars() {
-        val disposable = updateAllCalendarsFlow()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .onErrorComplete { exception ->
-                Log.e(TAG, "Update: $exception")
-                exception is TimeoutException
-            }
-            .subscribe {
-                Log.i(TAG, "Update done")
-            }
-
-        compositeDisposable.add(disposable)
-    }
-
     /**
-     * General flow which updates all used calendars.
-     *
-     * Gets Sirius API events of all saved calendars and updates them.
+     * Updates all calendars used by the application with data from Sirius API.
      */
-    private fun updateAllCalendarsFlow(): Completable {
-        return repository.refreshCalendars()
+    fun updateAllCalendars() {
+        val disposable = repository.getGoogleCalendarList()
             .observeOn(Schedulers.io())
+            .flatMapCompletable { calendarsCheck(it) }
+            .andThen(repository.refreshCalendars())
             .andThen(repository.getLocalCalendarList())
             .flatMapCompletable { calendarListItem ->
                 val siriusObs = getSiriusEventsList(calendarListItem)
@@ -153,6 +138,52 @@ class MainActivityViewModel : ViewModel() {
                 return@flatMapCompletable updateObs
             }
             .andThen(repository.refreshCalendars()) // TODO: Remove?
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorComplete { exception ->
+                Log.e(TAG, "Update: $exception")
+                exception is TimeoutException
+            }
+            .subscribe {
+                Log.i(TAG, "Update done")
+            }
+
+        compositeDisposable.add(disposable)
+    }
+
+    /**
+     * Checks Google Calendar list for calendars that are hidden and for the missing personal calendar.
+     */
+    private fun calendarsCheck(calendars: MutableList<CalendarListEntry>): Completable {
+        val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
+        val personalCalendarName = "${username}_${MyApplication.calendarsName}"
+        var personalCalendarFound = false
+        var hiddenCalendars = mutableListOf<CalendarListEntry>()
+
+        for (calendar in calendars) {
+            if (calendar.hidden != null) {
+                // Calendars that the app is using mustn't be hidden
+                calendar.hidden = false
+                hiddenCalendars.add(calendar)
+            }
+
+            if (calendar.summary == personalCalendarName) {
+                personalCalendarFound = true
+            }
+        }
+
+        var completable = Observable.fromIterable(hiddenCalendars)
+            .flatMapCompletable { entry ->
+                repository.updateGoogleCalendarList(entry)
+                    .toCompletable()
+            }
+
+        if (!personalCalendarFound) {
+            Log.i(TAG, "Creating personal calendar: $personalCalendarName")
+            completable = completable.andThen(repository.addSecondaryGoogleCalendar(personalCalendarName))
+        }
+
+        return completable
     }
 
     /**
@@ -249,7 +280,9 @@ class MainActivityViewModel : ViewModel() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
-                    Log.i(TAG, "CalendarName: ${result.summary}")
+                    for (calendar in result) {
+                        Log.i(TAG, "CalendarName: ${calendar.summary}")
+                    }
                 },
                 { error ->
                     Log.e(TAG, "GetCalendarEvents: $error")

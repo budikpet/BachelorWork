@@ -8,6 +8,9 @@ import retrofit2.converter.gson.GsonConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 
+/**
+ * Special endpoints of the Sirius APIs authentication server.
+ */
 interface SiriusAuthApiService {
 
     /***

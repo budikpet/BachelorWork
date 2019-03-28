@@ -188,7 +188,7 @@ class MainActivity : AppCompatActivity() {
             editor.apply()
             credential.selectedAccountName = accountName
 
-            mainActivityViewModel.firstCalendarsUpdate()
+            mainActivityViewModel.updateAllCalendars()
         }
     }
 }

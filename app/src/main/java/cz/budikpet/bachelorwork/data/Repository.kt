@@ -247,8 +247,8 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Gets a list of calendars used by the application using Google Calendar API.
      */
-    fun getGoogleCalendarList(): Observable<CalendarListEntry> {
-        val FIELDS = "summary,hidden"
+    fun getGoogleCalendarList(): Single<MutableList<CalendarListEntry>> {
+        val FIELDS = "id,summary,hidden"
         val FEED_FIELDS = "items($FIELDS)"
 
         // TODO: Filter only used calendars
@@ -259,6 +259,11 @@ class Repository @Inject constructor(private val context: Context) {
         }
             .flatMapObservable { Observable.fromIterable(it.items) }
             .filter { it.summary.contains(MyApplication.calendarsName) }
+            .toList()
+    }
+
+    fun updateGoogleCalendarList(entry: CalendarListEntry): Single<CalendarListEntry> {
+        return Single.fromCallable { calendarService.calendarList().update(entry.id, entry).execute() }
     }
 
     /**
