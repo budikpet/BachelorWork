@@ -18,9 +18,9 @@ data class Event(
 
 data class EventName(val cs: String? = null)
 data class OriginalData(
-    val starts_at: Date,
-    val ends_at: Date,
-    val room_id: String
+    val starts_at: Date?,
+    val ends_at: Date?,
+    val room_id: String?
 )
 
 data class Links(

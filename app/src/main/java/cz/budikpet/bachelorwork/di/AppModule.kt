@@ -5,6 +5,7 @@ import android.content.SharedPreferences
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.services.calendar.CalendarScopes
 import cz.budikpet.bachelorwork.api.SiriusApiService
+import cz.budikpet.bachelorwork.api.SiriusAuthApiService
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import dagger.Module
 import dagger.Provides
@@ -29,8 +30,13 @@ internal class AppModule(private val context: Context) {
 
     @Provides
     @Singleton
+    fun providesSiriusAuthApiService(): SiriusAuthApiService {
+        return SiriusAuthApiService.create()
+    }
+
+    @Provides
+    @Singleton
     fun providesSharedPreferences(): SharedPreferences {
-        // TODO: Should name be equal to username?
         return context.getSharedPreferences("Pref", Context.MODE_PRIVATE)
     }
 

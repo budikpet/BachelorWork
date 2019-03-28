@@ -3,6 +3,7 @@ package cz.budikpet.bachelorwork.mvp.main
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
+import android.content.SharedPreferences
 import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.Repository
@@ -11,6 +12,7 @@ import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.data.models.GoogleCalendarListItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -33,6 +35,9 @@ class MainActivityViewModel : ViewModel() {
     @Inject
     internal lateinit var repository: Repository
 
+    @Inject
+    internal lateinit var sharedPreferences: SharedPreferences
+
     private var compositeDisposable = CompositeDisposable()
 
     init {
@@ -44,7 +49,29 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
-        repository.checkAuthorization(response, exception)
+        val disposable = repository.checkAuthorization(response, exception)
+            .observeOn(Schedulers.io())
+            .flatMapObservable { accessToken -> repository.getLoggedUserInfo(accessToken) }
+            .flatMapCompletable { userInfo ->
+                if (sharedPreferences.contains(SharedPreferencesKeys.SIRIUS_USERNAME.toString())) {
+                    val editor = sharedPreferences.edit()
+                    editor.putString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), userInfo.username)
+                    editor.apply()
+                }
+
+                Completable.complete()
+            }
+            .observeOn(Schedulers.io())
+            .subscribeOn(Schedulers.io())
+            .onErrorComplete { exception ->
+                Log.e(TAG, "Update: $exception")
+                false
+            }
+            .subscribe {
+                Log.i(TAG, "Fully authorized & tokens restored.")
+            }
+
+        compositeDisposable.add(disposable)
     }
 
     fun signOut() {

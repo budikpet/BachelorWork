@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     internal lateinit var credential: GoogleAccountCredential
 
     @Inject
-    internal lateinit var preferences: SharedPreferences
+    internal lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -100,24 +100,15 @@ class MainActivity : AppCompatActivity() {
 
         personRadioBtn.isChecked = true
 
-        var test = true
-
         getCalendarsBtn.setOnClickListener {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             // TODO: Change
 //            mainActivityViewModel.getGoogleCalendarList()
-//            mainActivityViewModel.addSecondaryGoogleCalendar("krbilkat_BachelorWork")
+//            mainActivityViewModel.addSecondaryGoogleCalendar("budikpet_${MyApplication.calendarsName}")
 //            mainActivityViewModel.getLocalCalendarList()
 //            mainActivityViewModel.getGoogleCalendarEvents(3)
 //            mainActivityViewModel.addGoogleCalendarEvent()
             mainActivityViewModel.updateAllCalendars()
-
-//            if (test) {
-//                test = false
-////                mainActivityViewModel.addSecondaryGoogleCalendar("krbilkat4_BachelorWork")
-//            } else {
-//                mainActivityViewModel.getLocalCalendarList()
-//            }
         }
     }
 
@@ -144,15 +135,15 @@ class MainActivity : AppCompatActivity() {
     // MARK: Google account
 
     private fun checkGoogleLogin() {
-        if (preferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), null) == null) {
+        if (sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), null) == null) {
             // Ask a user to log into a Google account once after he logged into CTU
             // TODO: Enable
-//            if(!preferences.getBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), false)) {
+//            if(!sharedPreferences.getBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), false)) {
             // Ask a user to log into a Google account
             Log.i(TAG, "Logging into Google")
             checkPermissions()
 
-            val editor = preferences.edit()
+            val editor = sharedPreferences.edit()
             editor.putBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), true)
             editor.apply()
 //            }
@@ -192,7 +183,7 @@ class MainActivity : AppCompatActivity() {
         if (requestCode == CODE_GOOGLE_LOGIN) {
             // Store google account name
             val accountName = data?.extras!!.getString(AccountManager.KEY_ACCOUNT_NAME)
-            val editor = preferences.edit()
+            val editor = sharedPreferences.edit()
             editor.putString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), accountName)
             editor.apply()
             credential.selectedAccountName = accountName

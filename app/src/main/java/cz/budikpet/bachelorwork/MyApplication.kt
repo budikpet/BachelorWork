@@ -10,6 +10,7 @@ class MyApplication : Application() {
 
     companion object {
         internal lateinit var appComponent: AppComponent
+        val calendarsName = "BachelorWork"
     }
 
     override fun onCreate() {

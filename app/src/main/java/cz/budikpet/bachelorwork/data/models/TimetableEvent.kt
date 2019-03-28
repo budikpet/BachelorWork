@@ -31,10 +31,6 @@ data class TimetableEvent(
         }
 
         private fun hasEventChanged(event: Event): Boolean {
-            if(event.id == 521654319) { // TODO: Remove
-                return true
-            }
-
             return event.original_data.ends_at != null ||
                     event.original_data.starts_at != null ||
                     event.original_data.room_id != null

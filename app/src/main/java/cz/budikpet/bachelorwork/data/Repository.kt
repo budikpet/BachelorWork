@@ -19,6 +19,7 @@ import com.google.api.services.calendar.model.CalendarListEntry
 import com.google.gson.Gson
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
+import cz.budikpet.bachelorwork.api.SiriusAuthApiService
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.AppAuthManager
@@ -48,6 +49,9 @@ class Repository @Inject constructor(private val context: Context) {
     internal lateinit var siriusApiService: SiriusApiService
 
     @Inject
+    internal lateinit var siriusAuthApiService: SiriusAuthApiService
+
+    @Inject
     internal lateinit var credential: GoogleAccountCredential
 
     private lateinit var calendarService: Calendar
@@ -60,7 +64,7 @@ class Repository @Inject constructor(private val context: Context) {
 
         val transport = NetHttpTransport.Builder().build()
         calendarService = Calendar.Builder(transport, GsonFactory.getDefaultInstance(), setHttpTimeout(credential))
-            .setApplicationName("BachelorWork")
+            .setApplicationName(MyApplication.calendarsName)
             .build()
 
     }
@@ -78,8 +82,12 @@ class Repository @Inject constructor(private val context: Context) {
 
     // MARK: Sirius API
 
-    fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
-        appAuthManager.checkAuthorization(response, exception)
+    fun getLoggedUserInfo(accessToken: String): Observable<AuthUserInfo> {
+        return siriusAuthApiService.getUserInfo(accessToken)
+    }
+
+    fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?): Single<String> {
+        return appAuthManager.checkAuthorization(response, exception)
     }
 
     fun signOut() {
@@ -271,9 +279,9 @@ class Repository @Inject constructor(private val context: Context) {
         val uri: Uri = CalendarContract.Calendars.CONTENT_URI
         val selection =
             "${CalendarContract.Events.CALENDAR_DISPLAY_NAME} LIKE ?"
-        val selectionArgs: Array<String> = arrayOf("%_BachelorWork%")
+        val selectionArgs: Array<String> = arrayOf("%_${MyApplication.calendarsName}%")
 
-        val obs = Observable.create<GoogleCalendarListItem> { emitter ->
+        return Observable.create { emitter ->
             Log.i(TAG, "Checking local calendars")
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
 
@@ -287,8 +295,6 @@ class Repository @Inject constructor(private val context: Context) {
             }
             emitter.onComplete()
         }
-
-        return obs
     }
 
     /**

@@ -5,6 +5,7 @@ import android.net.Uri
 import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import io.reactivex.Single
+import io.reactivex.SingleEmitter
 import net.openid.appauth.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -17,6 +18,7 @@ class AppAuthManager @Inject constructor(context: Context) {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     private val clientId = "1932312b-4981-4224-97b1-b45ad041a4b7"
+    private val clientSecret = "eMaDK7iPVDlC09mb70pRc4OMIja37nQY"
     private val redirectUri = Uri.parse("net.openid.appauthdemo:/oauth2redirect")
     private val scope = "cvut:sirius:limited-by-idm:read"
 
@@ -72,12 +74,12 @@ class AppAuthManager @Inject constructor(context: Context) {
         authStateManager.authState = clearedState
     }
 
-    fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
-        if (isAuthorized()) {
+    fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?): Single<String> {
+        return if (isAuthorized()) {
             Log.i(TAG, "Already authorized.")
             startRefreshAccessToken()
         } else {
-            Log.i(TAG, "Not authorized")
+            Log.i(TAG, "Not yet authorized")
             startAuthCodeExchange(response, exception)
         }
     }
@@ -132,21 +134,27 @@ class AppAuthManager @Inject constructor(context: Context) {
      * We received data from the authorization server.
      *
      */
-    fun startAuthCodeExchange(response: AuthorizationResponse?, exception: AuthorizationException?) {
+    private fun startAuthCodeExchange(
+        response: AuthorizationResponse?,
+        exception: AuthorizationException?
+    ): Single<String> {
         // We need to complete the authState
 
-        if (response != null || exception != null) {
-            authStateManager.updateAfterAuthorization(response, exception)
-        }
+        return Single.create { emitter ->
+            if (response != null || exception != null) {
+                authStateManager.updateAfterAuthorization(response, exception)
+            }
 
-        if (response?.authorizationCode != null) {
-            // authorization code exchange is required
-            authStateManager.updateAfterAuthorization(response, exception)
-            exchangeAuthorizationCode(response)
-        } else if (exception != null) {
-            Log.e(TAG, "Authorization flow failed: " + exception.message)
-        } else {
-            Log.e(TAG, "No authorization state retained - reauthorization required")
+            if (response?.authorizationCode != null) {
+                // authorization code exchange is required
+                authStateManager.updateAfterAuthorization(response, exception)
+                exchangeAuthorizationCode(response, emitter)
+            } else if (exception != null) {
+                Log.e(TAG, "Authorization flow failed: " + exception.message)
+                emitter.onError(exception)
+            } else {
+                emitter.onError(UserNotAuthenticatedException("No authorization state retained - reauthorization required"))
+            }
         }
     }
 
@@ -154,7 +162,8 @@ class AppAuthManager @Inject constructor(context: Context) {
      * We received authorization code which needs to be exchanged for tokens.
      */
     private fun exchangeAuthorizationCode(
-        authorizationResponse: AuthorizationResponse
+        authorizationResponse: AuthorizationResponse,
+        emitter: SingleEmitter<String>
     ) {
         Log.i(TAG, "Exchanging authorization code")
 
@@ -163,7 +172,8 @@ class AppAuthManager @Inject constructor(context: Context) {
             AuthorizationService.TokenResponseCallback { tokenResponse, authException ->
                 this.handleCodeExchangeResponse(
                     tokenResponse,
-                    authException
+                    authException,
+                    emitter
                 )
             })
     }
@@ -174,7 +184,7 @@ class AppAuthManager @Inject constructor(context: Context) {
     ) {
 
         // FIT OAuth2 provider requires ClientSecret in Basic Authentication Header
-        val clientAuthentication = ClientSecretBasic("eMaDK7iPVDlC09mb70pRc4OMIja37nQY")
+        val clientAuthentication = ClientSecretBasic(clientSecret)
 
         authService.performTokenRequest(
             request,
@@ -185,7 +195,8 @@ class AppAuthManager @Inject constructor(context: Context) {
 
     private fun handleCodeExchangeResponse(
         tokenResponse: TokenResponse?,
-        authException: AuthorizationException?
+        authException: AuthorizationException?,
+        emitter: SingleEmitter<String>
     ) {
 
         authStateManager.updateAfterTokenResponse(tokenResponse, authException)
@@ -194,11 +205,12 @@ class AppAuthManager @Inject constructor(context: Context) {
             val message = "Authorization Code exchange failed" + if (authException != null) authException.error else ""
 
             // WrongThread inference is incorrect for lambdas
-            Log.e(TAG, message)
+            emitter.onError(UserNotAuthenticatedException(message))
         } else {
             // The Authorization Code exchange was successful
             Log.i(TAG, "AccessToken: ${getAccessToken()}")
             Log.i(TAG, "RefreshToken: ${authStateManager.authState?.refreshToken}")
+            emitter.onSuccess(getAccessToken()!!)
         }
     }
 
