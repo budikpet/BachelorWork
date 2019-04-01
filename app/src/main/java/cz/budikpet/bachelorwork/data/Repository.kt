@@ -148,8 +148,7 @@ class Repository @Inject constructor(private val context: Context) {
     ): Observable<EventsResult> {
         val dateString = mondayDate.toString("YYYY-MM-dd")
 
-        // TODO: Remove
-        val endDateString = mondayDate.plusDays(7).toString("YYYY-MM-dd")
+        val endDateString = mondayDate.plusDays(7).toString("YYYY-MM-dd")   // TODO: Remove
         return when (itemType) {
             ItemType.COURSE -> siriusApiService.getCourseEvents(
                 accessToken = accessToken,
@@ -328,7 +327,7 @@ class Repository @Inject constructor(private val context: Context) {
         val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?)" +
                 "AND (${CalendarContract.Events.DTEND} < ?))"
 
-        val dateEnd = DateTime().withDate(2019, 3, 31)  // TODO: Remove
+        val dateEnd = mondayDate.plusDays(7)  // TODO: Remove
         val selectionArgs: Array<String> = arrayOf("${mondayDate.millis}", "$calId", "${dateEnd.millis}")
 
         val obs = Observable.create<TimetableEvent> { emitter ->

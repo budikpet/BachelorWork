@@ -24,7 +24,6 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import java.util.*
-import java.util.concurrent.TimeoutException
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
@@ -139,12 +138,12 @@ class MainActivityViewModel : ViewModel() {
 
                 return@flatMapCompletable updateObs
             }
-            .andThen(repository.refreshCalendars()) // TODO: Remove?
+            .andThen(repository.refreshCalendars()) // TODO: Unnecessary refresh?
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
                 Log.e(TAG, "Update: $exception")
-                exception is TimeoutException
+                true   // TODO: Show error toast
             }
             .subscribe {
                 Log.i(TAG, "Update done")
@@ -334,7 +333,7 @@ class MainActivityViewModel : ViewModel() {
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
                 Log.e(TAG, "AddSecondaryCalendar: $exception")
-                exception is TimeoutException
+                true   // TODO: Show error toast
             }
             .subscribe {
                 Log.i(TAG, "Calendar added successfully.")
@@ -388,6 +387,10 @@ class MainActivityViewModel : ViewModel() {
         val disposable = repository.unsharePersonalCalendar(email)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .onErrorComplete { exception ->
+                Log.e(TAG, "Unshare: $exception")
+                true   // TODO: Show error toast
+            }
             .subscribe {
                 Log.i(TAG, "Calendar unshared successfully.")
             }
