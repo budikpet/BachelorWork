@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork.mvp.ctuLogin
+package cz.budikpet.bachelorwork.screens.ctuLogin
 
 import android.app.PendingIntent
 import android.content.Intent
@@ -6,7 +6,7 @@ import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
-import cz.budikpet.bachelorwork.mvp.main.MainActivity
+import cz.budikpet.bachelorwork.screens.main.MainActivity
 import cz.budikpet.bachelorwork.util.AppAuthManager
 import net.openid.appauth.AuthorizationService
 import javax.inject.Inject

@@ -1,9 +1,9 @@
 package cz.budikpet.bachelorwork.di
 
 import cz.budikpet.bachelorwork.data.Repository
-import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
-import cz.budikpet.bachelorwork.mvp.main.MainActivity
-import cz.budikpet.bachelorwork.mvp.main.MainActivityViewModel
+import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
+import cz.budikpet.bachelorwork.screens.main.MainActivity
+import cz.budikpet.bachelorwork.screens.main.MainActivityViewModel
 import dagger.Component
 import javax.inject.Singleton
 

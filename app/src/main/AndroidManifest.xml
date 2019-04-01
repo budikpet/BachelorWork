@@ -25,9 +25,9 @@
             android:supportsRtl="true"
             android:theme="@style/AppTheme"
             android:name=".MyApplication">
-        <activity android:name=".mvp.main.MainActivity">
+        <activity android:name=".screens.main.MainActivity">
         </activity>
-        <activity android:name=".mvp.ctuLogin.CTULoginActivity">
+        <activity android:name=".screens.ctuLogin.CTULoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN"/>
 

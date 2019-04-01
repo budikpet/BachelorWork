@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork.mvp.main
+package cz.budikpet.bachelorwork.screens.main
 
 import android.Manifest
 import android.accounts.AccountManager
@@ -14,7 +14,7 @@ import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
-import cz.budikpet.bachelorwork.mvp.ctuLogin.CTULoginActivity
+import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import kotlinx.android.synthetic.main.activity_main.*
 import net.openid.appauth.AuthorizationException
@@ -65,7 +65,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // TODO: Needs to be disposed
+        // TODO: Need to test disposing
         mainActivityViewModel.onDestroy()
     }
 
@@ -139,8 +139,8 @@ class MainActivity : AppCompatActivity() {
     private fun checkGoogleLogin() {
         if (sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), null) == null) {
             // Ask a user to log into a Google account once after he logged into CTU
-            // TODO: Enable
-//            if(!sharedPreferences.getBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), false)) {
+            // TODO: Make better permissions check
+            if(!sharedPreferences.getBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), false)) {
             // Ask a user to log into a Google account
             Log.i(TAG, "Logging into Google")
             checkPermissions()
@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
             val editor = sharedPreferences.edit()
             editor.putBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), true)
             editor.apply()
-//            }
+            }
         }
     }
 

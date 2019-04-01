@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork.mvp.main
+package cz.budikpet.bachelorwork.screens.main
 
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
