@@ -66,7 +66,7 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         // TODO: Needs to be disposed
-//        mainActivityViewModel.onDestroy()
+        mainActivityViewModel.onDestroy()
     }
 
     private fun initButtons() {
@@ -109,6 +109,8 @@ class MainActivity : AppCompatActivity() {
 //            mainActivityViewModel.getGoogleCalendarEvents(3)
 //            mainActivityViewModel.addGoogleCalendarEvent()
             mainActivityViewModel.updateAllCalendars()
+//            mainActivityViewModel.sharePersonalCalendar("sgt.petrov@gmail.com")
+//            mainActivityViewModel.unsharePersonalCalendar("sgt.petrov@gmail.com")
         }
     }
 

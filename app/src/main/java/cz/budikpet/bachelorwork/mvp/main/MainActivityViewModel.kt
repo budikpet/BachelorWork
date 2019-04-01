@@ -117,6 +117,8 @@ class MainActivityViewModel : ViewModel() {
      * Updates all calendars used by the application with data from Sirius API.
      */
     fun updateAllCalendars() {
+        compositeDisposable.clear()
+
         val disposable = repository.getGoogleCalendarList()
             .observeOn(Schedulers.io())
             .flatMapCompletable { calendarsCheck(it) }
@@ -360,8 +362,35 @@ class MainActivityViewModel : ViewModel() {
                     Log.i(TAG, "Event id: $result")
                 },
                 { error ->
-                    Log.e(TAG, "addGoogleCalendarEvent: ${error}")
+                    Log.e(TAG, "addGoogleCalendarEvent: $error")
                 })
+
+        compositeDisposable.add(disposable)
+    }
+
+    fun sharePersonalCalendar(email: String) {
+        val disposable = repository.sharePersonalCalendar(email)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result ->
+                    Log.i(TAG, "sharePersonalCalendar")
+                    Log.i(TAG, "ACL: $result")
+                },
+                { error ->
+                    Log.e(TAG, "sharePersonalCalendar: $error")
+                })
+
+        compositeDisposable.add(disposable)
+    }
+
+    fun unsharePersonalCalendar(email: String) {
+        val disposable = repository.unsharePersonalCalendar(email)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe {
+                Log.i(TAG, "Calendar unshared successfully.")
+            }
 
         compositeDisposable.add(disposable)
     }

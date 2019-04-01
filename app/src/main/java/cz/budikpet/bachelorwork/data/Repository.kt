@@ -1,9 +1,6 @@
 package cz.budikpet.bachelorwork.data
 
-import android.content.ContentResolver
-import android.content.ContentUris
-import android.content.ContentValues
-import android.content.Context
+import android.content.*
 import android.net.Uri
 import android.os.Bundle
 import android.provider.CalendarContract
@@ -14,6 +11,7 @@ import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.calendar.Calendar
+import com.google.api.services.calendar.model.AclRule
 import com.google.api.services.calendar.model.CalendarListEntry
 import com.google.gson.Gson
 import cz.budikpet.bachelorwork.MyApplication
@@ -22,6 +20,7 @@ import cz.budikpet.bachelorwork.api.SiriusAuthApiService
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.AppAuthManager
+import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import io.reactivex.Completable
 import io.reactivex.CompletableEmitter
 import io.reactivex.Observable
@@ -52,6 +51,9 @@ class Repository @Inject constructor(private val context: Context) {
 
     @Inject
     internal lateinit var credential: GoogleAccountCredential
+
+    @Inject
+    internal lateinit var sharedPreferences: SharedPreferences
 
     private val calendarService: Calendar
         get() {
@@ -147,7 +149,7 @@ class Repository @Inject constructor(private val context: Context) {
         val dateString = mondayDate.toString("YYYY-MM-dd")
 
         // TODO: Remove
-        val endDateString = DateTime().withDate(2019, 3, 31).toString("YYYY-MM-dd")
+        val endDateString = mondayDate.plusDays(7).toString("YYYY-MM-dd")
         return when (itemType) {
             ItemType.COURSE -> siriusApiService.getCourseEvents(
                 accessToken = accessToken,
@@ -251,7 +253,6 @@ class Repository @Inject constructor(private val context: Context) {
         val FIELDS = "id,summary,hidden"
         val FEED_FIELDS = "items($FIELDS)"
 
-        // TODO: Filter only used calendars
         return Single.fromCallable {
             calendarService.calendarList().list()
                 .setFields(FEED_FIELDS).setShowHidden(true).setMaxResults(240)
@@ -441,6 +442,48 @@ class Repository @Inject constructor(private val context: Context) {
                 }
             }
             .toCompletable()
+    }
+
+    fun sharePersonalCalendar(email: String): Single<AclRule> {
+        val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
+        val calendarName = "${username}_${MyApplication.calendarsName}"
+
+        // Create access rule with associated scope
+        val rule = AclRule()
+        val scope = AclRule.Scope()
+        scope.setType("user").value = email
+        rule.setScope(scope).role = "reader"
+
+        return getGoogleCalendar(calendarName)
+            .flatMap { calendar ->
+                Single.fromCallable {
+                    return@fromCallable calendarService.acl().insert(calendar.id, rule).setSendNotifications(false)
+                        .execute()
+                }
+            }
+    }
+
+    fun unsharePersonalCalendar(email: String): Completable {
+        val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
+        val calendarName = "${username}_${MyApplication.calendarsName}"
+
+        val ruleId = "user:$email"
+
+        return getGoogleCalendar(calendarName)
+            .flatMapCompletable { calendar ->
+                Completable.fromCallable {
+                    calendarService.acl().delete(calendar.id, ruleId).execute();
+                }
+            }
+    }
+
+    private fun getGoogleCalendar(calendarName: String): Single<CalendarListEntry> {
+        return getGoogleCalendarList()
+            .flatMapObservable { calendarList ->
+                Observable.fromIterable(calendarList)
+            }
+            .filter { it.summary == calendarName }
+            .singleOrError()
     }
 }
 
