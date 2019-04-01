@@ -104,7 +104,7 @@ class MainActivity : AppCompatActivity() {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             // TODO: Change
 //            mainActivityViewModel.getGoogleCalendarList()
-//            mainActivityViewModel.addSecondaryGoogleCalendar("budikpet_${MyApplication.calendarsName}")
+//            mainActivityViewModel.addSecondaryGoogleCalendar("T9:350_${MyApplication.calendarsName}")
 //            mainActivityViewModel.getLocalCalendarList()
 //            mainActivityViewModel.getGoogleCalendarEvents(3)
 //            mainActivityViewModel.addGoogleCalendarEvent()

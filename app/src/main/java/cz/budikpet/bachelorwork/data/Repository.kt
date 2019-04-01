@@ -14,6 +14,7 @@ import com.google.api.services.calendar.Calendar
 import com.google.api.services.calendar.model.AclRule
 import com.google.api.services.calendar.model.CalendarListEntry
 import com.google.gson.Gson
+import com.google.gson.JsonSyntaxException
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
 import cz.budikpet.bachelorwork.api.SiriusAuthApiService
@@ -345,8 +346,14 @@ class Repository @Inject constructor(private val context: Context) {
                 val dateEnd = DateTime(cursor.getLong(projectionDTEndIndex))
                 val id = cursor.getLong(projectionIdIndex)
 
-                // TODO: Check metadata if they are what they should be
-                val metadata = Gson().fromJson(desc, GoogleCalendarMetadata::class.java)
+                // Get and check metadata
+                var metadata = GoogleCalendarMetadata()
+                try {
+                    metadata = Gson().fromJson(desc, GoogleCalendarMetadata::class.java)
+                } catch (e: JsonSyntaxException) {
+                    // When error occurs, default metadata is used which makes the faulty event deleted
+                    Log.e(TAG, "Metadata error: $e")
+                }
 
                 val event = TimetableEvent(
                     metadata.id, googleId = id, starts_at = dateStart, ends_at = dateEnd,
@@ -355,9 +362,6 @@ class Repository @Inject constructor(private val context: Context) {
                     students = metadata.students, deleted = metadata.deleted
                 )
                 emitter.onNext(event)
-
-//                Log.e(TAG, "$dateStart > $mondayDate == ${dateStart > mondayDate}")
-//                Log.e(TAG, "#####################")
             }
             emitter.onComplete()
         }

@@ -215,7 +215,7 @@ class MainActivityViewModel : ViewModel() {
      */
     private fun getGoogleCalendarEventsList(calendarListItem: GoogleCalendarListItem): Observable<ArrayList<TimetableEvent>> {
         return repository.getGoogleCalendarEvents(calendarListItem.id)
-            .filter { event -> event.siriusId != null && !event.deleted }
+            .filter { event -> event.siriusId != null && !event.deleted }   // TODO: Move to methods that use the list?
             .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
             .map { list ->
                 list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
@@ -260,6 +260,7 @@ class MainActivityViewModel : ViewModel() {
                 return@map it
             }
             .flatMap { currEvent ->
+                // TODO: Update deleted status of events with SiriusID, delete the rest
                 repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
             }
             .ignoreElements()

@@ -16,7 +16,9 @@ enum class EventType() {
     @SerializedName("tutorial")
     TUTORIAL,
     @SerializedName("teacher_timetable_slot")
-    TEACHER_TIMETABLE_SLOT;
+    TEACHER_TIMETABLE_SLOT,
+    @SerializedName("other")
+    OTHER;
 
     override fun toString(): String {
         return super.toString().toLowerCase()
