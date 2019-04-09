@@ -19,6 +19,7 @@ import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import kotlinx.android.synthetic.main.activity_main.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
+import pub.devrel.easypermissions.EasyPermissions
 import javax.inject.Inject
 
 /**
@@ -161,12 +162,15 @@ class MainActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         Log.i(TAG, "RequestPermsResult")
 
-        if (requestCode == CODE_REQUEST_PERMISSIONS) {
-            if (!grantResults.contains(-1)) {
-                // All permissions granted, log into a Google account
-                startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
-            }
-        }
+        // Forward results to EasyPermissions
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+
+//        if (requestCode == CODE_REQUEST_PERMISSIONS) {
+//            if (!grantResults.contains(-1)) {
+//                // All permissions granted, log into a Google account
+//                startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
+//            }
+//        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
