@@ -13,6 +13,7 @@ import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.data.models.GoogleCalendarListItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import io.reactivex.Completable
 import io.reactivex.Observable
@@ -142,14 +143,23 @@ class MainActivityViewModel : ViewModel() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
-                Log.e(TAG, "Update: $exception")
-                true   // TODO: Show error toast
+                return@onErrorComplete handleError(exception)
             }
             .subscribe {
                 Log.i(TAG, "Update done")
             }
 
         compositeDisposable.add(disposable)
+    }
+
+    private fun handleError(exception: Throwable): Boolean {
+        if(exception is GoogleAccountNotFoundException) {
+            // Prompt the user to select a new google account
+            Log.e(TAG, "Used google account not found.")
+        }
+
+        Log.e(TAG, "Update: $exception")
+        return true   // TODO: Show error toast
     }
 
     /**

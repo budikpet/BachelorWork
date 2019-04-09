@@ -21,6 +21,7 @@ import cz.budikpet.bachelorwork.api.SiriusAuthApiService
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.AppAuthManager
+import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import io.reactivex.Completable
 import io.reactivex.CompletableEmitter
@@ -61,7 +62,7 @@ class Repository @Inject constructor(private val context: Context) {
             if (credential.selectedAccountName != null) {
                 return field
             } else {
-                throw UserNotAuthenticatedException()
+                throw GoogleAccountNotFoundException()
             }
         }
 

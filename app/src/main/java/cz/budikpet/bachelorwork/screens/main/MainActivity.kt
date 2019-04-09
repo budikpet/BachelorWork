@@ -21,7 +21,6 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import javax.inject.Inject
 
-
 /**
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
@@ -137,19 +136,10 @@ class MainActivity : AppCompatActivity() {
     // MARK: Google account
 
     private fun checkGoogleLogin() {
-        if (sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), null) == null) {
-            // Ask a user to log into a Google account once after he logged into CTU
-            // TODO: Make better permissions check
-            if(!sharedPreferences.getBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), false)) {
-            // Ask a user to log into a Google account
-            Log.i(TAG, "Logging into Google")
-            checkPermissions()
-
-            val editor = sharedPreferences.edit()
-            editor.putBoolean(SharedPreferencesKeys.GOOGLE_LOGIN_CHECKED.toString(), true)
-            editor.apply()
-            }
-        }
+        // Ask a user to log into a Google account once after he logged into CTU
+        // TODO: Make better permissions check
+        Log.i(TAG, "Logging into Google")
+        checkPermissions()
     }
 
     private fun checkPermissions() {
@@ -173,6 +163,7 @@ class MainActivity : AppCompatActivity() {
 
         if (requestCode == CODE_REQUEST_PERMISSIONS) {
             if (!grantResults.contains(-1)) {
+                // All permissions granted, log into a Google account
                 startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
             }
         }
