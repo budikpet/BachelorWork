@@ -4,7 +4,6 @@ import android.content.*
 import android.net.Uri
 import android.os.Bundle
 import android.provider.CalendarContract
-import android.security.keystore.UserNotAuthenticatedException
 import android.util.Log
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.client.http.HttpRequestInitializer
@@ -96,8 +95,8 @@ class Repository @Inject constructor(private val context: Context) {
         return siriusAuthApiService.getUserInfo(accessToken)
     }
 
-    fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?): Single<String> {
-        return appAuthManager.checkAuthorization(response, exception)
+    fun checkSiriusAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?): Single<String> {
+        return appAuthManager.checkSiriusAuthorization(response, exception)
     }
 
     fun signOut() {

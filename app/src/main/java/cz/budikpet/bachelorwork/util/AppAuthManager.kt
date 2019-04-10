@@ -74,7 +74,7 @@ class AppAuthManager @Inject constructor(context: Context) {
         authStateManager.authState = clearedState
     }
 
-    fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?): Single<String> {
+    fun checkSiriusAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?): Single<String> {
         return if (isAuthorized()) {
             Log.i(TAG, "Already authorized.")
             startRefreshAccessToken()

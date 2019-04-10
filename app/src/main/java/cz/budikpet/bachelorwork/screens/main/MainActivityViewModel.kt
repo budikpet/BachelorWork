@@ -56,8 +56,8 @@ class MainActivityViewModel : ViewModel() {
      *
      * If the user is fully authorized, tokens are refreshed.
      */
-    fun checkAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
-        val disposable = repository.checkAuthorization(response, exception)
+    fun checkSiriusAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
+        val disposable = repository.checkSiriusAuthorization(response, exception)
             .observeOn(Schedulers.io())
             .flatMapObservable { accessToken -> repository.getLoggedUserInfo(accessToken) }
             .flatMapCompletable { userInfo ->
@@ -153,7 +153,7 @@ class MainActivityViewModel : ViewModel() {
     }
 
     private fun handleError(exception: Throwable): Boolean {
-        if(exception is GoogleAccountNotFoundException) {
+        if (exception is GoogleAccountNotFoundException) {
             // Prompt the user to select a new google account
             Log.e(TAG, "Used google account not found.")
         }
