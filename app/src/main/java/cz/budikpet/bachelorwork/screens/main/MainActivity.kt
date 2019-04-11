@@ -11,7 +11,6 @@ import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
-import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
@@ -22,25 +21,28 @@ import net.openid.appauth.AuthorizationResponse
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
+import pub.devrel.easypermissions.PermissionRequest
 import javax.inject.Inject
+
 
 // TODO: EasyPermission dialogs - check if they are cancelled, stop app on cancel
 // TODO: Ask again for only the denied permissions
 /**
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
-class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
-    private val TAG = "MY_${this.javaClass.simpleName}"
+class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, EasyPermissions.RationaleCallbacks {
+    private val TAG = "AMY_${this.javaClass.simpleName}"
 
     companion object {
         private const val CODE_GOOGLE_LOGIN = 0
         private const val CODE_REQUEST_PERMISSIONS = 1
+        private const val CODE_REQUEST_PERMISSIONS2 = 2
 
         private val requiredPerms: Array<String> = arrayOf(
             Manifest.permission.READ_CALENDAR,
             Manifest.permission.WRITE_CALENDAR,
-            Manifest.permission.GET_ACCOUNTS,
-            Manifest.permission.READ_SYNC_STATS
+            Manifest.permission.READ_SYNC_STATS,
+            Manifest.permission.GET_ACCOUNTS
         )
     }
 
@@ -54,7 +56,7 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        setContentView(cz.budikpet.bachelorwork.R.layout.activity_main)
 
         MyApplication.appComponent.inject(this)
         mainActivityViewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
@@ -66,7 +68,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
         // TODO: Check permissions, then google login
         checkPermissions()
-        checkGoogleLogin()
 
         initButtons()
 
@@ -153,23 +154,17 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
     private fun checkGoogleLogin() {
         // Ask a user to log into a Google account once after he logged into CTU
-        // TODO("Check if any google account name is stored in shared preferences, then check if the account exists.")
-    }
 
-
-    @AfterPermissionGranted(CODE_REQUEST_PERMISSIONS)
-    private fun checkPermissions() {
-        Log.i(TAG, "Checking permissions")
         if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
-            Log.i(TAG, "Already has all the permissions needed.")
+            Log.i(TAG, "Has all required permissions. Checking Google login")
 
-            // TODO: Check Google account here
-
-        } else {
-            Log.i(TAG, "Asking for permissions.")
-            EasyPermissions.requestPermissions(this, "We need them", CODE_REQUEST_PERMISSIONS, *requiredPerms)
+            if (sharedPreferences.contains(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString())) {
+                // TODO: Check if the account still exists
+                Log.i(TAG, "User already logged into a google account.")
+            } else {
+                startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
+            }
         }
-
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -178,14 +173,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
         // Forward results to EasyPermissions
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
-
-//        if (requestCode == CODE_REQUEST_PERMISSIONS) {
-//            Log.i(TAG, "onRequestPermissionsResult granted.")
-//            if (!grantResults.contains(-1)) {
-//                // All permissions granted, log into a Google account
-//                startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
-//            }
-//        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -202,9 +189,53 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
             mainActivityViewModel.updateAllCalendars()
         } else if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
-            // What happens when the user comes back after being sent to settings to grant permissions
-            Log.i(TAG, "The user came back from settings.")
+            // The user was asked to go to settings to grant permissions
+            Log.i(TAG, "The user returned from settings dialog.")
+            if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
+                checkGoogleLogin()
+            } else {
+                myFinish()
+            }
         }
+    }
+
+    // MARK: Permissions
+
+    @AfterPermissionGranted(CODE_REQUEST_PERMISSIONS)
+    private fun checkPermissions() {
+        Log.i(TAG, "Checking permissions")
+        if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
+            Log.i(TAG, "Already has all the permissions needed.")
+            checkGoogleLogin()
+        } else {
+            Log.i(TAG, "Asking for permissions.")
+            permsCheck()
+        }
+
+    }
+
+    private fun permsCheck() {
+        val perms: MutableList<String> = mutableListOf()
+
+        for (perm in requiredPerms) {
+            if (!EasyPermissions.hasPermissions(this, perm)) {
+                perms.add(perm)
+            }
+        }
+        Log.i(TAG, "Asking for these permissions: $perms")
+
+        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
+            Log.i(TAG, "PermsCheck - some permissions are permanently denied")
+        }
+
+        EasyPermissions.requestPermissions(
+            PermissionRequest.Builder(this, CODE_REQUEST_PERMISSIONS, *perms.toTypedArray())
+                .setRationale("PermsCheck. We need them.")
+//                .setPositiveButtonText(cz.budikpet.bachelorwork.R.string.rationale_ask_ok)
+                .setNegativeButtonText("Quit")
+//                .setTheme(cz.budikpet.bachelorwork.R.style.my_fancy_style)
+                .build()
+        )
     }
 
     override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
@@ -212,19 +243,34 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks {
 
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
             Log.i(TAG, "Some permissions permanently denied.")
-            AppSettingsDialog.Builder(this).build().show()
+            AppSettingsDialog.Builder(this)
+                .setNegativeButton("Quit")
+                .build()
+                .show()
         } else {
-            Log.i(TAG, "Asking for permissions again.")
-            EasyPermissions.requestPermissions(this, "We need them", CODE_REQUEST_PERMISSIONS, *perms.toTypedArray())
+            permsCheck()
         }
     }
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
         Log.i(TAG, "Granted permissions: $perms")
 
-        if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
-            Log.i(TAG, "Has all required permissions.")
-            startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
-        }
+        checkGoogleLogin()
+    }
+
+    override fun onRationaleDenied(requestCode: Int) {
+        Log.i(TAG, "Rationale denied: $requestCode")
+
+        myFinish()
+    }
+
+    override fun onRationaleAccepted(requestCode: Int) {
+        Log.i(TAG, "Rationale accepted: $requestCode")
+    }
+
+    private fun myFinish() {
+//        finish()
+        finishAffinity()
+//        finishAndRemoveTask()
     }
 }
