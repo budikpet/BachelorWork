@@ -7,6 +7,7 @@ import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -169,7 +170,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, E
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        Log.i(TAG, "RequestPermsResult")
 
         // Forward results to EasyPermissions
         EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
@@ -180,14 +180,32 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, E
         Log.i(TAG, "OnActivityResult")
 
         if (requestCode == CODE_GOOGLE_LOGIN) {
-            // Store google account name
-            val accountName = data?.extras!!.getString(AccountManager.KEY_ACCOUNT_NAME)
-            val editor = sharedPreferences.edit()
-            editor.putString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), accountName)
-            editor.apply()
-            credential.selectedAccountName = accountName
+            if(data != null) {
+                // User logged into a Google account, store its name
+                val accountName = data.extras!!.getString(AccountManager.KEY_ACCOUNT_NAME)
+                val editor = sharedPreferences.edit()
+                editor.putString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), accountName)
+                editor.apply()
+                credential.selectedAccountName = accountName
 
-            mainActivityViewModel.updateAllCalendars()
+                mainActivityViewModel.updateAllCalendars()
+            } else {
+                Log.i(TAG, "Google account not specified.")
+
+                // TODO: Tell the user that google account is mandatory
+                AlertDialog.Builder(this)
+                    .setTitle("Google Account was not specified")
+                    .setMessage("Google Account is needed.")
+                    .setPositiveButton("Log in") { dialog, id ->
+                        checkGoogleLogin()
+                    }
+                    .setNegativeButton("Quit") { dialog, id ->
+                        myFinish()
+                    }
+                    .show()
+
+            }
+
         } else if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
             // The user was asked to go to settings to grant permissions
             Log.i(TAG, "The user returned from settings dialog.")
@@ -224,10 +242,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, E
         }
         Log.i(TAG, "Asking for these permissions: $perms")
 
-        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
-            Log.i(TAG, "PermsCheck - some permissions are permanently denied")
-        }
-
         EasyPermissions.requestPermissions(
             PermissionRequest.Builder(this, CODE_REQUEST_PERMISSIONS, *perms.toTypedArray())
                 .setRationale("PermsCheck. We need them.")
@@ -254,8 +268,6 @@ class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, E
 
     override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
         Log.i(TAG, "Granted permissions: $perms")
-
-        checkGoogleLogin()
     }
 
     override fun onRationaleDenied(requestCode: Int) {
