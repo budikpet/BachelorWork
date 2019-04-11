@@ -1,7 +1,7 @@
 package cz.budikpet.bachelorwork.screens.main
 
-import android.Manifest
 import android.accounts.AccountManager
+import android.app.Activity
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
@@ -15,24 +15,22 @@ import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
+import cz.budikpet.bachelorwork.util.PermissionsHandler
+import cz.budikpet.bachelorwork.util.PermissionsHandler.Companion.requiredPerms
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import kotlinx.android.synthetic.main.activity_main.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
-import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
-import pub.devrel.easypermissions.PermissionRequest
 import javax.inject.Inject
 
 
-// TODO: EasyPermission dialogs - check if they are cancelled, stop app on cancel
-// TODO: Ask again for only the denied permissions
 /**
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
 //class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, EasyPermissions.RationaleCallbacks {
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), PermissionsHandler.Callback {
     private val TAG = "AMY_${this.javaClass.simpleName}"
 
     companion object {
@@ -46,6 +44,8 @@ class MainActivity : AppCompatActivity() {
 
     @Inject
     internal lateinit var sharedPreferences: SharedPreferences
+
+    val permissionsHandler = PermissionsHandler(this)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -148,7 +148,7 @@ class MainActivity : AppCompatActivity() {
     private fun checkGoogleLogin() {
         // Ask a user to log into a Google account once after he logged into CTU
 
-//        if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
+        if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
             Log.i(TAG, "Has all required permissions. Checking Google login")
 
             if (sharedPreferences.contains(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString())) {
@@ -157,9 +157,9 @@ class MainActivity : AppCompatActivity() {
             } else {
                 startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
             }
-//        } else {
-//            checkPermissions()
-//        }
+        } else {
+            permissionsHandler.checkPermissions()
+        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -167,7 +167,7 @@ class MainActivity : AppCompatActivity() {
         Log.i(TAG, "OnActivityResult")
 
         if (requestCode == CODE_GOOGLE_LOGIN) {
-            if(data != null) {
+            if (data != null) {
                 // User logged into a Google account, store its name
                 val accountName = data.extras!!.getString(AccountManager.KEY_ACCOUNT_NAME)
                 val editor = sharedPreferences.edit()
@@ -186,7 +186,6 @@ class MainActivity : AppCompatActivity() {
                         checkGoogleLogin()
                     }
                     .setNegativeButton("Quit") { dialog, id ->
-//                        myFinish()
                         finishAffinity()
                     }
                     .show()
@@ -194,90 +193,32 @@ class MainActivity : AppCompatActivity() {
             }
 
         }
-//        else if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
-//            // The user was asked to go to settings to grant permissions
-//            Log.i(TAG, "The user returned from settings dialog.")
-//            if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
-//                checkGoogleLogin()
-//            } else {
-//                myFinish()
-//            }
-//        }
+
+        if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
+            // The user was asked to go to settings to grant permissions
+            Log.i(TAG, "The user returned from settings dialog.")
+            if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
+                checkGoogleLogin()
+            } else {
+                finishAffinity()
+            }
+        }
     }
 
     // MARK: Permissions
 
-//    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-//        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-//
-//        // Forward results to EasyPermissions
-//        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
-//    }
+    override fun onAllPermissionsGranted() {
+        checkGoogleLogin()
+    }
 
-//    @AfterPermissionGranted(CODE_REQUEST_PERMISSIONS)
-//    private fun checkPermissions() {
-//        Log.i(TAG, "Checking permissions")
-//        if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
-//            Log.i(TAG, "Already has all the permissions needed.")
-//            checkGoogleLogin()
-//        } else {
-//            Log.i(TAG, "Asking for permissions.")
-//            permsCheck()
-//        }
-//
-//    }
-//
-//    private fun permsCheck() {
-//        val perms: MutableList<String> = mutableListOf()
-//
-//        for (perm in requiredPerms) {
-//            if (!EasyPermissions.hasPermissions(this, perm)) {
-//                perms.add(perm)
-//            }
-//        }
-//        Log.i(TAG, "Asking for these permissions: $perms")
-//
-//        EasyPermissions.requestPermissions(
-//            PermissionRequest.Builder(this, CODE_REQUEST_PERMISSIONS, *perms.toTypedArray())
-//                .setRationale("PermsCheck. We need them.")
-////                .setPositiveButtonText(cz.budikpet.bachelorwork.R.string.rationale_ask_ok)
-//                .setNegativeButtonText("Quit")
-////                .setTheme(cz.budikpet.bachelorwork.R.style.my_fancy_style)
-//                .build()
-//        )
-//    }
-//
-//    override fun onPermissionsDenied(requestCode: Int, perms: MutableList<String>) {
-//        Log.i(TAG, "Denied permissions: $perms")
-//
-//        if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
-//            Log.i(TAG, "Some permissions permanently denied.")
-//            AppSettingsDialog.Builder(this)
-//                .setNegativeButton("Quit")
-//                .build()
-//                .show()
-//        } else {
-//            permsCheck()
-//        }
-//    }
-//
-//    override fun onPermissionsGranted(requestCode: Int, perms: MutableList<String>) {
-//        Log.i(TAG, "Granted permissions: $perms")
-//    }
-//
-//    override fun onRationaleDenied(requestCode: Int) {
-//        Log.i(TAG, "Rationale denied: $requestCode")
-//
-//        myFinish()
-//    }
-//
-//    override fun onRationaleAccepted(requestCode: Int) {
-//        Log.i(TAG, "Rationale accepted: $requestCode")
-//    }
-//
-//    private fun myFinish() {
-////        finish()
-//        finishAffinity()
-////        finishAndRemoveTask()
-//    }
+    override fun getActivity(): Activity {
+        return this
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        // Forward results to EasyPermissions
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, permissionsHandler);
+    }
 }
