@@ -28,7 +28,7 @@ import javax.inject.Inject
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
 class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
-    private val TAG = "AMY_${this.javaClass.simpleName}"
+    private val TAG = "MY_${this.javaClass.simpleName}"
 
     companion object {
         private const val CODE_GOOGLE_LOGIN = 0
@@ -66,16 +66,12 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         val exception = AuthorizationException.fromIntent(intent)
         mainActivityViewModel.checkSiriusAuthorization(response, exception)
 
-        checkGoogleLogin()
-
         initButtons()
+    }
 
-        // TODO: Fix - Called before being authorized. Need to be called one after the other.
-        // Should get user list from Google Calendar, not Sirius API
-        if (savedInstanceState == null) {
-            // TODO: Get users name from somewhere
-//            mainActivityViewModel.getSiriusEventsOf(ItemType.PERSON, "budikpet")
-        }
+    override fun onResume() {
+        super.onResume()
+        checkGoogleLogin()
     }
 
     override fun onDestroy() {
@@ -155,8 +151,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         // Ask a user to log into a Google account once after he logged into CTU
 
         if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
-            Log.i(TAG, "Has all required permissions. Checking Google login")
-
             if (sharedPreferences.contains(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString())) {
                 Log.i(TAG, "Google account name is in SharedPreferences.")
 
@@ -167,7 +161,9 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 }
 
                 // TODO: Check if the account still exists
+
             } else {
+                Log.i(TAG, "Started Google account log in.")
                 startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
             }
         } else {

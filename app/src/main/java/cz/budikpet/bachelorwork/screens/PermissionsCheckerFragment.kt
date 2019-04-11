@@ -33,6 +33,7 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
         fun quitApplication()
     }
 
+    // TODO: Create withRequiredPermissions method?
     companion object {
         private const val BASE_PERMISSIONS_REQUEST = 1
 
@@ -50,7 +51,7 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
-        Log.i(TAG, "onAttach")
+//        Log.i(TAG, "OnAttach")
         if (context is Callback) {
             callback = context
         } else {
@@ -61,20 +62,18 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 //        retainInstance = true
-        Log.i(TAG, "OnCreate")
+//        Log.i(TAG, "OnCreate")
     }
 
     override fun onDetach() {
         super.onDetach()
         callback = null
-        Log.i(TAG, "OnDetach")
     }
 
     // MARK: Permissions checking
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Log.i(TAG, "OnActivityResult")
 
         if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
             // The user was asked to go to settings to grant permissions
@@ -102,8 +101,6 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
      */
     @AfterPermissionGranted(BASE_PERMISSIONS_REQUEST)
     fun checkPermissions() {
-        Log.i(TAG, "Checking permissions")
-
         if (EasyPermissions.hasPermissions(this.context!!, *requiredPerms)) {
             Log.i(TAG, "Already has all the permissions needed.")
             callback?.onAllPermissionsGranted()

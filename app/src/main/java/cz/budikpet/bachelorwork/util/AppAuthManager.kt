@@ -116,13 +116,11 @@ class AppAuthManager @Inject constructor(context: Context) {
      * Get new access tokens using the refresh token.
      */
     private fun startRefreshAccessToken(): Single<String> {
-        Log.i(TAG, "PRE_RefreshToken: ${getAccessToken()}")
         return Single.create { emitter ->
             performTokenRequest(
                 authStateManager.authState!!.createTokenRefreshRequest(),
                 AuthorizationService.TokenResponseCallback { tokenResponse, authException ->
                     authStateManager.updateAfterTokenResponse(tokenResponse, authException)
-                    Log.i(TAG, "POST_RefreshToken: ${getAccessToken()}")
                     emitter.onSuccess(getAccessToken()!!)
                 })
         }
