@@ -1,7 +1,6 @@
 package cz.budikpet.bachelorwork.screens.main
 
 import android.accounts.AccountManager
-import android.app.Activity
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
@@ -14,14 +13,13 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
+import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
+import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
-import cz.budikpet.bachelorwork.util.PermissionsHandler
-import cz.budikpet.bachelorwork.util.PermissionsHandler.Companion.requiredPerms
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import kotlinx.android.synthetic.main.activity_main.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
-import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import javax.inject.Inject
 
@@ -29,8 +27,7 @@ import javax.inject.Inject
 /**
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
-//class MainActivity : AppCompatActivity(), EasyPermissions.PermissionCallbacks, EasyPermissions.RationaleCallbacks {
-class MainActivity : AppCompatActivity(), PermissionsHandler.Callback {
+class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     private val TAG = "AMY_${this.javaClass.simpleName}"
 
     companion object {
@@ -45,13 +42,23 @@ class MainActivity : AppCompatActivity(), PermissionsHandler.Callback {
     @Inject
     internal lateinit var sharedPreferences: SharedPreferences
 
-    val permissionsHandler = PermissionsHandler(this)
+    private lateinit var permissionsCheckerFragment: PermissionsCheckerFragment
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(cz.budikpet.bachelorwork.R.layout.activity_main)
-
         MyApplication.appComponent.inject(this)
+
+        if (savedInstanceState == null) {
+            permissionsCheckerFragment = PermissionsCheckerFragment()
+            supportFragmentManager.beginTransaction()
+                .add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
+                .commit()
+        } else {
+            permissionsCheckerFragment =
+                supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
+        }
+
         mainActivityViewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
         subscribeObservers()
 
@@ -59,7 +66,6 @@ class MainActivity : AppCompatActivity(), PermissionsHandler.Callback {
         val exception = AuthorizationException.fromIntent(intent)
         mainActivityViewModel.checkSiriusAuthorization(response, exception)
 
-        // TODO: Check permissions, then google login
         checkGoogleLogin()
 
         initButtons()
@@ -152,13 +158,20 @@ class MainActivity : AppCompatActivity(), PermissionsHandler.Callback {
             Log.i(TAG, "Has all required permissions. Checking Google login")
 
             if (sharedPreferences.contains(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString())) {
+                Log.i(TAG, "Google account name is in SharedPreferences.")
+
+                if (credential.selectedAccountName == null) {
+                    // Add the selected google account into credential
+                    credential.selectedAccountName =
+                        sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), null)
+                }
+
                 // TODO: Check if the account still exists
-                Log.i(TAG, "User already logged into a google account.")
             } else {
                 startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
             }
         } else {
-            permissionsHandler.checkPermissions()
+            permissionsCheckerFragment.checkPermissions()
         }
     }
 
@@ -186,22 +199,12 @@ class MainActivity : AppCompatActivity(), PermissionsHandler.Callback {
                         checkGoogleLogin()
                     }
                     .setNegativeButton("Quit") { dialog, id ->
-                        finishAffinity()
+                        quitApplication()
                     }
                     .show()
 
             }
 
-        }
-
-        if (requestCode == AppSettingsDialog.DEFAULT_SETTINGS_REQ_CODE) {
-            // The user was asked to go to settings to grant permissions
-            Log.i(TAG, "The user returned from settings dialog.")
-            if (EasyPermissions.hasPermissions(this, *requiredPerms)) {
-                checkGoogleLogin()
-            } else {
-                finishAffinity()
-            }
         }
     }
 
@@ -211,14 +214,7 @@ class MainActivity : AppCompatActivity(), PermissionsHandler.Callback {
         checkGoogleLogin()
     }
 
-    override fun getActivity(): Activity {
-        return this
-    }
-
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-
-        // Forward results to EasyPermissions
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, permissionsHandler);
+    override fun quitApplication() {
+        finishAffinity()
     }
 }
