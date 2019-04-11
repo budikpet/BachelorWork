@@ -46,28 +46,11 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
             permissionsCheckerFragment = PermissionsCheckerFragment()
             supportFragmentManager.beginTransaction()
                 .add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
-                .commit()
+                .commitNow()
         } else {
             permissionsCheckerFragment =
                 supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
         }
-
-    }
-
-    override fun onResume() {
-        super.onResume()
-
-        // TODO: Find better way?
-        // Asking for permissions starts onResume more than once. This makes it run only once
-        if (onResumeCalled) {
-            return
-        } else {
-            onResumeCalled = true
-        }
-
-        Log.i(TAG, "OnResume")
-
-        // TODO: Catch cancelled Sirius login
 
         if (sharedPreferences.contains(SharedPreferencesKeys.FIRST_RUN.toString())) {
             // The application was already started at least once
@@ -91,6 +74,14 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
                 }
                 .show()
         }
+
+    }
+
+    override fun onResume() {
+        super.onResume()
+        Log.i(TAG, "OnResume")
+
+        // TODO: Catch cancelled Sirius login
     }
 
     override fun onPause() {

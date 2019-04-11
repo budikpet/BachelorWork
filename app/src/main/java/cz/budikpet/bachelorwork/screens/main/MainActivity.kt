@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             permissionsCheckerFragment = PermissionsCheckerFragment()
             supportFragmentManager.beginTransaction()
                 .add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
-                .commit()
+                .commitNow()
         } else {
             permissionsCheckerFragment =
                 supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
@@ -66,12 +66,9 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         val exception = AuthorizationException.fromIntent(intent)
         mainActivityViewModel.checkSiriusAuthorization(response, exception)
 
-        initButtons()
-    }
-
-    override fun onResume() {
-        super.onResume()
         checkGoogleLogin()
+
+        initButtons()
     }
 
     override fun onDestroy() {
