@@ -11,6 +11,7 @@ import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import pub.devrel.easypermissions.PermissionRequest
 
+// TODO: Isn't it possible to use a normal kotlin class which somehow implements needed methods of activities?
 /**
  * A simple [Fragment] subclass.
  * It is used to display permission dialogs until the user agrees to all the required permissions.
