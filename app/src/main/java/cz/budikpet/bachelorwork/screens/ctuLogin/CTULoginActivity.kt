@@ -12,7 +12,9 @@ import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.main.MainActivity
 import cz.budikpet.bachelorwork.util.AppAuthManager
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
+import cz.budikpet.bachelorwork.util.edit
 import net.openid.appauth.AuthorizationService
+import org.joda.time.DateTime
 import javax.inject.Inject
 
 /**
@@ -56,9 +58,7 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
             // The application was already started at least once
             permissionsCheckerFragment.checkPermissions()
         } else {
-            val editor = sharedPreferences.edit()
-            editor.putBoolean(SharedPreferencesKeys.FIRST_RUN.toString(), false)
-            editor.apply()
+            setPreferences()
 
             AlertDialog.Builder(this)
                 .setTitle("Notice")
@@ -73,6 +73,20 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
                     finishAffinity()
                 }
                 .show()
+        }
+
+    }
+
+    private fun setPreferences() {
+        // Prepare needed preferences for the MultidayViewFragment
+        val lessonsStartTime = DateTime().withTime(7, 30, 0, 0).millisOfDay
+
+        sharedPreferences.edit {
+            it.putBoolean(SharedPreferencesKeys.FIRST_RUN.toString(), false)
+            it.putInt(SharedPreferencesKeys.NUM_OF_LESSONS.toString(), 8)
+            it.putInt(SharedPreferencesKeys.LESSONS_START_TIME.toString(), lessonsStartTime)
+            it.putInt(SharedPreferencesKeys.LENGTH_OF_BREAK.toString(), 15)
+            it.putInt(SharedPreferencesKeys.LENGTH_OF_LESSON.toString(), 90)
         }
 
     }

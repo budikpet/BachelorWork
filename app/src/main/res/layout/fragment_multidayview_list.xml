@@ -1,0 +1,136 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<ScrollView
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+    <android.support.constraint.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:id="@+id/timetableHolder">
+
+        <LinearLayout
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:showDividers="middle|beginning|end"
+                android:divider="@drawable/row_item_divider"
+                android:id="@+id/dayDisplay" android:layout_width="0dp" android:layout_weight="2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/timesList" android:background="@color/itemWhite">
+
+            <TextView
+                    tools:text="mon"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent" android:layout_weight="2" android:id="@+id/dayTextView0"
+                    android:textAlignment="center"/>
+
+            <TextView
+                    tools:text="tue"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent" android:layout_weight="2" android:id="@+id/dayTextView1"
+                    android:textAlignment="center"/>
+            <TextView
+                    tools:text="wed"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent" android:layout_weight="2" android:id="@+id/dayTextView2"
+                    android:textAlignment="center"/>
+            <TextView
+                    tools:text="thu"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent" android:layout_weight="2" android:id="@+id/dayTextView3"
+                    android:textAlignment="center"/>
+            <TextView
+                    tools:text="fri"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent" android:layout_weight="2" android:id="@+id/dayTextView4"
+                    android:textAlignment="center"/>
+            <TextView
+                    tools:text="sat"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent" android:layout_weight="2" android:id="@+id/dayTextView5"
+                    android:textAlignment="center"/>
+            <TextView
+                    tools:text="sun"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent" android:layout_weight="2" android:id="@+id/dayTextView6"
+                    android:textAlignment="center"/>
+
+        </LinearLayout>
+        <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:id="@+id/timesList"
+                app:layout_constraintTop_toBottomOf="@id/dayDisplay" app:layout_constraintStart_toStartOf="parent"/>
+        <LinearLayout
+                android:id="@+id/rowsList"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintTop_toBottomOf="@id/dayDisplay"
+                app:layout_constraintStart_toEndOf="@+id/timesList"
+                app:layout_constraintEnd_toEndOf="parent"
+        >
+        </LinearLayout>
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="0dp"
+                android:layout_height="0dp" android:id="@+id/events_columns"
+                android:divider="@drawable/row_item_divider"
+                app:layout_constraintTop_toBottomOf="@id/dayDisplay"
+                app:layout_constraintStart_toEndOf="@+id/timesList"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/rowsList" android:baselineAligned="false"
+        >
+
+            <android.support.constraint.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:id="@+id/eventColumn0"/>
+
+            <android.support.constraint.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/eventColumn1"
+                    android:layout_weight="2"/>
+
+            <android.support.constraint.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:id="@+id/eventColumn2"
+                    android:layout_weight="2"/>
+
+            <android.support.constraint.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:id="@+id/eventColumn3"/>
+
+            <android.support.constraint.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:id="@+id/eventColumn4"/>
+
+            <android.support.constraint.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:id="@+id/eventColumn5"/>
+
+            <android.support.constraint.ConstraintLayout
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="2"
+                    android:id="@+id/eventColumn6"/>
+
+        </LinearLayout>
+
+    </android.support.constraint.ConstraintLayout>
+
+
+</ScrollView>
