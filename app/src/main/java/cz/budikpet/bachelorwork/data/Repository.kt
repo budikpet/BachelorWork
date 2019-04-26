@@ -305,7 +305,7 @@ class Repository @Inject constructor(private val context: Context) {
      *
      * @param calId id of the calendar we add event to. Received from a list of calendars using Android Calendar provider.
      */
-    fun getGoogleCalendarEvents(calId: Int): Observable<TimetableEvent> {
+    fun getCalendarEvents(calId: Int): Observable<TimetableEvent> {
         val eventProjection: Array<String> = arrayOf(
             CalendarContract.Events.CALENDAR_DISPLAY_NAME,
             CalendarContract.Events.TITLE,
@@ -333,7 +333,7 @@ class Repository @Inject constructor(private val context: Context) {
 
         val obs = Observable.create<TimetableEvent> { emitter ->
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
-            Log.i(TAG, "getGoogleCalendarEvents: received ${cursor.count}")
+            Log.i(TAG, "getCalendarEvents: received ${cursor.count}")
 
             // Use the cursor to step through the returned records
             while (cursor.moveToNext()) {

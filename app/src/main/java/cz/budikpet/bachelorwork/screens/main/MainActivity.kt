@@ -39,7 +39,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
         private const val CODE_GOOGLE_LOGIN = 0
     }
 
-    private lateinit var mainActivityViewModel: MainActivityViewModel
+    private lateinit var viewModel: MainViewModel
 
     @Inject
     internal lateinit var credential: GoogleAccountCredential
@@ -61,7 +61,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
 
             supportFragmentManager.beginTransaction()
                 .add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
-                .add(R.id.multidayViewFragment, multidayViewFragment) // TODO: Test if the move went ok
+                .add(R.id.multidayViewFragment, multidayViewFragment) // TODO: Remove
                 .commitNow()
         } else {
             permissionsCheckerFragment =
@@ -70,12 +70,12 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
             multidayViewFragment = supportFragmentManager.findFragmentById(R.id.multidayViewFragment) as MultidayViewFragment
         }
 
-        mainActivityViewModel = ViewModelProviders.of(this).get(MainActivityViewModel::class.java)
+        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         subscribeObservers()
 
         val response = AuthorizationResponse.fromIntent(intent)
         val exception = AuthorizationException.fromIntent(intent)
-        mainActivityViewModel.checkSiriusAuthorization(response, exception)
+        viewModel.checkSiriusAuthorization(response, exception)
 
         checkGoogleLogin()
 
@@ -90,12 +90,12 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
     override fun onDestroy() {
         super.onDestroy()
         // TODO: Need to test disposing
-        mainActivityViewModel.onDestroy()
+        viewModel.onDestroy()
     }
 
     private fun initButtons() {
         disposeBtn.setOnClickListener {
-            mainActivityViewModel.onDestroy()
+            viewModel.onDestroy()
         }
 
         getEventsBtn.setOnClickListener {
@@ -110,11 +110,11 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
                     ItemType.ROOM
                 }
             }
-            mainActivityViewModel.getSiriusEventsOf(itemType, providedId.text.toString())
+            viewModel.getSiriusEventsOf(itemType, providedId.text.toString())
         }
 
         signoutBtn.setOnClickListener {
-            mainActivityViewModel.signOut()
+            viewModel.signOut()
 
             val mainIntent = Intent(this, CTULoginActivity::class.java)
             mainIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
@@ -127,19 +127,19 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
         getCalendarsBtn.setOnClickListener {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             // TODO: Change
-//            mainActivityViewModel.getGoogleCalendarList()
-//            mainActivityViewModel.addSecondaryGoogleCalendar("T9:350_${MyApplication.calendarsName}")
-//            mainActivityViewModel.getLocalCalendarList()
-//            mainActivityViewModel.getGoogleCalendarEvents(3)
-//            mainActivityViewModel.addGoogleCalendarEvent()
-            mainActivityViewModel.updateAllCalendars()
-//            mainActivityViewModel.sharePersonalCalendar("sgt.petrov@gmail.com")
-//            mainActivityViewModel.unsharePersonalCalendar("sgt.petrov@gmail.com")
+//            viewModel.getGoogleCalendarList()
+//            viewModel.addSecondaryGoogleCalendar("T9:350_${MyApplication.calendarsName}")
+//            viewModel.getLocalCalendarList()
+//            viewModel.getCalendarEvents(3)
+//            viewModel.addGoogleCalendarEvent()
+            viewModel.updateAllCalendars()
+//            viewModel.sharePersonalCalendar("sgt.petrov@gmail.com")
+//            viewModel.unsharePersonalCalendar("sgt.petrov@gmail.com")
         }
     }
 
     private fun subscribeObservers() {
-        mainActivityViewModel.getSiriusApiEvents().observe(this, Observer { eventsList ->
+        viewModel.events.observe(this, Observer { eventsList ->
             if (eventsList != null) {
                 Log.i(TAG, "Observing events from LiveData.")
                 showString(eventsList)
@@ -197,7 +197,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
                 editor.apply()
                 credential.selectedAccountName = accountName
 
-                mainActivityViewModel.updateAllCalendars()
+                viewModel.updateAllCalendars()
             } else {
                 Log.i(TAG, "Google account not specified.")
 
@@ -220,7 +220,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if(item!!.itemId == R.id.itemSync) {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
-            mainActivityViewModel.updateAllCalendars()
+            viewModel.updateAllCalendars()
 
             return true
         }

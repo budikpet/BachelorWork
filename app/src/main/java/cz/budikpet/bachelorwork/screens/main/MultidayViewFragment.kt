@@ -1,5 +1,7 @@
 package cz.budikpet.bachelorwork.screens.main
 
+import android.arch.lifecycle.Observer
+import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
@@ -13,18 +15,22 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
+import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.EventType
+import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.toDp
 import kotlinx.android.synthetic.main.fragment_multidayview_list.view.*
 import org.joda.time.*
+import javax.inject.Inject
 
 /**
  * Fragment used to show multiple days like Google Calendar Week View.
  */
 class MultidayViewFragment : Fragment() {
+    private val TAG = "MY_${this.javaClass.simpleName}"
     private val events = mutableListOf<TimetableEvent>()
 
     private var listener: Callback? = null
@@ -49,13 +55,18 @@ class MultidayViewFragment : Fragment() {
         )
     }
 
-    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var viewModel: MainViewModel
     private lateinit var eventsColumns: List<ConstraintLayout>
+
+    @Inject
+    internal lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MyApplication.appComponent.inject(this)
 
-        sharedPreferences = context!!.getSharedPreferences("Pref", Context.MODE_PRIVATE)
+        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        subscribeObservers()
 
         arguments?.let {
             eventsColumnsCount = it.getInt(ARG_COLUMN_COUNT)
@@ -67,6 +78,15 @@ class MultidayViewFragment : Fragment() {
         }
 
         createListeners()
+    }
+
+    private fun subscribeObservers() {
+        viewModel.events.observe(this, Observer { eventsList ->
+            if (eventsList != null) {
+                Log.i(TAG, "Observing events from LiveData.")
+                // TODO: Implement
+            }
+        })
     }
 
     private fun createListeners() {

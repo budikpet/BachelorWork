@@ -1,6 +1,5 @@
 package cz.budikpet.bachelorwork.screens.main
 
-import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.content.SharedPreferences
@@ -28,10 +27,10 @@ import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
-class MainActivityViewModel : ViewModel() {
+class MainViewModel : ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
-    private val events = MutableLiveData<List<Event>>()
+    val events = MutableLiveData<List<Event>>()
 
     @Inject
     internal lateinit var repository: Repository
@@ -87,10 +86,6 @@ class MainActivityViewModel : ViewModel() {
         repository.signOut()
     }
 
-    fun getSiriusApiEvents(): LiveData<List<Event>> {
-        return events
-    }
-
     /**
      * Uses Sirius API to get events of the specified thing.
      *
@@ -125,6 +120,7 @@ class MainActivityViewModel : ViewModel() {
             .andThen(repository.refreshCalendars())
             .andThen(repository.getLocalCalendarList())
             .flatMapCompletable { calendarListItem ->
+                // Update the currently picked calendar with data from Sirius API
                 val siriusObs = getSiriusEventsList(calendarListItem)
 
                 val calendarObs = getGoogleCalendarEventsList(calendarListItem)
@@ -224,7 +220,7 @@ class MainActivityViewModel : ViewModel() {
      * @return An observable holding a list of TimetableEvents.
      */
     private fun getGoogleCalendarEventsList(calendarListItem: GoogleCalendarListItem): Observable<ArrayList<TimetableEvent>> {
-        return repository.getGoogleCalendarEvents(calendarListItem.id)
+        return repository.getCalendarEvents(calendarListItem.id)
             .filter { event -> event.siriusId != null && !event.deleted }   // TODO: Move to methods that use the list?
             .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
             .map { list ->
@@ -324,7 +320,7 @@ class MainActivityViewModel : ViewModel() {
     }
 
     fun getGoogleCalendarEvents(calId: Int) {
-        val disposable = repository.getGoogleCalendarEvents(calId)
+        val disposable = repository.getCalendarEvents(calId)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
