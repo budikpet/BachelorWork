@@ -9,6 +9,8 @@ import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
@@ -78,6 +80,11 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
         checkGoogleLogin()
 
 //        initButtons()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_bar, menu)
+        return true
     }
 
     override fun onDestroy() {
@@ -208,6 +215,18 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
             }
 
         }
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        if(item!!.itemId == R.id.itemSync) {
+            Log.i(TAG, "Selected account: ${credential.selectedAccount}")
+            mainActivityViewModel.updateAllCalendars()
+
+            return true
+        }
+
+
+        return false
     }
 
     // MARK: Permissions
