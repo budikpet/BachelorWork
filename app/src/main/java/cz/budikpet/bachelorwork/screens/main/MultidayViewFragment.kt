@@ -120,7 +120,10 @@ class MultidayViewFragment : Fragment() {
             if (state != null) {
                 // Add events to the view
                 Log.i(TAG, "Observing events from LiveData.")
-                updateEventsView(state.events)
+
+                if (!state.events.isEmpty()) {
+                    updateEventsView(state.events)
+                }
             }
         })
     }

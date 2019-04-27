@@ -19,6 +19,7 @@ import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
+import cz.budikpet.bachelorwork.util.edit
 import kotlinx.android.synthetic.main.activity_main_old.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -70,7 +71,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         }
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
-        subscribeObservers()
 
         val response = AuthorizationResponse.fromIntent(intent)
         val exception = AuthorizationException.fromIntent(intent)
@@ -137,15 +137,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         }
     }
 
-    private fun subscribeObservers() {
-//        viewModel.events.observe(this, Observer { eventsList ->
-//            if (eventsList != null) {
-//                Log.i(TAG, "Observing events from LiveData.")
-//                showString(eventsList)
-//            }
-//        })
-    }
-
     private fun showString(result: List<Event>) {
         var builder = StringBuilder()
         for (event in result) {
@@ -171,8 +162,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 }
 
                 // TODO: Check if the google account still exists
-                val username: String = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), "")
-                viewModel.loadEventsFromCalendar(username)
+
+                viewModel.signedInToGoogle()
 
             } else {
                 // Ask for a Google Account
@@ -192,10 +183,13 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             if (data != null) {
                 // User logged into a Google account, store its name
                 val accountName = data.extras!!.getString(AccountManager.KEY_ACCOUNT_NAME)
-                val editor = sharedPreferences.edit()
-                editor.putString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), accountName)
-                editor.apply()
+                sharedPreferences.edit {
+                    it.putString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), accountName)
+                }
+
                 credential.selectedAccountName = accountName
+
+                viewModel.signedInToGoogle()
 
                 viewModel.updateAllCalendars()
             } else {

@@ -33,7 +33,15 @@ data class State(val username: String, val events: List<TimetableEvent>)
 class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
+    /**
+     * Holds data important for displaying events.
+     */
     val state = MutableLiveData<State>()
+
+    /**
+     * Indicates that an update of all calendars ended successfully.
+     */
+    val calendarsUpdated = MutableLiveData<Boolean>()
 
     @Inject
     internal lateinit var repository: Repository
@@ -101,6 +109,11 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         repository.signOut()
     }
 
+    fun signedInToGoogle() {
+        val username: String = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), "")
+        state.postValue(State(username, listOf()))
+    }
+
     /**
      * Uses Sirius API to get events of the specified thing.
      *
@@ -155,7 +168,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
                 return@flatMapCompletable updateObs
             }
-            .andThen(repository.refreshCalendars()) // TODO: Unnecessary refresh?
+            .andThen(repository.refreshCalendars())
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
@@ -163,6 +176,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .subscribe {
                 Log.i(TAG, "Update done")
+                calendarsUpdated.postValue(true)
             }
 
         compositeDisposable.add(disposable)
@@ -171,6 +185,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     private fun handleError(exception: Throwable): Boolean {
         if (exception is GoogleAccountNotFoundException) {
             // Prompt the user to select a new google account
+            // TODO: Implement
             Log.e(TAG, "Used google account not found.")
         }
 
