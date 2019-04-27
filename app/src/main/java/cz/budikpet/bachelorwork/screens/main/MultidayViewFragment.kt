@@ -108,7 +108,9 @@ class MultidayViewFragment : Fragment() {
                 dayTextView.visibility = View.GONE
                 eventsColumns.elementAt(i).visibility = View.GONE
             } else {
-                dayTextView.text = firstDate.plusDays(i).dayOfWeek().getAsShortText(null).capitalize()
+                val currDate = firstDate.plusDays(i)
+                val dayText = currDate.dayOfWeek().getAsShortText(null).capitalize()
+                dayTextView.text = "$dayText\n${currDate.dayOfMonth().get()}"
             }
         }
 
