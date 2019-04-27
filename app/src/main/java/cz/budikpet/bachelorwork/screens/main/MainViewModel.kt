@@ -85,7 +85,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                 if (!sharedPreferences.contains(SharedPreferencesKeys.SIRIUS_USERNAME.toString())) {
                     // Store the Sirius username
                     sharedPreferences.edit {
-                        it.putString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), userInfo.username)
+                        putString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), userInfo.username)
                     }
                 }
 

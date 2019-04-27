@@ -20,6 +20,7 @@ import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.req
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
+import cz.budikpet.bachelorwork.util.inTransaction
 import kotlinx.android.synthetic.main.activity_main_old.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -58,10 +59,11 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             permissionsCheckerFragment = PermissionsCheckerFragment()
             multidayFragmentHolder = MultidayFragmentHolder()
 
-            supportFragmentManager.beginTransaction()
-                .add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
-                .add(R.id.fragmentHolder, multidayFragmentHolder)
-                .commitNow()
+            supportFragmentManager.inTransaction {
+                add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
+                add(R.id.fragmentHolder, multidayFragmentHolder)
+            }
+
         } else {
             permissionsCheckerFragment =
                 supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
@@ -184,7 +186,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 // User logged into a Google account, store its name
                 val accountName = data.extras!!.getString(AccountManager.KEY_ACCOUNT_NAME)
                 sharedPreferences.edit {
-                    it.putString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), accountName)
+                    putString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), accountName)
                 }
 
                 credential.selectedAccountName = accountName

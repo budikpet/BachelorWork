@@ -13,6 +13,7 @@ import cz.budikpet.bachelorwork.screens.main.MainActivity
 import cz.budikpet.bachelorwork.util.AppAuthManager
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
+import cz.budikpet.bachelorwork.util.inTransaction
 import net.openid.appauth.AuthorizationService
 import org.joda.time.DateTime
 import javax.inject.Inject
@@ -46,9 +47,9 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
 
         if (savedInstanceState == null) {
             permissionsCheckerFragment = PermissionsCheckerFragment()
-            supportFragmentManager.beginTransaction()
-                .add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
-                .commitNow()
+            supportFragmentManager.inTransaction {
+                add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
+            }
         } else {
             permissionsCheckerFragment =
                 supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
@@ -82,12 +83,12 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
         val lessonsStartTime = DateTime().withTime(7, 30, 0, 0).millisOfDay
 
         sharedPreferences.edit {
-            it.putBoolean(SharedPreferencesKeys.FIRST_RUN.toString(), false)
-            it.putInt(SharedPreferencesKeys.NUM_OF_LESSONS.toString(), 8)
-            it.putInt(SharedPreferencesKeys.LESSONS_START_TIME.toString(), lessonsStartTime)
-            it.putInt(SharedPreferencesKeys.LENGTH_OF_BREAK.toString(), 15)
-            it.putInt(SharedPreferencesKeys.LENGTH_OF_LESSON.toString(), 90)
-            it.putInt(SharedPreferencesKeys.NUM_OF_WEEKS_TO_UPDATE.toString(), 4)
+            putBoolean(SharedPreferencesKeys.FIRST_RUN.toString(), false)
+            putInt(SharedPreferencesKeys.NUM_OF_LESSONS.toString(), 8)
+            putInt(SharedPreferencesKeys.LESSONS_START_TIME.toString(), lessonsStartTime)
+            putInt(SharedPreferencesKeys.LENGTH_OF_BREAK.toString(), 15)
+            putInt(SharedPreferencesKeys.LENGTH_OF_LESSON.toString(), 90)
+            putInt(SharedPreferencesKeys.NUM_OF_WEEKS_TO_UPDATE.toString(), 4)
         }
 
     }

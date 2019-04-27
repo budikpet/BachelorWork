@@ -2,6 +2,8 @@ package cz.budikpet.bachelorwork.util
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.support.v4.app.FragmentManager
+import android.support.v4.app.FragmentTransaction
 import android.util.TypedValue
 import com.google.api.services.calendar.model.Calendar
 import com.google.api.services.calendar.model.CalendarListEntry
@@ -18,15 +20,6 @@ fun Float.toDp(context: Context): Int {
 }
 
 /**
- * Makes editing of SharedPreferences easier.
- */
-fun SharedPreferences.edit(editCode: (editor: SharedPreferences.Editor) -> Unit) {
-    val editor = edit()
-    editCode(editor)
-    editor.apply()
-}
-
-/**
  * Make the entry hidden with a specific color.
  */
 fun Calendar.createMyEntry(): CalendarListEntry {
@@ -37,4 +30,18 @@ fun Calendar.createMyEntry(): CalendarListEntry {
     entry.backgroundColor = "#d3d3d3"
 
     return entry
+}
+
+/**
+ * Makes using FragmentManager easier.
+ */
+inline fun FragmentManager.inTransaction(func: FragmentTransaction.() -> FragmentTransaction) {
+    beginTransaction().func().commitNow()
+}
+
+/**
+ * Makes editing of SharedPreferences easier.
+ */
+internal inline fun SharedPreferences.edit(func: SharedPreferences.Editor.() -> SharedPreferences.Editor) {
+    this.edit().func().apply()
 }
