@@ -15,7 +15,6 @@ import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
-import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
@@ -23,7 +22,6 @@ import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import kotlinx.android.synthetic.main.activity_main_old.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
-import org.joda.time.DateTime
 import pub.devrel.easypermissions.EasyPermissions
 import javax.inject.Inject
 
@@ -47,27 +45,28 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     internal lateinit var sharedPreferences: SharedPreferences
 
     private lateinit var permissionsCheckerFragment: PermissionsCheckerFragment
-    private lateinit var multidayViewFragment: MultidayViewFragment
+    private lateinit var multidayFragmentHolder: MultidayFragmentHolder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         MyApplication.appComponent.inject(this)
 
+        // TODO: Can multiday fragment be here before all checks?
         if (savedInstanceState == null) {
             permissionsCheckerFragment = PermissionsCheckerFragment()
-            multidayViewFragment = MultidayViewFragment.newInstance(7, DateTime())
+            multidayFragmentHolder = MultidayFragmentHolder()
 
             supportFragmentManager.beginTransaction()
                 .add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
-                .add(R.id.multidayViewFragment, multidayViewFragment) // TODO: Remove
+                .add(R.id.fragmentHolder, multidayFragmentHolder)
                 .commitNow()
         } else {
             permissionsCheckerFragment =
                 supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
 
-            multidayViewFragment =
-                supportFragmentManager.findFragmentById(R.id.multidayViewFragment) as MultidayViewFragment
+            multidayFragmentHolder =
+                supportFragmentManager.findFragmentById(R.id.fragmentHolder) as MultidayFragmentHolder
         }
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -171,9 +170,12 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                         sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), null)
                 }
 
-                // TODO: Check if the account still exists
+                // TODO: Check if the google account still exists
+                val username: String = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), "")
+                viewModel.loadEventsFromCalendar(username)
 
             } else {
+                // Ask for a Google Account
                 Log.i(TAG, "Started Google account log in.")
                 startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
             }

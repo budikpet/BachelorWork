@@ -87,6 +87,7 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
             it.putInt(SharedPreferencesKeys.LESSONS_START_TIME.toString(), lessonsStartTime)
             it.putInt(SharedPreferencesKeys.LENGTH_OF_BREAK.toString(), 15)
             it.putInt(SharedPreferencesKeys.LENGTH_OF_LESSON.toString(), 90)
+            it.putInt(SharedPreferencesKeys.NUM_OF_WEEKS_TO_UPDATE.toString(), 4)
         }
 
     }
@@ -101,11 +102,6 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
     override fun onPause() {
         super.onPause()
         Log.i(TAG, "OnPause")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-//        appAuthManager.close()
     }
 
     // MARK: User authorization

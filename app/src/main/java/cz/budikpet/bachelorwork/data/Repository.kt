@@ -31,7 +31,6 @@ import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
-import org.joda.time.DateTimeConstants
 import java.util.*
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
@@ -66,9 +65,6 @@ class Repository @Inject constructor(private val context: Context) {
             }
         }
 
-    private val mondayDate = DateTime().withDayOfWeek(DateTimeConstants.MONDAY)
-        .withTime(0, 0, 0, 0)
-
     init {
         MyApplication.appComponent.inject(this)
 
@@ -76,7 +72,6 @@ class Repository @Inject constructor(private val context: Context) {
         calendarService = Calendar.Builder(transport, GsonFactory.getDefaultInstance(), setHttpTimeout(credential))
             .setApplicationName(MyApplication.calendarsName)
             .build()
-
     }
 
     /**
@@ -125,13 +120,15 @@ class Repository @Inject constructor(private val context: Context) {
      *
      * @return An observable @EventsResult endpoint.
      */
-    fun getSiriusEventsOf(itemType: ItemType, id: String): Observable<EventsResult> {
+    fun getSiriusEventsOf(
+        itemType: ItemType, id: String, dateStart: DateTime,
+        dateEnd: DateTime
+    ): Observable<EventsResult> {
         return appAuthManager.getFreshAccessToken()
-            .toObservable()
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io()) // Observe the refreshAccessToken operation on a non-main thread.
-            .flatMap { accessToken ->
-                getSiriusEventsOf(accessToken, itemType, id)
+            .flatMapObservable { accessToken ->
+                getSiriusEventsOf(itemType, id, accessToken, dateStart, dateEnd)
             }
     }
 
@@ -144,13 +141,15 @@ class Repository @Inject constructor(private val context: Context) {
      * @return Observable SiriusApi endpoint data.
      */
     private fun getSiriusEventsOf(
-        accessToken: String,
         itemType: ItemType,
-        id: String
+        id: String,
+        accessToken: String,
+        dateStart: DateTime,
+        dateEnd: DateTime
     ): Observable<EventsResult> {
-        val dateString = mondayDate.toString("YYYY-MM-dd")
+        val dateString = dateStart.toString("YYYY-MM-dd")
 
-        val endDateString = mondayDate.plusDays(7).toString("YYYY-MM-dd")   // TODO: Remove
+        val endDateString = dateEnd.toString("YYYY-MM-dd")
         return when (itemType) {
             ItemType.COURSE -> siriusApiService.getCourseEvents(
                 accessToken = accessToken,
@@ -297,6 +296,7 @@ class Repository @Inject constructor(private val context: Context) {
 
                 emitter.onNext(GoogleCalendarListItem(id, displayName))
             }
+            cursor.close()
             emitter.onComplete()
         }
     }
@@ -306,7 +306,11 @@ class Repository @Inject constructor(private val context: Context) {
      *
      * @param calId id of the calendar we add event to. Received from a list of calendars using Android Calendar provider.
      */
-    fun getCalendarEvents(calId: Int): Observable<TimetableEvent> {
+    fun getCalendarEvents(
+        calId: Int,
+        dateStart: DateTime,
+        dateEnd: DateTime
+    ): Observable<TimetableEvent> {
         val eventProjection: Array<String> = arrayOf(
             CalendarContract.Events.CALENDAR_DISPLAY_NAME,
             CalendarContract.Events.TITLE,
@@ -329,8 +333,7 @@ class Repository @Inject constructor(private val context: Context) {
         val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?)" +
                 "AND (${CalendarContract.Events.DTEND} < ?))"
 
-        val dateEnd = mondayDate.plusDays(7)  // TODO: Remove
-        val selectionArgs: Array<String> = arrayOf("${mondayDate.millis}", "$calId", "${dateEnd.millis}")
+        val selectionArgs: Array<String> = arrayOf("${dateStart.millis}", "$calId", "${dateEnd.millis}")
 
         val obs = Observable.create<TimetableEvent> { emitter ->
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
@@ -364,6 +367,7 @@ class Repository @Inject constructor(private val context: Context) {
                 )
                 emitter.onNext(event)
             }
+            cursor.close()
             emitter.onComplete()
         }
 
@@ -476,7 +480,7 @@ class Repository @Inject constructor(private val context: Context) {
         return getGoogleCalendar(calendarName)
             .flatMapCompletable { calendar ->
                 Completable.fromCallable {
-                    calendarService.acl().delete(calendar.id, ruleId).execute();
+                    calendarService.acl().delete(calendar.id, ruleId).execute()
                 }
             }
     }

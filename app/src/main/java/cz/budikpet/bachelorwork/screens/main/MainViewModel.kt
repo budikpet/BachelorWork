@@ -23,14 +23,17 @@ import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
+import org.joda.time.DateTimeConstants
 import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
+data class State(val username: String, val events: List<TimetableEvent>)
+
 class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
-    val events = MutableLiveData<List<TimetableEvent>>()
+    val state = MutableLiveData<State>()
 
     @Inject
     internal lateinit var repository: Repository
@@ -39,6 +42,13 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     internal lateinit var sharedPreferences: SharedPreferences
 
     private var compositeDisposable = CompositeDisposable()
+
+    private val dateMonday = DateTime().withDayOfWeek(DateTimeConstants.MONDAY).withTimeAtStartOfDay()
+    private val numOfWeeksToUpdate by lazy {
+        sharedPreferences.getInt(
+            SharedPreferencesKeys.NUM_OF_WEEKS_TO_UPDATE.toString(), 1
+        )
+    }
 
     init {
         MyApplication.appComponent.inject(this)
@@ -97,8 +107,13 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * @param id identification of the item whose events we want.
      * @param itemType type of the item whose events we want.
      */
-    fun getSiriusEventsOf(itemType: ItemType, id: String) {
-        val disposable = repository.getSiriusEventsOf(itemType, id)
+    fun getSiriusEventsOf(
+        itemType: ItemType,
+        id: String,
+        dateStart: DateTime = dateMonday,
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate)
+    ) {
+        val disposable = repository.getSiriusEventsOf(itemType, id, dateStart, dateEnd)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
@@ -202,12 +217,17 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * Gets Sirius API events of the selected calendar.
      * @return An observable holding a list of TimetableEvents.
      */
-    private fun getSiriusEventsList(calendarListItem: GoogleCalendarListItem): Observable<ArrayList<TimetableEvent>> {
+    private fun getSiriusEventsList(
+        calendarListItem: GoogleCalendarListItem, dateStart: DateTime = dateMonday,
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate)
+    ): Observable<ArrayList<TimetableEvent>> {
+        // Get id from calendar display name - username, room number...
         val id = calendarListItem.displayName.substringBefore("_")
+
         return repository.searchSirius(id)
             .filter { searchItem -> searchItem.id == id }
             .flatMap { searchItem ->
-                repository.getSiriusEventsOf(searchItem.type, searchItem.id)
+                repository.getSiriusEventsOf(searchItem.type, searchItem.id, dateStart, dateEnd)
             }
             .flatMap { Observable.fromIterable(it.events) }
             .filter { !it.deleted }
@@ -224,8 +244,11 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * Gets events from the selected Google calendar.
      * @return An observable holding a list of TimetableEvents.
      */
-    private fun getGoogleCalendarEventsList(calendarListItem: GoogleCalendarListItem): Observable<ArrayList<TimetableEvent>> {
-        return repository.getCalendarEvents(calendarListItem.id)
+    private fun getGoogleCalendarEventsList(
+        calendarListItem: GoogleCalendarListItem, dateStart: DateTime = dateMonday,
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate)
+    ): Observable<ArrayList<TimetableEvent>> {
+        return repository.getCalendarEvents(calendarListItem.id, dateStart, dateEnd)
             .filter { event -> event.siriusId != null && !event.deleted }   // TODO: Move to methods that use the list?
             .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
             .map { list ->
@@ -287,10 +310,14 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         return Completable.mergeArray(createObs, deleteObs, changedObs)
     }
 
-    fun showEventsFromCalendar(username: String) {
+    fun loadEventsFromCalendar(
+        username: String,
+        dateStart: DateTime = dateMonday,
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate)
+    ) {
         val disposable = repository.getLocalCalendarList()
             .filter { it.displayName == "${username}_${MyApplication.calendarsName}" }
-            .flatMap { repository.getCalendarEvents(it.id) }
+            .flatMap { repository.getCalendarEvents(it.id, dateStart, dateEnd) }
             .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
             .map { list ->
                 list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
@@ -300,10 +327,10 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { events ->
-                    this.events.postValue(events)
+                    this.state.postValue(State(username, events))
                 },
                 { error ->
-                    Log.e(TAG, "showEventsFromCalendar: $error")
+                    Log.e(TAG, "loadEventsFromCalendar: $error")
                 }
             )
 
@@ -362,20 +389,20 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         compositeDisposable.add(disposable)
     }
 
-    fun getGoogleCalendarEvents(calId: Int) {
-        val disposable = repository.getCalendarEvents(calId)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { result ->
-                    Log.i(TAG, "AddGoogleCalendar")
-                    Log.i(TAG, result.toString())
-                },
-                { error ->
-                    Log.e(TAG, "AddGoogleCalendar: ${error}")
-                })
-        compositeDisposable.add(disposable)
-    }
+//    fun getGoogleCalendarEvents(calId: Int) {
+//        val disposable = repository.getCalendarEvents(calId)
+//            .subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+//            .subscribe(
+//                { result ->
+//                    Log.i(TAG, "AddGoogleCalendar")
+//                    Log.i(TAG, result.toString())
+//                },
+//                { error ->
+//                    Log.e(TAG, "AddGoogleCalendar: ${error}")
+//                })
+//        compositeDisposable.add(disposable)
+//    }
 
     fun addSecondaryGoogleCalendar(name: String) {
         val disposable = repository.addSecondaryGoogleCalendar(name)

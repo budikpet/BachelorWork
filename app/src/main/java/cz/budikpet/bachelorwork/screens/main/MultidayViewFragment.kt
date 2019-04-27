@@ -2,7 +2,6 @@ package cz.budikpet.bachelorwork.screens.main
 
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.content.Context
 import android.content.SharedPreferences
 import android.graphics.Color
 import android.os.Bundle
@@ -29,7 +28,6 @@ import javax.inject.Inject
  */
 class MultidayViewFragment : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
-    private var events = mutableListOf<TimetableEvent>()
 
     private lateinit var onEmptySpaceClickListener: View.OnClickListener
     private lateinit var onEventClickListener: View.OnClickListener
@@ -62,7 +60,10 @@ class MultidayViewFragment : Fragment() {
         super.onCreate(savedInstanceState)
         MyApplication.appComponent.inject(this)
 
-        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        viewModel = activity?.run {
+            ViewModelProviders.of(this).get(MainViewModel::class.java)
+        } ?: throw Exception("Invalid Activity")
+
         subscribeObservers()
 
         arguments?.let {
@@ -77,13 +78,49 @@ class MultidayViewFragment : Fragment() {
         createListeners()
     }
 
+    override fun onCreateView(
+        inflater: LayoutInflater, container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        val layout = inflater.inflate(R.layout.fragment_multidayview_list, container, false)
+        val rowsList = layout.rowsList
+        val timesList = layout.timesList
+
+        // Store references to dynamic event columns
+        eventsColumns = listOf(
+            layout.eventColumn0, layout.eventColumn1, layout.eventColumn2, layout.eventColumn3,
+            layout.eventColumn4, layout.eventColumn5, layout.eventColumn6
+        )
+
+        // Create rows
+        val currRowTime = firstDate.withTime(lessonsStartTime)
+        for (i in 0 until numOfLessons) {
+            val time = currRowTime.plusMinutes(i * (lessonLength + breakLength))
+            createNewRow(inflater, rowsList, timesList, time)
+        }
+
+        // Hide views according to the number of columns
+        val dayDisplayLayout = layout.dayDisplay
+        for (i in 0 until MAX_COLUMNS) {
+            val dayTextView = getDayTextView(i, dayDisplayLayout)
+
+            if (i >= eventsColumnsCount) {
+                dayTextView.visibility = View.GONE
+                eventsColumns.elementAt(i).visibility = View.GONE
+            } else {
+                dayTextView.text = firstDate.plusDays(i).dayOfWeek().getAsShortText(null).capitalize()
+            }
+        }
+
+        return layout
+    }
+
     private fun subscribeObservers() {
-        viewModel.events.observe(this, Observer { events ->
-            if (events != null) {
+        viewModel.state.observe(this, Observer { state ->
+            if (state != null) {
+                // Add events to the view
                 Log.i(TAG, "Observing events from LiveData.")
-                // TODO: Implement
-                this.events = events!!.toMutableList()
-                updateEventsView()
+                updateEventsView(state.events)
             }
         })
     }
@@ -114,51 +151,6 @@ class MultidayViewFragment : Fragment() {
         onEventClickListener = View.OnClickListener { eventView ->
             viewModel.onEventClicked(eventView.tag as TimetableEvent)
         }
-    }
-
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        val layout = inflater.inflate(R.layout.fragment_multidayview_list, container, false)
-        val rowsList = layout.rowsList
-        val timesList = layout.timesList
-
-        // Store references to dynamic event columns
-        eventsColumns = listOf(
-            layout.eventColumn0, layout.eventColumn1, layout.eventColumn2, layout.eventColumn3,
-            layout.eventColumn4, layout.eventColumn5, layout.eventColumn6
-        )
-
-        // Create rows
-        val currRowTime = DateTime().withDayOfWeek(DateTimeConstants.MONDAY).withTime(lessonsStartTime)
-        for (i in 0 until numOfLessons) {
-            val time = currRowTime.plusMinutes(i * (lessonLength + breakLength))
-            createNewRow(inflater, rowsList, timesList, time)
-        }
-
-        // Hide views according to the number of columns
-        val dayDisplayLayout = layout.dayDisplay
-        for (i in 0 until MAX_COLUMNS) {
-            val dayTextView = getDayTextView(i, dayDisplayLayout)
-
-            if (i >= eventsColumnsCount) {
-                dayTextView.visibility = View.GONE
-                eventsColumns.elementAt(i).visibility = View.GONE
-            } else {
-                dayTextView.text = firstDate.plusDays(i).dayOfWeek().getAsShortText(null).capitalize()
-            }
-        }
-
-        // TODO: Call somewhere else?
-        viewModel.showEventsFromCalendar(
-            sharedPreferences.getString(
-                SharedPreferencesKeys.SIRIUS_USERNAME.toString(),
-                ""
-            )
-        )
-
-        return layout
     }
 
     private fun getDayTextView(num: Int, dayDisplayLayout: LinearLayout): TextView {
@@ -211,7 +203,7 @@ class MultidayViewFragment : Fragment() {
     /**
      * Add events from the collection into the view.
      */
-    private fun updateEventsView() {
+    private fun updateEventsView(events: List<TimetableEvent>) {
         var currIndex = 0
         val lastDate = firstDate.plusDays(eventsColumnsCount)
         val preparedCollection = events
@@ -374,7 +366,7 @@ class MultidayViewFragment : Fragment() {
         const val MAX_COLUMNS = 7
 
         @JvmStatic
-        fun newInstance(columnCount: Int, startDate: DateTime): MultidayViewFragment {
+        fun newInstance(columnCount: Int, firstDate: DateTime): MultidayViewFragment {
             var columnCount = columnCount
 
             when {
@@ -385,7 +377,7 @@ class MultidayViewFragment : Fragment() {
             return MultidayViewFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_COLUMN_COUNT, columnCount)
-                    putLong(ARG_START_DATE, startDate.millis)
+                    putLong(ARG_START_DATE, firstDate.millis)
                 }
             }
         }
