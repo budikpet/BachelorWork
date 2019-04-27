@@ -31,7 +31,6 @@ class MultidayViewFragment : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
     private var events = mutableListOf<TimetableEvent>()
 
-    private var listener: Callback? = null
     private lateinit var onEmptySpaceClickListener: View.OnClickListener
     private lateinit var onEventClickListener: View.OnClickListener
 
@@ -104,7 +103,7 @@ class MultidayViewFragment : Fragment() {
 
             if (emptySpace.alpha == 1f) {
                 emptySpace.alpha = 0f
-                listener?.onAddEventClicked(selectedStartTime, selectedStartTime.plusMinutes(lessonLength))
+                viewModel.onAddEventClicked(selectedStartTime, selectedStartTime.plusMinutes(lessonLength))
             } else {
                 // Make the picture symbolizing event adding visible
                 emptySpace.alpha = 1f
@@ -113,7 +112,7 @@ class MultidayViewFragment : Fragment() {
         }
 
         onEventClickListener = View.OnClickListener { eventView ->
-            listener?.onEventClicked(eventView.tag as TimetableEvent)
+            viewModel.onEventClicked(eventView.tag as TimetableEvent)
         }
     }
 
@@ -205,20 +204,6 @@ class MultidayViewFragment : Fragment() {
 
         rowsList.addView(rowView)
         timesList.addView(timeTextView)
-    }
-
-    override fun onAttach(context: Context) {
-        super.onAttach(context)
-        if (context is Callback) {
-            listener = context
-        } else {
-            throw RuntimeException("$context must implement Callback")
-        }
-    }
-
-    override fun onDetach() {
-        super.onDetach()
-        listener = null
     }
 
     // MARK: Dynamically added events

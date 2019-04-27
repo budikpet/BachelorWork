@@ -31,7 +31,7 @@ import javax.inject.Inject
 /**
  * The first screen a user sees after logging into CTU from @CTULoginActivity.
  */
-class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, MultidayViewFragment.Callback {
+class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     companion object {
@@ -235,18 +235,5 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
 
     override fun quitApplication() {
         finishAffinity()
-    }
-
-    // MARK: Multiday
-
-    override fun onAddEventClicked(startTime: DateTime, endTime: DateTime) {
-        Log.i(
-            TAG,
-            "Add event clicked: ${startTime.toString("dd.MM")}<${startTime.toString("HH:mm")} – ${endTime.toString("HH:mm")}>"
-        )
-    }
-
-    override fun onEventClicked(event: TimetableEvent) {
-        Log.i(TAG, "Event clicked: $event")
     }
 }

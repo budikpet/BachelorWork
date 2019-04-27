@@ -27,7 +27,7 @@ import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
-class MainViewModel : ViewModel() {
+class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     val events = MutableLiveData<List<TimetableEvent>>()
@@ -308,6 +308,19 @@ class MainViewModel : ViewModel() {
             )
 
         compositeDisposable.add(disposable)
+    }
+
+    // MARK: Multiday
+
+    override fun onAddEventClicked(startTime: DateTime, endTime: DateTime) {
+        Log.i(
+            TAG,
+            "Add event clicked: ${startTime.toString("dd.MM")}<${startTime.toString("HH:mm")} – ${endTime.toString("HH:mm")}>"
+        )
+    }
+
+    override fun onEventClicked(event: TimetableEvent) {
+        Log.i(TAG, "Event clicked: $event")
     }
 
     // MARK: Mostly methods used for testing
