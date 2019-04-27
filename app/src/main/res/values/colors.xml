@@ -6,4 +6,9 @@
     <color name="divider_grey">#e7e7e7</color>
     <color name="transparent">#00000000</color>
     <color name="itemWhite">#FFFFFFFF</color>
+    <color name="eventDefault">#42ebf4</color>
+    <color name="eventLecture">#F1C95A</color>
+    <color name="eventTutorial">#75A754</color>
+    <color name="eventExam">#ff6060</color>
+    <color name="eventOther">#e0dbdb</color>
 </resources>

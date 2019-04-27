@@ -1,5 +1,6 @@
 package cz.budikpet.bachelorwork.data.models
 
+import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.EventType
 import org.joda.time.DateTime
 import org.joda.time.Interval
@@ -19,7 +20,8 @@ data class TimetableEvent(
     val capacity: Int,
     val occupied: Int = 0,
     val teachers: ArrayList<String>,
-    val students: ArrayList<String>? = null
+    val students: ArrayList<String>? = null,
+    var color: Int = defaultColor(event_type)
 ) {
     companion object {
         fun from(event: Event): TimetableEvent {
@@ -35,6 +37,19 @@ data class TimetableEvent(
             return event.original_data.ends_at != null ||
                     event.original_data.starts_at != null ||
                     event.original_data.room_id != null
+        }
+
+        fun defaultColor(event_type: EventType): Int {
+            return when (event_type) {
+                EventType.LECTURE -> R.color.eventLecture
+                EventType.EXAM -> R.color.eventExam
+                EventType.OTHER -> R.color.eventOther
+                EventType.TUTORIAL ->
+                    R.color.eventTutorial
+                else -> {
+                    R.color.eventDefault
+                }
+            }
         }
     }
 

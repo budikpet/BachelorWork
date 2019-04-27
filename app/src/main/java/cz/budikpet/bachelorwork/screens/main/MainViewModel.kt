@@ -41,7 +41,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     /**
      * Indicates that an update of all calendars ended successfully.
      */
-    val calendarsUpdated = MutableLiveData<Boolean>()
+    val calendarsUpdating = MutableLiveData<Boolean>()
 
     @Inject
     internal lateinit var repository: Repository
@@ -148,6 +148,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     fun updateAllCalendars() {
         compositeDisposable.clear()
 
+        calendarsUpdating.postValue(true)
+
         val disposable = repository.getGoogleCalendarList()
             .flatMapCompletable { checkGoogleCalendars(it) }
             .andThen(repository.refreshCalendars())
@@ -176,7 +178,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .subscribe {
                 Log.i(TAG, "Update done")
-                calendarsUpdated.postValue(true)
+                calendarsUpdating.postValue(false)
             }
 
         compositeDisposable.add(disposable)

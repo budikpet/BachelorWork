@@ -116,12 +116,14 @@ class MultidayViewFragment : Fragment() {
     }
 
     private fun subscribeObservers() {
+
+        // One observer per created fragment
         viewModel.state.observe(this, Observer { state ->
             if (state != null) {
                 // Add events to the view
                 Log.i(TAG, "Observing events from LiveData.")
 
-                if (!state.events.isEmpty()) {
+                if (state.events.isNotEmpty()) {
                     updateEventsView(state.events)
                 }
             }
@@ -311,7 +313,7 @@ class MultidayViewFragment : Fragment() {
     private fun createEventView(event: TimetableEvent): TextView {
         val eventView = TextView(context!!)
         eventView.text = event.acronym
-        eventView.setBackgroundColor(Color.RED)
+        eventView.setBackgroundColor(resources.getColor(event.color, null))
         eventView.height = getEventViewHeight(event)
         eventView.tag = event
         eventView.setOnClickListener(onEventClickListener)
