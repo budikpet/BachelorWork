@@ -6,15 +6,15 @@
 	These permissions are set only for Android 22 and lower.
 	Android 23 and higher have to ask for them at the runtime.
 	 -->
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
-    <uses-permission android:name="android.permission.READ_CALENDAR" />
-    <uses-permission android:name="android.permission.WRITE_CALENDAR" />
-    <uses-permission android:name="android.permission.READ_SYNC_STATS" />
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.READ_CALENDAR"/>
+    <uses-permission android:name="android.permission.WRITE_CALENDAR"/>
+    <uses-permission android:name="android.permission.READ_SYNC_STATS"/>
 
     <!-- Removed in API 23 -->
-    <uses-permission android:name="android.permission.USE_CREDENTIALS" android:maxSdkVersion="22" />
-    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" android:maxSdkVersion="22" />
+    <uses-permission android:name="android.permission.USE_CREDENTIALS" android:maxSdkVersion="22"/>
+    <uses-permission android:name="android.permission.MANAGE_ACCOUNTS" android:maxSdkVersion="22"/>
     <!---->
 
     <application

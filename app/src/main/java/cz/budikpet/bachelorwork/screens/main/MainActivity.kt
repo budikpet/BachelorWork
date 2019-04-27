@@ -1,7 +1,6 @@
 package cz.budikpet.bachelorwork.screens.main
 
 import android.accounts.AccountManager
-import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
 import android.content.SharedPreferences
@@ -67,7 +66,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
             permissionsCheckerFragment =
                 supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
 
-            multidayViewFragment = supportFragmentManager.findFragmentById(R.id.multidayViewFragment) as MultidayViewFragment
+            multidayViewFragment =
+                supportFragmentManager.findFragmentById(R.id.multidayViewFragment) as MultidayViewFragment
         }
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -139,14 +139,12 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
     }
 
     private fun subscribeObservers() {
-        viewModel.events.observe(this, Observer { eventsList ->
-            if (eventsList != null) {
-                Log.i(TAG, "Observing events from LiveData.")
-                showString(eventsList)
-            }
-        })
-
-
+//        viewModel.events.observe(this, Observer { eventsList ->
+//            if (eventsList != null) {
+//                Log.i(TAG, "Observing events from LiveData.")
+//                showString(eventsList)
+//            }
+//        })
     }
 
     private fun showString(result: List<Event>) {
@@ -218,7 +216,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback, M
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        if(item!!.itemId == R.id.itemSync) {
+        if (item!!.itemId == R.id.itemSync) {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             viewModel.updateAllCalendars()
 

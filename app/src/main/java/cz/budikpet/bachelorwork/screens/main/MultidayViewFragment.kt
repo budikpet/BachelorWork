@@ -17,8 +17,6 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
-import cz.budikpet.bachelorwork.data.enums.EventType
-import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.toDp
@@ -31,7 +29,7 @@ import javax.inject.Inject
  */
 class MultidayViewFragment : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
-    private val events = mutableListOf<TimetableEvent>()
+    private var events = mutableListOf<TimetableEvent>()
 
     private var listener: Callback? = null
     private lateinit var onEmptySpaceClickListener: View.OnClickListener
@@ -81,10 +79,12 @@ class MultidayViewFragment : Fragment() {
     }
 
     private fun subscribeObservers() {
-        viewModel.events.observe(this, Observer { eventsList ->
-            if (eventsList != null) {
+        viewModel.events.observe(this, Observer { events ->
+            if (events != null) {
                 Log.i(TAG, "Observing events from LiveData.")
                 // TODO: Implement
+                this.events = events!!.toMutableList()
+                updateEventsView()
             }
         })
     }
@@ -151,8 +151,13 @@ class MultidayViewFragment : Fragment() {
             }
         }
 
-        createDummyEvents()
-        updateEventsView()
+        // TODO: Call somewhere else?
+        viewModel.showEventsFromCalendar(
+            sharedPreferences.getString(
+                SharedPreferencesKeys.SIRIUS_USERNAME.toString(),
+                ""
+            )
+        )
 
         return layout
     }
@@ -184,8 +189,6 @@ class MultidayViewFragment : Fragment() {
         timeTextView.layoutParams = layoutParams
 
         for (i in 0 until MAX_COLUMNS) {
-            Log.i("MY_test", "$i")
-
             val emptySpace = rowView
                 .findViewById<View>(resources.getIdentifier("space$i", "id", context!!.packageName))
 
@@ -219,127 +222,6 @@ class MultidayViewFragment : Fragment() {
     }
 
     // MARK: Dynamically added events
-
-    private fun createDummyEvents() {
-        val mondayDate = firstDate.withDayOfWeek(DateTimeConstants.MONDAY).withTimeAtStartOfDay()
-
-        val event1Start = mondayDate.withTime(11, 0, 0, 0)
-        val event1End = event1Start.plusMinutes(90)
-
-        val event1 = TimetableEvent(
-            room = "T9:151",
-            fullName = "BI-BAP",
-            acronym = "BI-BAP_1",
-            capacity = 90,
-            starts_at = event1Start,
-            ends_at = event1End,
-            event_type = EventType.COURSE_EVENT,
-            teachers = arrayListOf("balikm"),
-            occupied = 49
-        )
-
-        val event2Start = event1Start.withTime(9, 15, 0, 0)
-        val event2End = event2Start.plusMinutes(195)
-
-        val event2 = TimetableEvent(
-            room = "T9:153",
-            fullName = "BI-END",
-            acronym = "BI-END_2",
-            capacity = 90,
-            starts_at = event2Start,
-            ends_at = event2End,
-            event_type = EventType.COURSE_EVENT,
-            teachers = arrayListOf("bulim"),
-            occupied = 49
-        )
-
-        val event3Start = mondayDate.withTime(8, 15, 0, 0).plusDays(4)
-        val event3End = event3Start.withTime(10, 45, 0, 0)
-
-        val event3 = TimetableEvent(
-            room = "T9:153",
-            fullName = "BI-LONE",
-            acronym = "BI-LONE_3",
-            capacity = 90,
-            starts_at = event3Start,
-            ends_at = event3End,
-            event_type = EventType.COURSE_EVENT,
-            teachers = arrayListOf("bulim"),
-            occupied = 49
-        )
-
-        val event4Start = mondayDate.withTime(11, 0, 0, 0).plusDays(5)
-        val event4End = event4Start.plusMinutes(90)
-
-        val event4 = TimetableEvent(
-            room = "T9:151",
-            fullName = "BI-BAP",
-            acronym = "BI-BAP_4",
-            capacity = 90,
-            starts_at = event4Start,
-            ends_at = event4End,
-            event_type = EventType.COURSE_EVENT,
-            teachers = arrayListOf("balikm"),
-            occupied = 49
-        )
-
-        val event5Start = event4Start.withTime(9, 15, 0, 0)
-        val event5End = event5Start.plusMinutes(195)
-
-        val event5 = TimetableEvent(
-            room = "T9:153",
-            fullName = "BI-END",
-            acronym = "BI-END_5",
-            capacity = 90,
-            starts_at = event5Start,
-            ends_at = event5End,
-            event_type = EventType.COURSE_EVENT,
-            teachers = arrayListOf("bulim"),
-            occupied = 49
-        )
-
-        val event6Start = event4Start.withTime(14, 15, 0, 0)
-        val event6End = event6Start.plusMinutes(90)
-
-        val event6 = TimetableEvent(
-            room = "T9:153",
-            fullName = "BI-LONE",
-            acronym = "BI-LONE_6",
-            capacity = 90,
-            starts_at = event6Start,
-            ends_at = event6End,
-            event_type = EventType.COURSE_EVENT,
-            teachers = arrayListOf("bulim"),
-            occupied = 49
-        )
-
-        val event7Start = mondayDate.withTime(19, 15, 0, 0).plusDays(2)
-        val event7End = event7Start.plusMinutes(200)
-
-        val event7 = TimetableEvent(
-            room = "T9:153",
-            fullName = "BI-LATE",
-            acronym = "BI-LATE_7",
-            capacity = 90,
-            starts_at = event7Start,
-            ends_at = event7End,
-            event_type = EventType.COURSE_EVENT,
-            teachers = arrayListOf("bulim"),
-            occupied = 49
-        )
-
-
-        events.add(event1)
-        events.add(event2)
-
-        events.add(event3)
-        events.add(event6)
-
-        events.add(event4)
-        events.add(event5)
-
-        events.add(event7)
-    }
 
     /**
      * Add events from the collection into the view.

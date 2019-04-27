@@ -9,11 +9,11 @@ import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
-import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.data.models.GoogleCalendarListItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
+import cz.budikpet.bachelorwork.util.edit
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -30,7 +30,7 @@ import kotlin.collections.ArrayList
 class MainViewModel : ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
-    val events = MutableLiveData<List<Event>>()
+    val events = MutableLiveData<List<TimetableEvent>>()
 
     @Inject
     internal lateinit var repository: Repository
@@ -56,26 +56,31 @@ class MainViewModel : ViewModel() {
      * If the user is fully authorized, tokens are refreshed.
      */
     fun checkSiriusAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?) {
+        compositeDisposable.clear()
+
         val disposable = repository.checkSiriusAuthorization(response, exception)
-            .observeOn(Schedulers.io())
-            .flatMapObservable { accessToken -> repository.getLoggedUserInfo(accessToken) }
+            .observeOn(Schedulers.io()) // TODO: Why is it necessery?
+            .flatMapObservable { accessToken ->
+                repository.getLoggedUserInfo(accessToken)
+            }
             .flatMapCompletable { userInfo ->
                 if (!sharedPreferences.contains(SharedPreferencesKeys.SIRIUS_USERNAME.toString())) {
                     // Store the Sirius username
-                    val editor = sharedPreferences.edit()
-                    editor.putString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), userInfo.username)
-                    editor.apply()
+                    sharedPreferences.edit {
+                        it.putString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), userInfo.username)
+                    }
                 }
 
                 Completable.complete()
             }
-            .observeOn(Schedulers.io())
             .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
                 Log.e(TAG, "Authorization: $exception")
                 false
             }
             .subscribe {
+                //                Log.i(TAG, "Thread: ${Thread.currentThread().name}")
                 Log.i(TAG, "Fully authorized & tokens restored.")
             }
 
@@ -98,7 +103,8 @@ class MainViewModel : ViewModel() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
-                    events.postValue(result.events)
+                    // TODO: Implement
+//                    events.postValue(result.events)
                 },
                 { error -> Log.e(TAG, "Error: ${error}") }
             )
@@ -115,8 +121,7 @@ class MainViewModel : ViewModel() {
         compositeDisposable.clear()
 
         val disposable = repository.getGoogleCalendarList()
-            .observeOn(Schedulers.io())
-            .flatMapCompletable { calendarsCheck(it) }
+            .flatMapCompletable { checkGoogleCalendars(it) }
             .andThen(repository.refreshCalendars())
             .andThen(repository.getLocalCalendarList())
             .flatMapCompletable { calendarListItem ->
@@ -161,7 +166,7 @@ class MainViewModel : ViewModel() {
     /**
      * Checks Google Calendar list for calendars that are hidden and for the missing personal calendar.
      */
-    private fun calendarsCheck(calendars: MutableList<CalendarListEntry>): Completable {
+    private fun checkGoogleCalendars(calendars: MutableList<CalendarListEntry>): Completable {
         val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
         val personalCalendarName = "${username}_${MyApplication.calendarsName}"
         var personalCalendarFound = false
@@ -281,6 +286,31 @@ class MainViewModel : ViewModel() {
         // Create a completable which starts all actions
         return Completable.mergeArray(createObs, deleteObs, changedObs)
     }
+
+    fun showEventsFromCalendar(username: String) {
+        val disposable = repository.getLocalCalendarList()
+            .filter { it.displayName == "${username}_${MyApplication.calendarsName}" }
+            .flatMap { repository.getCalendarEvents(it.id) }
+            .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
+            .map { list ->
+                list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
+                return@map list
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { events ->
+                    this.events.postValue(events)
+                },
+                { error ->
+                    Log.e(TAG, "showEventsFromCalendar: $error")
+                }
+            )
+
+        compositeDisposable.add(disposable)
+    }
+
+    // MARK: Mostly methods used for testing
 
     fun getGoogleCalendarList() {
         val disposable = repository.getGoogleCalendarList()

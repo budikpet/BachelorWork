@@ -22,6 +22,7 @@ import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.AppAuthManager
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
+import cz.budikpet.bachelorwork.util.createMyEntry
 import io.reactivex.Completable
 import io.reactivex.CompletableEmitter
 import io.reactivex.Observable
@@ -488,17 +489,4 @@ class Repository @Inject constructor(private val context: Context) {
             .filter { it.summary == calendarName }
             .singleOrError()
     }
-}
-
-/**
- * Make the entry hidden with a specific color.
- */
-fun com.google.api.services.calendar.model.Calendar.createMyEntry(): CalendarListEntry {
-    val entry = CalendarListEntry()
-    entry.id = id
-    entry.hidden = false
-    entry.foregroundColor = "#000000"
-    entry.backgroundColor = "#d3d3d3"
-
-    return entry
 }
