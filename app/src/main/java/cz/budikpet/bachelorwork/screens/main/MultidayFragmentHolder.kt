@@ -3,13 +3,17 @@ package cz.budikpet.bachelorwork.screens.main
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
 import android.support.v4.view.ViewPager
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ProgressBar
 import cz.budikpet.bachelorwork.R
+import kotlinx.android.synthetic.main.fragment_holder_multiday.*
+import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
 import org.joda.time.DateTime
 
 class MultidayFragmentHolder : Fragment() {
@@ -17,7 +21,8 @@ class MultidayFragmentHolder : Fragment() {
 
     private val PREFILLED_WEEKS = 151
 
-    private var viewPager: ViewPager? = null
+    private lateinit var viewPager: ViewPager
+    private lateinit var progressBar: ProgressBar
     private var isGoToTodayVisible = false
 
     private val todayDate = DateTime().withTimeAtStartOfDay()
@@ -34,6 +39,14 @@ class MultidayFragmentHolder : Fragment() {
         } ?: throw Exception("Invalid Activity")
 
         subscribeObservers()
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val layout = inflater.inflate(R.layout.fragment_holder_multiday, container, false) as ConstraintLayout
+        viewPager = layout.viewPager
+        progressBar = layout.progressBar
+        setupFragment()
+        return layout
     }
 
     private fun subscribeObservers() {
@@ -56,21 +69,14 @@ class MultidayFragmentHolder : Fragment() {
             if (updating != null && username != null) {
                 if (!updating) {
                     // Update done
-                    // TODO: Stop indicator
-
+                    progressBar.visibility = View.GONE
                     viewModel.loadEventsFromCalendar(username)
                 } else {
                     // Update started
-                    // TODO: Implement indicator
+                    progressBar.visibility = View.VISIBLE
                 }
             }
         })
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        viewPager = inflater.inflate(R.layout.fragment_holder_multiday, container, false) as ViewPager
-        setupFragment()
-        return viewPager
     }
 
     private fun setupFragment() {

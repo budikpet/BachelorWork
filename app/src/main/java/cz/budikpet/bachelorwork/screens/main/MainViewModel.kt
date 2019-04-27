@@ -174,6 +174,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
+                calendarsUpdating.postValue(false)
                 return@onErrorComplete handleError(exception)
             }
             .subscribe {
