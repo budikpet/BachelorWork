@@ -2,7 +2,7 @@ package cz.budikpet.bachelorwork.data.enums
 
 import com.google.gson.annotations.SerializedName
 
-enum class ItemType() {
+enum class ItemType {
     @SerializedName("course")
     COURSE,
     @SerializedName("room")

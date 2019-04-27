@@ -2,7 +2,7 @@ package cz.budikpet.bachelorwork.data.enums
 
 import com.google.gson.annotations.SerializedName
 
-enum class EventType() {
+enum class EventType {
     @SerializedName("assessment")   // Makes it possible to use the enum with Retrofit
     ASSESSMENT,
     @SerializedName("course_event")

@@ -11,7 +11,7 @@ class AuthStateManager(context: Context) {
 
     private val prefPath = "auth"
     private val STATE_KEY = "stateJson"
-    private val authPrefs: SharedPreferences = context.getSharedPreferences(prefPath, MODE_PRIVATE);
+    private val authPrefs: SharedPreferences = context.getSharedPreferences(prefPath, MODE_PRIVATE)
 
     var authState: AuthState? = null
         get() {

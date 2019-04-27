@@ -3,7 +3,6 @@ package cz.budikpet.bachelorwork.screens
 import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.util.Log
 import pub.devrel.easypermissions.AfterPermissionGranted
@@ -60,12 +59,6 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
         }
     }
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-//        retainInstance = true
-//        Log.i(TAG, "OnCreate")
-    }
-
     override fun onDetach() {
         super.onDetach()
         callback = null
@@ -91,10 +84,10 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
         // Enables results of EasyPermissions interfaces and @AfterPermissionGranted annotation in [PermissionsCheckerFragment]
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, this)
 
         // Enables results of EasyPermissions interfaces and @AfterPermissionGranted annotation in the activity
-        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, callback);
+        EasyPermissions.onRequestPermissionsResult(requestCode, permissions, grantResults, callback)
     }
 
     /**
