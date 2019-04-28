@@ -214,6 +214,11 @@ class MultidayViewFragment : Fragment() {
             .filter { firstDate.isBefore(it.starts_at.millis) && lastDate.isAfter(it.starts_at.millis) }
             .map { return@map IndexedTimetableEvent(-1, it) }
 
+        // Clear columns
+        for (column in eventsColumns) {
+            column.removeAllViews()
+        }
+
         // Sets up indexes. Events with the same index are overlapping.
         preparedCollection.forEach { indexedTimetableEvent1: IndexedTimetableEvent ->
             if (indexedTimetableEvent1.index == -1) {
