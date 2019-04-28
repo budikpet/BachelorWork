@@ -28,6 +28,8 @@ import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
+// TODO: React on exceptions - toasts and other methods
+
 data class State(val username: String, val events: List<TimetableEvent>)
 
 class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
@@ -42,6 +44,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * Indicates that an update of all calendars ended successfully.
      */
     val calendarsUpdating = MutableLiveData<Boolean>()
+
+    val thrownException = MutableLiveData<Throwable>()
 
     @Inject
     internal lateinit var repository: Repository
@@ -174,7 +178,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
-                calendarsUpdating.postValue(false)
                 return@onErrorComplete handleError(exception)
             }
             .subscribe {
@@ -236,8 +239,9 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * @return An observable holding a list of TimetableEvents.
      */
     private fun getSiriusEventsList(
-        calendarListItem: GoogleCalendarListItem, dateStart: DateTime = dateMonday,
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate)
+        calendarListItem: GoogleCalendarListItem,
+        dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate*2)
     ): Observable<ArrayList<TimetableEvent>> {
         // Get id from calendar display name - username, room number...
         val id = calendarListItem.displayName.substringBefore("_")
@@ -263,8 +267,9 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * @return An observable holding a list of TimetableEvents.
      */
     private fun getGoogleCalendarEventsList(
-        calendarListItem: GoogleCalendarListItem, dateStart: DateTime = dateMonday,
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate)
+        calendarListItem: GoogleCalendarListItem,
+        dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate*2)
     ): Observable<ArrayList<TimetableEvent>> {
         return repository.getCalendarEvents(calendarListItem.id, dateStart, dateEnd)
             .filter { event -> event.siriusId != null && !event.deleted }   // TODO: Move to methods that use the list?
@@ -330,8 +335,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     fun loadEventsFromCalendar(
         username: String,
-        dateStart: DateTime = dateMonday,
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate)
+        dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate*2)
     ) {
         val disposable = repository.getLocalCalendarList()
             .filter { it.displayName == "${username}_${MyApplication.calendarsName}" }
