@@ -8,6 +8,9 @@ import cz.budikpet.bachelorwork.di.DaggerAppComponent
 import io.reactivex.plugins.RxJavaPlugins
 import java.io.IOException
 import java.net.SocketException
+import io.reactivex.exceptions.UndeliverableException
+
+
 
 class MyApplication : Application() {
     private val TAG = "MY_${this.javaClass.simpleName}"
@@ -26,21 +29,28 @@ class MyApplication : Application() {
             .build()
 
         // Create a handler for some undeliverable exceptions
-        RxJavaPlugins.setErrorHandler { ex ->
-            // These exceptions occur sometimes when chains are interrupted and aren't crash worthy
-            if (ex is IOException) {
-                Log.i(TAG, "RxJava thrown an IOException: $ex")
-            } else if (ex is SocketException) {
-                Log.i(TAG, "RxJava thrown a SocketException: $ex")
-            } else if (ex is InterruptedException) {
-                Log.i(TAG, "RxJava thrown an InterruptedException: $ex")
+        RxJavaPlugins.setErrorHandler { e ->
+            if (e is IOException || e is SocketException) {
+                // fine, irrelevant network problem or API that throws on cancellation
+                return@setErrorHandler
             }
-
-            // These exceptions are crash worthy
-            if (ex is NullPointerException || ex is IllegalStateException || ex is IllegalArgumentException) {
-                Log.i(TAG, "RxJava thrown a crash worthy exception: $ex")
-                throw ex
+            if (e is InterruptedException) {
+                // fine, some blocking code was interrupted by a dispose call
+                return@setErrorHandler
             }
+            if (e is NullPointerException || e is IllegalArgumentException) {
+                // that's likely a bug in the application
+//                Thread.currentThread().uncaughtExceptionHandler
+//                    .handleException(Thread.currentThread(), e)
+                return@setErrorHandler
+            }
+            if (e is IllegalStateException) {
+                // that's a bug in RxJava or in a custom operator
+//                Thread.currentThread().uncaughtExceptionHandler.
+//                    .handleException(Thread.currentThread(), e)
+                return@setErrorHandler
+            }
+            Log.w(TAG,"Undeliverable exception received, not sure what to do", e)
         }
     }
 }
