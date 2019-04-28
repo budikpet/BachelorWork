@@ -23,7 +23,7 @@ interface SiriusApiService {
     @GET("events")
     fun getEvents(
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 100,    // <1; 1000>
+        @Query("limit") limit: Int? = 1000,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("include") include: String? = null,
         @Query("event_type") event_type: EventType? = null,
@@ -40,7 +40,7 @@ interface SiriusApiService {
     fun getPersonEvents(
         @Path("username") id: String,
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 100,    // <1; 1000>
+        @Query("limit") limit: Int? = 1000,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("include") include: String? = null,
         @Query("event_type") event_type: EventType? = null,
@@ -57,7 +57,7 @@ interface SiriusApiService {
     fun getRoomEvents(
         @Path("kosId") id: String,
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 100,    // <1; 1000>
+        @Query("limit") limit: Int? = 1000,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("include") include: String? = null,
         @Query("event_type") event_type: EventType? = null,
@@ -74,7 +74,7 @@ interface SiriusApiService {
     fun getCourseEvents(
         @Path("courseCode") id: String,
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 100,    // <1; 1000>
+        @Query("limit") limit: Int? = 1000,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("include") include: String? = null,
         @Query("event_type") event_type: EventType? = null,
@@ -92,7 +92,7 @@ interface SiriusApiService {
     @GET("search")
     fun search(
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 100,    // <1; 1000>
+        @Query("limit") limit: Int? = 1000,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("q") query: String
     ): Observable<SearchResult>

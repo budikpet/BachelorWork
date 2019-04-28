@@ -107,7 +107,7 @@ class Repository @Inject constructor(private val context: Context) {
             .toObservable()
             .observeOn(Schedulers.io())
             .flatMap { accessToken ->
-                siriusApiService.search(accessToken, 100, query = query)
+                siriusApiService.search(accessToken, query = query)
                     .flatMap { searchResult ->
                         Observable.fromIterable(searchResult.results)
                     }

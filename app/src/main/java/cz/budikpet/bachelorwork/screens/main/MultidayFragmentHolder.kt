@@ -68,6 +68,8 @@ class MultidayFragmentHolder : Fragment() {
         viewModel.calendarsUpdating.observe(this, Observer { updating ->
             val username = viewModel.state.value?.username
 
+            Log.i(TAG, "Calendars updating: $updating")
+
             if (updating != null && username != null) {
                 if (!updating) {
                     // Update done
