@@ -161,7 +161,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API
                 val siriusObs = getSiriusEventsList(calendarListItem)
-                    .retry(11)
+                    .retry(21)
 
                 val calendarObs = getGoogleCalendarEventsList(calendarListItem)
 
@@ -175,7 +175,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
                 return@flatMapCompletable updateObs
             }
-            .andThen(repository.refreshCalendars())
+//            .andThen(repository.refreshCalendars()) // TODO: Do after the postValue. Maybe even in a separate chain.
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete {
@@ -184,7 +184,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .subscribe {
                 Log.i(TAG, "Update done")
-                calendarsUpdating.postValue(false)
+                calendarsUpdating.postValue(false)  // TODO: Do before the second refreshCalendar
             }
 
         compositeDisposable.add(disposable)
