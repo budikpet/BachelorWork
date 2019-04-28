@@ -285,8 +285,8 @@ class Repository @Inject constructor(private val context: Context) {
         val selectionArgs: Array<String> = arrayOf("%_${MyApplication.calendarsName}%")
 
         return Observable.create { emitter ->
-            Log.i(TAG, "Checking local calendars")
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
+            Log.i(TAG, "Found ${cursor.count} used calendars.")
 
             // Use the cursor to step through the returned records
             while (cursor.moveToNext()) {
@@ -337,7 +337,7 @@ class Repository @Inject constructor(private val context: Context) {
 
         val obs = Observable.create<TimetableEvent> { emitter ->
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
-            Log.i(TAG, "getCalendarEvents: received ${cursor.count}")
+            Log.i(TAG, "Received ${cursor.count} events from calendar $calId.")
 
             // Use the cursor to step through the returned records
             while (cursor.moveToNext()) {

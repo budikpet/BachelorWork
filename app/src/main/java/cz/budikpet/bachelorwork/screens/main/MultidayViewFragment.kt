@@ -3,12 +3,10 @@ package cz.budikpet.bachelorwork.screens.main
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.SharedPreferences
-import android.graphics.Color
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.constraint.ConstraintSet
 import android.support.v4.app.Fragment
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -123,7 +121,6 @@ class MultidayViewFragment : Fragment() {
         viewModel.state.observe(this, Observer { state ->
             if (state != null) {
                 // Add events to the view
-                Log.i(TAG, "Observing events from LiveData.")
 
                 if (state.events.isNotEmpty()) {
                     updateEventsView(state.events)

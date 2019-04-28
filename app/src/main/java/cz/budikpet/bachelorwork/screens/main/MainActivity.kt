@@ -54,7 +54,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         setContentView(R.layout.activity_main)
         MyApplication.appComponent.inject(this)
 
-        // TODO: Can multiday fragment be here before all checks?
         if (savedInstanceState == null) {
             permissionsCheckerFragment = PermissionsCheckerFragment()
             multidayFragmentHolder = MultidayFragmentHolder()

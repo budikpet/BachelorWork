@@ -93,27 +93,15 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
 
     }
 
-    override fun onResume() {
-        super.onResume()
-        Log.i(TAG, "OnResume")
-
-        // TODO: Catch cancelled Sirius login
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.i(TAG, "OnPause")
-    }
-
     // MARK: User authorization
 
     private fun checkAuthorization() {
         if (appAuthManager.isAuthorized()) {
-            Log.i(TAG, "User is already authenticated, proceeding to token activity")
             startActivity(Intent(this, MainActivity::class.java))
             finish()
             return
         } else {
+            Log.i(TAG, "User is needs to be authorized in Sirius API.")
             startAuthorization()
         }
     }

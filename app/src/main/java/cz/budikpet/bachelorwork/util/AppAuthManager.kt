@@ -79,7 +79,7 @@ class AppAuthManager @Inject constructor(context: Context) {
             Log.i(TAG, "Already authorized.")
             startRefreshAccessToken()
         } else {
-            Log.i(TAG, "Not yet authorized")
+            Log.i(TAG, "Not yet authorized.")
             startAuthCodeExchange(response, exception)
         }
     }
