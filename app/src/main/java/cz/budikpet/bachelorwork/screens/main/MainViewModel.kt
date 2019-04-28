@@ -30,21 +30,27 @@ import kotlin.collections.ArrayList
 // TODO: Parts of AllCalendarUpdate code can be reused
 // TODO: Check created observables for possible exception throws
 
-data class State(val username: String, val events: List<TimetableEvent>)
-
 class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     /**
-     * Holds data important for displaying events.
+     * Username of the currently selected timetable.
      */
-    val state = MutableLiveData<State>()
+    val username = MutableLiveData<String>()
+
+    /**
+     * Events of the currently selected timetable.
+     */
+    val events = MutableLiveData<List<TimetableEvent>>()
 
     /**
      * Indicates that an update of all calendars ended successfully.
      */
     val calendarsUpdating = MutableLiveData<Boolean>()
 
+    /**
+     * Any exception that was thrown and must be somehow shown to the user.
+     */
     val thrownException = MutableLiveData<Throwable>()
 
     @Inject
@@ -115,7 +121,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     fun signedInToGoogle() {
         val username: String = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), "")
-        state.postValue(State(username, listOf()))
+        this.username.postValue(username)
     }
 
     /**
@@ -342,7 +348,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { events ->
-                    this.state.postValue(State(username, events))
+                    this.events.postValue(events)
                 },
                 { error ->
                     Log.e(TAG, "loadEventsFromCalendar: $error")

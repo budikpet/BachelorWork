@@ -54,20 +54,17 @@ class MultidayFragmentHolder : Fragment() {
     private fun subscribeObservers() {
 
         // Observer created only once
-        viewModel.state.observe(this, Observer { state ->
-            if (state != null) {
+        viewModel.username.observe(this, Observer { username ->
+            if (username != null) {
                 // TODO: Changes to other parts of the UI like ToolBar
 
-                // TODO: Warning, can cause an infinite loop if it is empty
-                if (state.events.isEmpty()) {
-                    // New username was loaded. Load its events
-//                    viewModel.loadEventsFromCalendar(state.username)
-                }
+                // New username was loaded
+                viewModel.loadEventsFromCalendar(username)
             }
         })
 
         viewModel.calendarsUpdating.observe(this, Observer { updating ->
-            val username = viewModel.state.value?.username
+            val username = viewModel.username.value
 
             Log.i(TAG, "Calendars updating: $updating")
 

@@ -118,12 +118,12 @@ class MultidayViewFragment : Fragment() {
     private fun subscribeObservers() {
 
         // One observer per created fragment
-        viewModel.state.observe(this, Observer { state ->
-            if (state != null) {
+        viewModel.events.observe(this, Observer { events ->
+            if (events != null) {
                 // Add events to the view
 
-                if (state.events.isNotEmpty()) {
-                    updateEventsView(state.events)
+                if (events.isNotEmpty()) {
+                    updateEventsView(events)
                 }
             }
         })
