@@ -11,10 +11,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
+import android.widget.Toast
 import cz.budikpet.bachelorwork.R
-import kotlinx.android.synthetic.main.fragment_holder_multiday.*
+import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
 import org.joda.time.DateTime
+import retrofit2.HttpException
 
 class MultidayFragmentHolder : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
@@ -54,10 +56,10 @@ class MultidayFragmentHolder : Fragment() {
         // Observer created only once
         viewModel.state.observe(this, Observer { state ->
             if (state != null) {
-                Log.i(TAG, "State changed")
                 // TODO: Changes to other parts of the UI like ToolBar
 
-                if(state.events.isEmpty()) {
+                if (state.events.isEmpty()) {
+                    // New username was loaded. Load its events
                     viewModel.loadEventsFromCalendar(state.username)
                 }
             }
@@ -77,12 +79,18 @@ class MultidayFragmentHolder : Fragment() {
                 }
             }
         })
+        
+        viewModel.thrownException.observe(this, Observer {
+            if(it != null) {
+                handleException(it)
+            }
+        })
     }
 
     private fun setupFragment() {
         val multidayAdapter = ViewPagerAdapter(activity!!.supportFragmentManager, 7, PREFILLED_WEEKS)
 
-        viewPager!!.apply {
+        viewPager.apply {
             adapter = multidayAdapter
             currentItem = PREFILLED_WEEKS / 2
 
@@ -106,6 +114,25 @@ class MultidayFragmentHolder : Fragment() {
             })
         }
 //        updateActionBarTitle()
+    }
+
+    private fun handleException(exception: Throwable) {
+        // TODO: Implement
+        var text = "Unknown exception occurred."
+
+        if (exception is GoogleAccountNotFoundException) {
+            // Prompt the user to select a new google account
+            Log.e(TAG, "Used google account not found.")
+        } else if(exception is HttpException) {
+            Log.e(TAG, "Retrofit 2 HTTP ${exception.code()} exception: ${exception.response()}")
+            if(exception.code() == 500) {
+                text = "CTU internal server error occured. Please try again."
+            }
+        } else {
+            Log.e(TAG, "Unknown exception occurred in update: $exception")
+        }
+
+        Toast.makeText(context, text, Toast.LENGTH_LONG).show()
     }
 
 //    private fun setupWeeklyActionbarTitle(timestamp: Long) {

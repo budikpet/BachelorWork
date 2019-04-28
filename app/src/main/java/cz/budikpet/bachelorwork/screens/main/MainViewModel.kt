@@ -24,11 +24,12 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
+import retrofit2.HttpException
 import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
-// TODO: React on exceptions - toasts and other methods
+// TODO: Parts of AllCalendarUpdate code can be reused
 
 data class State(val username: String, val events: List<TimetableEvent>)
 
@@ -161,6 +162,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API
                 val siriusObs = getSiriusEventsList(calendarListItem)
+                    .retry(11)
 
                 val calendarObs = getGoogleCalendarEventsList(calendarListItem)
 
@@ -177,8 +179,9 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .andThen(repository.refreshCalendars())
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .onErrorComplete { exception ->
-                return@onErrorComplete handleError(exception)
+            .onErrorComplete {
+                thrownException.postValue(it)
+                return@onErrorComplete true
             }
             .subscribe {
                 Log.i(TAG, "Update done")
@@ -186,17 +189,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
 
         compositeDisposable.add(disposable)
-    }
-
-    private fun handleError(exception: Throwable): Boolean {
-        if (exception is GoogleAccountNotFoundException) {
-            // Prompt the user to select a new google account
-            // TODO: Implement
-            Log.e(TAG, "Used google account not found.")
-        }
-
-        Log.e(TAG, "Update: $exception")
-        return true   // TODO: Show error toast
     }
 
     /**
@@ -256,6 +248,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .map { event -> TimetableEvent.from(event) }
             .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
             .map { list ->
+                Log.i(TAG, "Received ${list.count()} events from SiriusAPI timetable ${list.first().siriusId}.")
                 list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
                 return@map list
             }
