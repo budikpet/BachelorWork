@@ -408,6 +408,7 @@ class Repository @Inject constructor(private val context: Context) {
 
         val values = ContentValues().apply {
             put(CalendarContract.Events.CALENDAR_ID, calId)
+            put(CalendarContract.Events.EVENT_LOCATION, event.room)
             put(CalendarContract.Events.TITLE, event.acronym)
             put(CalendarContract.Events.DTSTART, event.starts_at.millis)
             put(CalendarContract.Events.DTEND, event.ends_at.millis)
