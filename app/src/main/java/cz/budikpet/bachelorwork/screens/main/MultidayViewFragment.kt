@@ -214,6 +214,12 @@ class MultidayViewFragment : Fragment() {
             .filter {
                 firstDate.isBefore(it.starts_at.millis) && lastDate.isAfter(it.starts_at.millis) && !it.deleted
             }
+            .filter {it ->
+                return@filter when {
+                    it.siriusId != null -> it.siriusId != -1
+                    else -> true
+                }
+            }
             .map { return@map IndexedTimetableEvent(-1, it) }
 
         // Clear columns
