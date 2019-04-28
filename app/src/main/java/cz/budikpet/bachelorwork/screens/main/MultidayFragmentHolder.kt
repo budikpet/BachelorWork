@@ -79,9 +79,9 @@ class MultidayFragmentHolder : Fragment() {
                 }
             }
         })
-        
+
         viewModel.thrownException.observe(this, Observer {
-            if(it != null) {
+            if (it != null) {
                 handleException(it)
             }
         })
@@ -123,9 +123,9 @@ class MultidayFragmentHolder : Fragment() {
         if (exception is GoogleAccountNotFoundException) {
             // Prompt the user to select a new google account
             Log.e(TAG, "Used google account not found.")
-        } else if(exception is HttpException) {
+        } else if (exception is HttpException) {
             Log.e(TAG, "Retrofit 2 HTTP ${exception.code()} exception: ${exception.response()}")
-            if(exception.code() == 500) {
+            if (exception.code() == 500) {
                 text = "CTU internal server error occured. Please try again."
             }
         } else {

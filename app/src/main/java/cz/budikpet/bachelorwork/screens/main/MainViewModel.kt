@@ -11,7 +11,6 @@ import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.GoogleCalendarListItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
-import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
 import io.reactivex.Completable
@@ -24,12 +23,12 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
-import retrofit2.HttpException
 import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
 
 // TODO: Parts of AllCalendarUpdate code can be reused
+// TODO: Check created observables for possible exception throws
 
 data class State(val username: String, val events: List<TimetableEvent>)
 
@@ -233,7 +232,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     private fun getSiriusEventsList(
         calendarListItem: GoogleCalendarListItem,
         dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate*2)
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
     ): Observable<ArrayList<TimetableEvent>> {
         // Get id from calendar display name - username, room number...
         val id = calendarListItem.displayName.substringBefore("_")
@@ -262,7 +261,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     private fun getGoogleCalendarEventsList(
         calendarListItem: GoogleCalendarListItem,
         dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate*2)
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
     ): Observable<ArrayList<TimetableEvent>> {
         return repository.getCalendarEvents(calendarListItem.id, dateStart, dateEnd)
             .filter { event -> event.siriusId != null && !event.deleted }   // TODO: Move to methods that use the list?
@@ -329,7 +328,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     fun loadEventsFromCalendar(
         username: String,
         dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate*2)
+        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
     ) {
         val disposable = repository.getLocalCalendarList()
             .filter { it.displayName == "${username}_${MyApplication.calendarsName}" }
