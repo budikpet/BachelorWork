@@ -60,6 +60,14 @@ data class TimetableEvent(
         return interval1.overlaps(interval2)
     }
 
+    fun compare(timetableEvent: TimetableEvent): Int {
+        return when {
+            starts_at.isBefore(timetableEvent.starts_at) -> -1
+            starts_at.isAfter(timetableEvent.starts_at) -> 1
+            else -> 0
+        }
+    }
+
     override fun hashCode(): Int {
         return Objects.hash(siriusId)
     }

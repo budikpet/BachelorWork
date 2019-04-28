@@ -272,6 +272,9 @@ class Repository @Inject constructor(private val context: Context) {
             .toList()
     }
 
+    /**
+     * Updates the CalendarList in the Google Calendar service using Google Calendar API.
+     */
     fun updateGoogleCalendarList(entry: CalendarListEntry): Single<CalendarListEntry> {
         return Single.fromCallable { calendarService.calendarList().update(entry.id, entry).execute() }
     }
@@ -279,14 +282,16 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Gets a list of calendars used by this application using Android calendar provider.
      */
-    fun getLocalCalendarList(): Observable<GoogleCalendarListItem> {
+    fun getLocalCalendarListItems(): Observable<CalendarListItem> {
         val eventProjection: Array<String> = arrayOf(
             CalendarContract.Calendars._ID,
-            CalendarContract.Calendars.CALENDAR_DISPLAY_NAME
+            CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+            CalendarContract.Calendars.SYNC_EVENTS
         )
 
         val projectionIdIndex = 0
         val projectionDisplayNameIndex = 1
+        val projectionSyncEventsIndex = 2
 
         val uri: Uri = CalendarContract.Calendars.CONTENT_URI
         val selection =
@@ -301,12 +306,28 @@ class Repository @Inject constructor(private val context: Context) {
             while (cursor.moveToNext()) {
                 // Get the field values
                 val displayName = cursor.getString(projectionDisplayNameIndex)
-                val id = cursor.getInt(projectionIdIndex)
+                val id = cursor.getLong(projectionIdIndex)
+                val syncEvents = cursor.getInt(projectionSyncEventsIndex) == 1
 
-                emitter.onNext(GoogleCalendarListItem(id, displayName))
+                emitter.onNext(CalendarListItem(id, displayName, syncEvents))
             }
             cursor.close()
             emitter.onComplete()
+        }
+    }
+
+    /**
+     * Updates an event in a calendar using Android calendar provider.
+     */
+    fun updateLocalCalendarList(calendarListItem: CalendarListItem): Single<Int> {
+
+        val values = ContentValues().apply {
+            put(CalendarContract.Calendars.SYNC_EVENTS, calendarListItem.syncEvents)
+        }
+        val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Calendars.CONTENT_URI, calendarListItem.id)
+        return Single.fromCallable {
+            val rows: Int = context.contentResolver.update(updateUri, values, null, null)
+            return@fromCallable rows
         }
     }
 
@@ -316,7 +337,7 @@ class Repository @Inject constructor(private val context: Context) {
      * @param calId id of the calendar we add event to. Received from a list of calendars using Android Calendar provider.
      */
     fun getCalendarEvents(
-        calId: Int,
+        calId: Long,
         dateStart: DateTime,
         dateEnd: DateTime
     ): Observable<TimetableEvent> {
@@ -366,6 +387,7 @@ class Repository @Inject constructor(private val context: Context) {
                 } catch (e: JsonSyntaxException) {
                     // When error occurs, default metadata is used which makes the faulty event deleted
                     Log.e(TAG, "Metadata error: $e")
+                    metadata.id = -1
                 }
 
                 val event = TimetableEvent(
@@ -419,7 +441,7 @@ class Repository @Inject constructor(private val context: Context) {
      * @param calId id of the calendar we add event to. Received from a list of calendars using Android Calendar provider.
      * @param event event to be added into the calendar.
      */
-    fun addGoogleCalendarEvent(calId: Int, event: TimetableEvent): Single<Long> {
+    fun addGoogleCalendarEvent(calId: Long, event: TimetableEvent): Single<Long> {
         val calendarMetadata = GoogleCalendarMetadata(
             event.siriusId, event.teachers, event.students, event.capacity,
             event.occupied, event.event_type
@@ -470,7 +492,7 @@ class Repository @Inject constructor(private val context: Context) {
                         .execute()
                 }
             }
-            .toCompletable()
+            .ignoreElement()
     }
 
     fun sharePersonalCalendar(email: String): Single<AclRule> {

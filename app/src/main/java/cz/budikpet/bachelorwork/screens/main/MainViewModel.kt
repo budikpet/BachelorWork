@@ -9,7 +9,7 @@ import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
-import cz.budikpet.bachelorwork.data.models.GoogleCalendarListItem
+import cz.budikpet.bachelorwork.data.models.CalendarListItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
@@ -161,9 +161,19 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         calendarsUpdating.postValue(true)
 
         val disposable = repository.getGoogleCalendarList()
-            .flatMapCompletable { checkGoogleCalendars(it) }
+            .flatMapCompletable {
+                // Check if personal calendar exists and unhide hidden calendars in Google Calendar service
+                checkGoogleCalendars(it)
+                    .andThen(repository.getLocalCalendarListItems())
+                    .filter { !it.syncEvents }
+                    .map { it.with(syncEvents = true) }
+                    .flatMapCompletable {
+                        // Make all local calendars sync with Google Calendar service
+                        repository.updateLocalCalendarList(it).ignoreElement()
+                    }
+            }
             .andThen(repository.refreshCalendars())
-            .andThen(repository.getLocalCalendarList())
+            .andThen(repository.getLocalCalendarListItems())
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API
                 val siriusObs = getSiriusEventsList(calendarListItem)
@@ -181,7 +191,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
                 return@flatMapCompletable updateObs
             }
-//            .andThen(repository.refreshCalendars()) // TODO: Do after the postValue. Maybe even in a separate chain.
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete {
@@ -190,7 +199,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .subscribe {
                 Log.i(TAG, "Update done")
-                calendarsUpdating.postValue(false)  // TODO: Do before the second refreshCalendar
+                calendarsUpdating.postValue(false)
                 repository.startCalendarRefresh()
             }
 
@@ -220,8 +229,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
         var completable = Observable.fromIterable(hiddenCalendars)
             .flatMapCompletable { entry ->
-                repository.updateGoogleCalendarList(entry)
-                    .toCompletable()
+                repository.updateGoogleCalendarList(entry).ignoreElement()
             }
 
         if (!personalCalendarFound) {
@@ -237,7 +245,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * @return An observable holding a list of TimetableEvents.
      */
     private fun getSiriusEventsList(
-        calendarListItem: GoogleCalendarListItem,
+        calendarListItem: CalendarListItem,
         dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
         dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
     ): Observable<ArrayList<TimetableEvent>> {
@@ -262,11 +270,11 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     }
 
     /**
-     * Gets events from the selected Google calendar.
+     * Gets events from the selected calendar.
      * @return An observable holding a list of TimetableEvents.
      */
     private fun getGoogleCalendarEventsList(
-        calendarListItem: GoogleCalendarListItem,
+        calendarListItem: CalendarListItem,
         dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
         dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
     ): Observable<ArrayList<TimetableEvent>> {
@@ -287,7 +295,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * @param calendarId an id of the calendar to update
      */
     private fun getActionsCompletable(
-        calendarId: Int,
+        calendarId: Long,
         pair: Pair<ArrayList<TimetableEvent>, ArrayList<TimetableEvent>>
     ): Completable {
         // Sort events out into lists by what action they should be used for
@@ -306,7 +314,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         // Create action observables
         val createObs = Observable.fromIterable(new)
             .flatMapCompletable { currEvent ->
-                repository.addGoogleCalendarEvent(calendarId, currEvent).toCompletable()
+                repository.addGoogleCalendarEvent(calendarId, currEvent).ignoreElement()
             }
 
         val deleteObs = Observable.fromIterable(deleted)
@@ -317,14 +325,14 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .flatMapCompletable { currEvent ->
                 // TODO: Update deleted status of events with SiriusID, delete the rest
                 Log.i(TAG, "Deleting event: $currEvent")
-                repository.deleteGoogleCalendarEvent(currEvent.googleId!!).toCompletable()
+                repository.deleteGoogleCalendarEvent(currEvent.googleId!!).ignoreElement()
             }
 
 
         val changedObs = Observable.fromIterable(changed)
             .flatMapCompletable { currEvent ->
                 Log.i(TAG, "Updating event: $currEvent")
-                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toCompletable()
+                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).ignoreElement()
             }
 
         // Create a completable which starts all actions
@@ -336,12 +344,12 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
         dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
     ) {
-        val disposable = repository.getLocalCalendarList()
+        val disposable = repository.getLocalCalendarListItems()
             .filter { it.displayName == "${username}_${MyApplication.calendarsName}" }
             .flatMap { repository.getCalendarEvents(it.id, dateStart, dateEnd) }
             .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
             .map { list ->
-                list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
+                list.sortWith(Comparator { event1, event2 -> event1.compare(event2) })
                 return@map list
             }
             .subscribeOn(Schedulers.io())
@@ -395,7 +403,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * Gets a list of calendar display names and ids using the android calendar provider.
      */
     fun getLocalCalendarList() {
-        val disposable = repository.getLocalCalendarList()
+        val disposable = repository.getLocalCalendarListItems()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
