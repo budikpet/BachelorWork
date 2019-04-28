@@ -383,6 +383,9 @@ class Repository @Inject constructor(private val context: Context) {
         return obs
     }
 
+    /**
+     * Updates an event in a calendar using Android calendar provider.
+     */
     fun updateGoogleCalendarEvent(eventId: Long, event: TimetableEvent): Single<Int> {
         val calendarMetadata = GoogleCalendarMetadata(
             event.siriusId, event.teachers, event.students, event.capacity,
@@ -390,6 +393,7 @@ class Repository @Inject constructor(private val context: Context) {
         )
         val values = ContentValues().apply {
             put(CalendarContract.Events.TITLE, event.acronym)
+            put(CalendarContract.Events.EVENT_LOCATION, event.room)
             put(CalendarContract.Events.DTSTART, event.starts_at.millis)
             put(CalendarContract.Events.DTEND, event.ends_at.millis)
             put(CalendarContract.Events.DESCRIPTION, Gson().toJson(calendarMetadata))
@@ -397,6 +401,14 @@ class Repository @Inject constructor(private val context: Context) {
         val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
         return Single.fromCallable {
             val rows: Int = context.contentResolver.update(updateUri, values, null, null)
+            return@fromCallable rows
+        }
+    }
+
+    fun deleteGoogleCalendarEvent(eventId: Long): Single<Int> {
+        val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
+        return Single.fromCallable {
+            val rows: Int = context.contentResolver.delete(updateUri, null, null)
             return@fromCallable rows
         }
     }

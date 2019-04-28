@@ -277,7 +277,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     /**
      * Creates and uses completables to update a calendar.
      *
-     * @param pair a pair containing a list of events from Sirius and a list of events from Google Calendar
+     * @param pair a pair<SiriusEvents, CalendarEvents> containing a list of events from Sirius and a list of events from Google Calendar
      * @param calendarId an id of the calendar to update
      */
     private fun getActionsCompletable(
@@ -299,30 +299,27 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
         // Create action observables
         val createObs = Observable.fromIterable(new)
-            .flatMap { currEvent ->
-                repository.addGoogleCalendarEvent(calendarId, currEvent).toObservable()
+            .flatMapCompletable { currEvent ->
+                repository.addGoogleCalendarEvent(calendarId, currEvent).toCompletable()
             }
-            .ignoreElements()
 
         val deleteObs = Observable.fromIterable(deleted)
             .map {
                 it.deleted = true
                 return@map it
             }
-            .flatMap { currEvent ->
+            .flatMapCompletable { currEvent ->
                 // TODO: Update deleted status of events with SiriusID, delete the rest
                 Log.i(TAG, "Deleting event: $currEvent")
-                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
+                repository.deleteGoogleCalendarEvent(currEvent.googleId!!).toCompletable()
             }
-            .ignoreElements()
 
 
         val changedObs = Observable.fromIterable(changed)
-            .flatMap { currEvent ->
+            .flatMapCompletable { currEvent ->
                 Log.i(TAG, "Updating event: $currEvent")
-                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
+                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toCompletable()
             }
-            .ignoreElements()
 
         // Create a completable which starts all actions
         return Completable.mergeArray(createObs, deleteObs, changedObs)
