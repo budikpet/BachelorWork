@@ -161,6 +161,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         calendarsUpdating.postValue(true)
 
         val disposable = repository.getGoogleCalendarList()
+            .observeOn(Schedulers.computation())
             .flatMapCompletable {
                 // Check if personal calendar exists and unhide hidden calendars in Google Calendar service
                 checkGoogleCalendars(it)
@@ -174,6 +175,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .andThen(repository.refreshCalendars())
             .andThen(repository.getLocalCalendarListItems())
+            .observeOn(Schedulers.io())
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API
                 val siriusObs = getSiriusEventsList(calendarListItem)
@@ -336,7 +338,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
 
         // Create a completable which starts all actions
-        return Completable.mergeArray(createObs, deleteObs, changedObs)
+        return Completable.mergeArray(deleteObs, createObs, changedObs)
     }
 
     fun loadEventsFromCalendar(
@@ -453,10 +455,12 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         val dateEnd = DateTime().withDate(2019, 3, 20).withTime(11, 30, 0, 0)
 
         val timetableEvent = TimetableEvent(
-            5, null, "T9:105", acronym = "BI-BIJ", capacity = 180,
+            5, "T9:105", acronym = "BI-BIJ", capacity = 180,
             event_type = EventType.LECTURE, fullName = "Bijec", teachers = arrayListOf("kalvotom"),
             starts_at = dateStart, ends_at = dateEnd
         )
+
+        timetableEvent.googleId = null
 
         val disposable = repository.addGoogleCalendarEvent(3, timetableEvent)
             .subscribeOn(Schedulers.io())

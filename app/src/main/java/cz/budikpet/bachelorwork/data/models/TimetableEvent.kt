@@ -8,7 +8,6 @@ import java.util.*
 
 data class TimetableEvent(
     val siriusId: Int? = null,
-    var googleId: Long? = null,
     val room: String,
     val acronym: String,
     val fullName: String = acronym,
@@ -23,6 +22,8 @@ data class TimetableEvent(
     val students: ArrayList<String>? = null,
     var color: Int = defaultColor(event_type)
 ) {
+    var googleId: Long? = null
+
     companion object {
         fun from(event: Event): TimetableEvent {
             return TimetableEvent(
@@ -68,15 +69,15 @@ data class TimetableEvent(
         }
     }
 
-    override fun hashCode(): Int {
-        return Objects.hash(siriusId)
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (other is TimetableEvent) {
-            return siriusId == other.siriusId
-        }
-
-        return super.equals(other)
-    }
+//    override fun hashCode(): Int {
+//        return Objects.hash(siriusId)
+//    }
+//
+//    override fun equals(other: Any?): Boolean {
+//        if (other is TimetableEvent) {
+//            return siriusId == other.siriusId
+//        }
+//
+//        return super.equals(other)
+//    }
 }

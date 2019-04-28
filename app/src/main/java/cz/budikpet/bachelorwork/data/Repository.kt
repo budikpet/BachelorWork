@@ -361,9 +361,10 @@ class Repository @Inject constructor(private val context: Context) {
 
         val uri: Uri = CalendarContract.Events.CONTENT_URI
         val selection = "((${CalendarContract.Events.DTSTART} > ?) AND (${CalendarContract.Events.CALENDAR_ID} = ?)" +
-                "AND (${CalendarContract.Events.DTEND} < ?))"
+                "AND (${CalendarContract.Events.DTEND} < ?)" +
+                "AND (${CalendarContract.Calendars.DELETED} = ?))"
 
-        val selectionArgs: Array<String> = arrayOf("${dateStart.millis}", "$calId", "${dateEnd.millis}")
+        val selectionArgs: Array<String> = arrayOf("${dateStart.millis}", "$calId", "${dateEnd.millis}", "0")
 
         val obs = Observable.create<TimetableEvent> { emitter ->
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
@@ -391,11 +392,12 @@ class Repository @Inject constructor(private val context: Context) {
                 }
 
                 val event = TimetableEvent(
-                    metadata.id, googleId = id, starts_at = dateStart, ends_at = dateEnd,
+                    metadata.id, starts_at = dateStart, ends_at = dateEnd,
                     event_type = metadata.eventType, capacity = metadata.capacity,
                     occupied = metadata.occupied, acronym = title, room = location, teachers = metadata.teachers,
                     students = metadata.students, deleted = metadata.deleted
                 )
+                event.googleId = id
                 emitter.onNext(event)
             }
             cursor.close()
