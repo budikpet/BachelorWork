@@ -175,7 +175,25 @@ class Repository @Inject constructor(private val context: Context) {
     // MARK: Google Calendar API
 
     /**
-     * Refreshes local copies of all calendars of the account the app is using.
+     * Starts the refresh of all calendars of the used google account asynchronously.
+     * Does not wait for completion.
+     *
+     * The application does not wait
+     */
+    fun startCalendarRefresh() {
+        val extras = Bundle()
+        extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
+        extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true)
+
+        ContentResolver.requestSync(
+            credential.selectedAccount,
+            CalendarContract.Calendars.CONTENT_URI.authority,
+            extras
+        )
+    }
+
+    /**
+     * Starts the refresh of all calendars of the used google account and waits until it completes.
      *
      * @throws TimeoutException thrown using the emitter when the refresh reaches specified timeout
      * @return A completable which completes when the refresh finishes.
@@ -183,25 +201,16 @@ class Repository @Inject constructor(private val context: Context) {
     fun refreshCalendars(): Completable {
         return Completable.create { emitter ->
             // Start refresh
-            val authority = CalendarContract.Calendars.CONTENT_URI.authority
-            val extras = Bundle()
-            extras.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true)
-            extras.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true)
+            startCalendarRefresh()
 
-            ContentResolver.requestSync(credential.selectedAccount, authority, extras)
-
-            waitRefreshEnd(emitter, authority, extras)
+            waitRefreshEnd(emitter)
         }
     }
 
     /**
      * Checks status of a refresh in a while loop. The loop either ends with timeout or when refresh ends.
      */
-    private fun waitRefreshEnd(
-        emitter: CompletableEmitter,
-        authority: String?,
-        extras: Bundle
-    ) {
+    private fun waitRefreshEnd(emitter: CompletableEmitter) {
         var refreshStarted = false  // set to true when refresh starts
         var restarted = false
         var loopCnt = 0             // number of loops made without refresh being started
@@ -214,7 +223,7 @@ class Repository @Inject constructor(private val context: Context) {
             val sync = ContentResolver.getCurrentSyncs()
             if (sync.size > 0) {
                 for (info in sync) {
-                    if (info.account == credential.selectedAccount && info.authority == authority) {
+                    if (info.account == credential.selectedAccount && info.authority == CalendarContract.Calendars.CONTENT_URI.authority) {
                         refreshStarted = true
                         Log.i(TAG, "Calendar refresh running")
                     }
@@ -238,7 +247,7 @@ class Repository @Inject constructor(private val context: Context) {
                 Log.i(TAG, "Restarting calendar refresh")
                 loopCnt = 0
                 restarted = true
-                ContentResolver.requestSync(credential.selectedAccount, authority, extras)
+                startCalendarRefresh()
             }
 
             // Lower sleep needed when we're waiting for refresh to start
@@ -388,7 +397,6 @@ class Repository @Inject constructor(private val context: Context) {
         val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
         return Single.fromCallable {
             val rows: Int = context.contentResolver.update(updateUri, values, null, null)
-            Log.i(TAG, "Rows updated: $rows")
             return@fromCallable rows
         }
     }

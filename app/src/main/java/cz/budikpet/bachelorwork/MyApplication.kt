@@ -8,8 +8,6 @@ import cz.budikpet.bachelorwork.di.DaggerAppComponent
 import io.reactivex.plugins.RxJavaPlugins
 import java.io.IOException
 import java.net.SocketException
-import io.reactivex.exceptions.UndeliverableException
-
 
 
 class MyApplication : Application() {
@@ -50,7 +48,7 @@ class MyApplication : Application() {
 //                    .handleException(Thread.currentThread(), e)
                 return@setErrorHandler
             }
-            Log.w(TAG,"Undeliverable exception received, not sure what to do", e)
+            Log.w(TAG, "Undeliverable exception received, not sure what to do", e)
         }
     }
 }

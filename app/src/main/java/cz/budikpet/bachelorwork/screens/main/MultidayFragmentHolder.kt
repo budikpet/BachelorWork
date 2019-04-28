@@ -58,9 +58,10 @@ class MultidayFragmentHolder : Fragment() {
             if (state != null) {
                 // TODO: Changes to other parts of the UI like ToolBar
 
+                // TODO: Warning, can cause an infinite loop if it is empty
                 if (state.events.isEmpty()) {
                     // New username was loaded. Load its events
-                    viewModel.loadEventsFromCalendar(state.username)
+//                    viewModel.loadEventsFromCalendar(state.username)
                 }
             }
         })

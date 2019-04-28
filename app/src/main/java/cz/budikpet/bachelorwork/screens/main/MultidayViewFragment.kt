@@ -211,7 +211,9 @@ class MultidayViewFragment : Fragment() {
         var currIndex = 0
         val lastDate = firstDate.plusDays(eventsColumnsCount)
         val preparedCollection = events
-            .filter { firstDate.isBefore(it.starts_at.millis) && lastDate.isAfter(it.starts_at.millis) }
+            .filter {
+                firstDate.isBefore(it.starts_at.millis) && lastDate.isAfter(it.starts_at.millis) && !it.deleted
+            }
             .map { return@map IndexedTimetableEvent(-1, it) }
 
         // Clear columns

@@ -185,6 +185,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .subscribe {
                 Log.i(TAG, "Update done")
                 calendarsUpdating.postValue(false)  // TODO: Do before the second refreshCalendar
+                repository.startCalendarRefresh()
             }
 
         compositeDisposable.add(disposable)
@@ -310,6 +311,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .flatMap { currEvent ->
                 // TODO: Update deleted status of events with SiriusID, delete the rest
+                Log.i(TAG, "Deleting event: $currEvent")
                 repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
             }
             .ignoreElements()
@@ -317,6 +319,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
         val changedObs = Observable.fromIterable(changed)
             .flatMap { currEvent ->
+                Log.i(TAG, "Updating event: $currEvent")
                 repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).toObservable()
             }
             .ignoreElements()
