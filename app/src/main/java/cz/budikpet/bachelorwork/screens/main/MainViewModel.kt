@@ -55,6 +55,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     val thrownException = MutableLiveData<Throwable>()
 
     val searchItems = MutableLiveData<List<SearchItem>>()
+    var lastSearchQuery = ""
 
     @Inject
     internal lateinit var repository: Repository
@@ -168,7 +169,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         val username: String = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), "")
         val currOwner = timetableOwner.value
 
-        if(currOwner == null || currOwner.first != username) {
+        if (currOwner == null || currOwner.first != username) {
             timetableOwner.postValue(Pair(username, ItemType.PERSON))
         }
     }

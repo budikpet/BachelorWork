@@ -7,7 +7,6 @@ import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
-import android.graphics.Rect
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -21,16 +20,11 @@ import android.view.View
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
-import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
-import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
-import cz.budikpet.bachelorwork.util.edit
-import cz.budikpet.bachelorwork.util.inTransaction
-import cz.budikpet.bachelorwork.util.toDp
-import io.reactivex.Observable
+import cz.budikpet.bachelorwork.util.*
 import kotlinx.android.synthetic.main.activity_main_old.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -49,13 +43,14 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     }
 
     private lateinit var viewModel: MainViewModel
-    private lateinit var searchSuggestions: RecyclerView
 
     @Inject
     internal lateinit var credential: GoogleAccountCredential
 
     @Inject
     internal lateinit var sharedPreferences: SharedPreferences
+
+    private lateinit var searchSuggestions: RecyclerView
 
     private lateinit var permissionsCheckerFragment: PermissionsCheckerFragment
     private lateinit var multidayFragmentHolder: MultidayFragmentHolder
@@ -83,6 +78,10 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         }
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        searchSuggestions = this.findViewById(R.id.searchSuggestions)
+        searchSuggestions.layoutManager = LinearLayoutManager(this)
+        searchSuggestions.addItemDecoration(MarginItemDecoration(4.toDp(this)))
+
         subscribeObservers()
 
         // Check logins
@@ -104,8 +103,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     private fun subscribeObservers() {
         viewModel.searchItems.observe(this, Observer { searchItems ->
             if (searchItems != null && searchItems.isNotEmpty()) {
-                val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter
-                adapter.updateValues(searchItems)
+                val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter?
+                adapter?.updateValues(searchItems)
             }
         })
     }
@@ -200,34 +199,35 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_bar, menu)
 
-        val searchMenuItem = menu?.findItem(R.id.app_bar_menu_search)
-        val searchView = searchMenuItem?.actionView as SearchView
+        val searchMenuItem = menu?.findItem(R.id.app_bar_menu_search)!!
+        val searchView = searchMenuItem.actionView as SearchView
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         searchView.isSubmitButtonEnabled = true
 
-        // Init searchSuggestions RecyclerView
+        // Init searchSuggestions RecyclerView adapter
         val adapter = SearchSuggestionsAdapter(this, onItemClickFunction = {
             searchMenuItem.collapseActionView()
             viewModel.timetableOwner.postValue(Pair(it.id, it.type))
         })
-
-        searchSuggestions = this.findViewById(R.id.searchSuggestions)
-        searchSuggestions.layoutManager = LinearLayoutManager(this)
-        searchSuggestions.addItemDecoration(MarginItemDecoration(4.toDp(this)))
         searchSuggestions.adapter = adapter
 
         // Watch for user input
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(query: String?): Boolean {
-                if (query != null && query.count() >= 1) {
-                    viewModel.searchSirius(query)
+                if (query != null) {
+                    viewModel.lastSearchQuery = query
+
+                    if (query.count() >= 1) {
+                        viewModel.searchSirius(query)
+                    }
                 }
                 return true
             }
 
             override fun onQueryTextSubmit(query: String?): Boolean {
                 Log.i(TAG, "Submitted: <$query>")
+                viewModel.lastSearchQuery = ""
                 return true
             }
 
@@ -244,11 +244,21 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
                 // User left the searchView
                 adapter.clear()
+                viewModel.lastSearchQuery = ""
                 searchSuggestions.visibility = View.GONE
                 return true
             }
 
         })
+
+        // Restore the search view after configuration changes
+        val query = viewModel.lastSearchQuery
+        if (query.count() > 0) {
+            // There are searchItems now
+            searchMenuItem.expandActionView()
+            searchView.setQuery(query, false)
+//            searchView.setQuery(viewModel.lastSearchQuery, false)
+        }
 
         return super.onCreateOptionsMenu(menu)
     }
@@ -264,7 +274,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
         return false
     }
-    
+
     // MARK: Permissions
 
     override fun onAllPermissionsGranted() {
@@ -273,18 +283,5 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
     override fun quitApplication() {
         finishAffinity()
-    }
-}
-
-class MarginItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
-    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-        with(outRect) {
-            if (parent.getChildAdapterPosition(view) == 0) {
-                top = spaceHeight
-            }
-            left = spaceHeight
-            right = spaceHeight
-            bottom = spaceHeight
-        }
     }
 }

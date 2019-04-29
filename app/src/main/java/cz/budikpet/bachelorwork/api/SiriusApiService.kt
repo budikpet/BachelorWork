@@ -92,7 +92,7 @@ interface SiriusApiService {
     @GET("search")
     fun search(
         @Query("access_token") accessToken: String,
-        @Query("limit") limit: Int? = 1000,    // <1; 1000>
+        @Query("limit") limit: Int? = 20,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("q") query: String
     ): Observable<SearchResult>
