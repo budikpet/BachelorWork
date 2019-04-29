@@ -18,9 +18,7 @@ class SearchSuggestionsAdapter(
     RecyclerView.Adapter<SearchSuggestionsAdapter.ViewHolder>() {
 
     private val listener = View.OnClickListener {
-        val index = it.tag as Int
-
-        onItemClickFunction(items.elementAt(index))
+        onItemClickFunction(it.tag as SearchItem)
     }
 
     override fun getItemCount() = items.count()
@@ -31,7 +29,7 @@ class SearchSuggestionsAdapter(
         holder.title.text = searchItem.title
 
         holder.parentView.setOnClickListener(listener)
-        holder.parentView.tag = index
+        holder.parentView.tag = searchItem
 
         holder.title.visibility = when {
             searchItem.title == "" -> View.GONE

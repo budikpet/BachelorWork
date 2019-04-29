@@ -37,7 +37,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     /**
      * Username of the currently selected timetable.
      */
-    val username = MutableLiveData<String>()
+    val timetableOwner = MutableLiveData<Pair<String, ItemType>>()
 
     /**
      * Events of the currently selected timetable.
@@ -45,9 +45,9 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     val events = MutableLiveData<List<TimetableEvent>>()
 
     /**
-     * Indicates that an update of all calendars ended successfully.
+     * Indicates whether the AllCalendars update is running.
      */
-    val calendarsUpdating = MutableLiveData<Boolean>()
+    val allCalendarsUpdating = MutableLiveData<Boolean>()
 
     /**
      * Any exception that was thrown and must be somehow shown to the user.
@@ -166,7 +166,11 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     fun signedInToGoogle() {
         val username: String = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), "")
-        this.username.postValue(username)
+        val currOwner = timetableOwner.value
+
+        if(currOwner == null || currOwner.first != username) {
+            timetableOwner.postValue(Pair(username, ItemType.PERSON))
+        }
     }
 
     /**
@@ -175,7 +179,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     fun updateAllCalendars() {
         compositeDisposable.clear()
 
-        calendarsUpdating.postValue(true)
+        allCalendarsUpdating.postValue(true)
 
         val disposable = repository.getGoogleCalendarList()
             .observeOn(Schedulers.computation())
@@ -218,7 +222,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .subscribe {
                 Log.i(TAG, "Update done")
-                calendarsUpdating.postValue(false)
+                allCalendarsUpdating.postValue(false)
                 repository.startCalendarRefresh()
             }
 
@@ -358,15 +362,22 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         return Completable.mergeArray(deleteObs, createObs, changedObs)
     }
 
-    fun loadEventsFromCalendar(
+    fun loadEvents(
         username: String,
+        itemType: ItemType,
         dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
         dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
     ) {
         val disposable = repository.getLocalCalendarListItems()
             .filter { it.displayName == "${username}_${MyApplication.calendarsName}" }
             .flatMap { repository.getCalendarEvents(it.id, dateStart, dateEnd) }
-            .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
+            .switchIfEmpty(
+                repository.getSiriusEventsOf(itemType, username, dateStart, dateEnd)
+                    .flatMap { Observable.fromIterable(it.events) }
+                    .filter { !it.deleted }
+                    .map { event -> TimetableEvent.from(event) }
+            )
+            .toList()
             .map { list ->
                 list.sortWith(Comparator { event1, event2 -> event1.compare(event2) })
                 return@map list
@@ -378,7 +389,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                     this.events.postValue(events)
                 },
                 { error ->
-                    Log.e(TAG, "loadEventsFromCalendar: $error")
+                    Log.e(TAG, "loadEvents: $error")
                 }
             )
 

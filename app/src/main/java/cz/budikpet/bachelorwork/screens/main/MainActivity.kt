@@ -103,35 +103,14 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
     private fun subscribeObservers() {
         viewModel.searchItems.observe(this, Observer { searchItems ->
-            if (searchItems != null) {
-                if (searchItems.isNotEmpty()) {
-                    val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter
-                    adapter.updateValues(searchItems)
-                }
+            if (searchItems != null && searchItems.isNotEmpty()) {
+                val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter
+                adapter.updateValues(searchItems)
             }
         })
     }
 
     private fun initButtons() {
-        disposeBtn.setOnClickListener {
-            viewModel.onDestroy()
-        }
-
-        getEventsBtn.setOnClickListener {
-            val itemType = when {
-                personRadioBtn.isChecked -> {
-                    ItemType.PERSON
-                }
-                courseRadioBtn.isChecked -> {
-                    ItemType.COURSE
-                }
-                else -> {
-                    ItemType.ROOM
-                }
-            }
-            viewModel.getSiriusEventsOf(itemType, providedId.text.toString())
-        }
-
         signoutBtn.setOnClickListener {
             viewModel.signOut()
 
@@ -139,21 +118,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             mainIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(mainIntent)
             finish()
-        }
-
-        personRadioBtn.isChecked = true
-
-        getCalendarsBtn.setOnClickListener {
-            Log.i(TAG, "Selected account: ${credential.selectedAccount}")
-            // TODO: Change
-//            viewModel.getGoogleCalendarList()
-//            viewModel.addSecondaryGoogleCalendar("T9:350_${MyApplication.calendarsName}")
-//            viewModel.getLocalCalendarList()
-//            viewModel.getCalendarEvents(3)
-//            viewModel.addGoogleCalendarEvent()
-            viewModel.updateAllCalendars()
-//            viewModel.sharePersonalCalendar("sgt.petrov@gmail.com")
-//            viewModel.unsharePersonalCalendar("sgt.petrov@gmail.com")
         }
     }
 
@@ -245,7 +209,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         // Init searchSuggestions RecyclerView
         val adapter = SearchSuggestionsAdapter(this, onItemClickFunction = {
             searchMenuItem.collapseActionView()
-            viewModel.username.postValue(it.id)
+            viewModel.timetableOwner.postValue(Pair(it.id, it.type))
         })
 
         searchSuggestions = this.findViewById(R.id.searchSuggestions)
@@ -293,7 +257,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         if (item!!.itemId == R.id.itemSync) {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             viewModel.updateAllCalendars()
-//            test()
 
             return true
         }
@@ -301,67 +264,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
         return false
     }
-
-    private fun test() {
-        val retryMax: Long = 5
-        var retries: Long = 0
-        var retries2: Long = 0
-
-        val test = Observable.create<Int> {
-            for (i in 0..10) {
-                if (i == 4 && retries <= retryMax - 2) {
-                    Log.i(TAG, "onError")
-                    it.onError(NotImplementedError("onError1"))
-                    break
-                } else if (i == 5) {
-                    Log.i(TAG, "throw")
-//                    throw NotOwnerException()
-                } else it.onNext(i)
-
-            }
-
-            it.onComplete()
-        }
-            .retry { t1, t2 ->
-                Log.i(TAG, "Retry count: $retries")
-                retries += 1
-                retries <= retryMax + 1
-            }
-            .collect({ mutableListOf<Int>() }, { list, value ->
-                list.add(value)
-                Log.i(TAG, "Added $value, list has ${list.count()} values.")
-            })
-            .map { it.distinct() }
-            .flatMapObservable { list ->
-                Observable.create<Int> {
-                    for (i in list) {
-                        if (i == 4 && retries2 <= retryMax - 2) {
-                            Log.i(TAG, "onError2")
-                            it.onError(NotImplementedError("onError2"))
-                            break
-                        } else if (i == 5) {
-                            Log.i(TAG, "throw")
-//                            throw NotOwnerException()
-                        } else it.onNext(i)
-
-                    }
-
-                    it.onComplete()
-                }
-            }
-            .retry { t1, t2 ->
-                Log.i(TAG, "Retry2 count: $retries2")
-                retries2 += 1
-                retries2 <= retryMax + 6
-            }
-            .subscribe(
-                { result ->
-                    Log.i(TAG, "Result: $result")
-                },
-                { error -> Log.e(TAG, "Chain ended with error: ${error}") }
-            )
-    }
-
+    
     // MARK: Permissions
 
     override fun onAllPermissionsGranted() {

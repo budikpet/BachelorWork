@@ -54,25 +54,31 @@ class MultidayFragmentHolder : Fragment() {
     private fun subscribeObservers() {
 
         // Observer created only once
-        viewModel.username.observe(this, Observer { username ->
-            if (username != null) {
+        viewModel.timetableOwner.observe(this, Observer { pair ->
+            if (pair != null) {
+                val username = pair.first
+                val itemType = pair.second
                 // TODO: Changes to other parts of the UI like ToolBar
 
-                // New username was loaded
-                viewModel.loadEventsFromCalendar(username)
+                // New pair was loaded
+                viewModel.loadEvents(username, itemType)
             }
         })
 
-        viewModel.calendarsUpdating.observe(this, Observer { updating ->
-            val username = viewModel.username.value
+        viewModel.allCalendarsUpdating.observe(this, Observer { updating ->
+            val pair = viewModel.timetableOwner.value
+
 
             Log.i(TAG, "Calendars updating: $updating")
 
-            if (updating != null && username != null) {
+            if (updating != null && pair != null) {
+                val username = pair.first
+                val itemType = pair.second
+
                 if (!updating) {
                     // Update done
                     progressBar.visibility = View.GONE
-                    viewModel.loadEventsFromCalendar(username)
+                    viewModel.loadEvents(username, itemType)
                 } else {
                     // Update started
                     progressBar.visibility = View.VISIBLE
