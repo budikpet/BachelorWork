@@ -178,8 +178,8 @@ class MultidayViewFragment : Fragment() {
 
         val layoutParams =
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
-        layoutParams.bottomMargin = (breakLength * dpPerMinRatio).toFloat().toDp(context!!)
-        layoutParams.height = (lessonLength * dpPerMinRatio).toFloat().toDp(context!!)
+        layoutParams.bottomMargin = (breakLength * dpPerMinRatio).toDp(context!!)
+        layoutParams.height = (lessonLength * dpPerMinRatio).toDp(context!!)
         rowView.layoutParams = layoutParams
         timeTextView.layoutParams = layoutParams
 
@@ -352,7 +352,6 @@ class MultidayViewFragment : Fragment() {
     private fun getEventViewHeight(event: TimetableEvent): Int {
         return Minutes.minutesBetween(event.starts_at, event.ends_at)
             .minutes
-            .toFloat()
             .toDp(context!!)
     }
 
@@ -363,7 +362,6 @@ class MultidayViewFragment : Fragment() {
     private fun getEventViewStart(event: TimetableEvent): Int {
         return Minutes.minutesBetween(event.starts_at.withTime(lessonsStartTime), event.starts_at)
             .minutes
-            .toFloat()
             .toDp(context!!)
     }
 

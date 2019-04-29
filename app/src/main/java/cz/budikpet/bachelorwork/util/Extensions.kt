@@ -20,6 +20,17 @@ fun Float.toDp(context: Context): Int {
 }
 
 /**
+ * Gets value of this int in dps.
+ */
+fun Int.toDp(context: Context): Int {
+    return TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP,
+        this.toFloat(),
+        context.resources.displayMetrics
+    ).toInt()
+}
+
+/**
  * Make the entry hidden with a specific color.
  */
 fun Calendar.createMyEntry(): CalendarListEntry {

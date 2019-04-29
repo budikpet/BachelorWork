@@ -1,5 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:title="Sync" android:icon="@android:drawable/ic_popup_sync" android:id="@+id/itemSync"
-          app:showAsAction="always"/>
+    <item
+            android:id="@+id/app_bar_menu_search"
+            android:title="Search"
+            app:actionViewClass="android.support.v7.widget.SearchView"
+            app:showAsAction="ifRoom|collapseActionView" android:icon="@android:drawable/ic_menu_search"/>
+    <item android:title="Synchronize" android:icon="@android:drawable/ic_popup_sync" android:id="@+id/itemSync"
+          app:showAsAction="ifRoom"/>
+
+    <item
+            android:id="@+id/app_bar_menu_share"
+            android:title="Share"
+            app:showAsAction="never"
+            app:actionProviderClass="android.support.v7.widget.ShareActionProvider"/>
 </menu>

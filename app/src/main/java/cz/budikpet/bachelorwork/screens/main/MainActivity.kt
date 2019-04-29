@@ -1,26 +1,36 @@
 package cz.budikpet.bachelorwork.screens.main
 
 import android.accounts.AccountManager
+import android.app.SearchManager
 import android.arch.lifecycle.ViewModelProviders
+import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.graphics.Rect
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
+import android.support.v7.widget.SearchView
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
+import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
 import cz.budikpet.bachelorwork.util.inTransaction
+import cz.budikpet.bachelorwork.util.toDp
+import io.reactivex.Observable
 import kotlinx.android.synthetic.main.activity_main_old.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -39,6 +49,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     }
 
     private lateinit var viewModel: MainViewModel
+    private lateinit var searchSuggestions: RecyclerView
 
     @Inject
     internal lateinit var credential: GoogleAccountCredential
@@ -73,18 +84,19 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
+        // Check logins
         val response = AuthorizationResponse.fromIntent(intent)
         val exception = AuthorizationException.fromIntent(intent)
         viewModel.checkSiriusAuthorization(response, exception)
 
         checkGoogleLogin()
 
-//        initButtons()
-    }
+        searchSuggestions = this.findViewById(R.id.searchSuggestions)
+        searchSuggestions.layoutManager = LinearLayoutManager(this)
+        searchSuggestions.addItemDecoration(MarginItemDecoration(2.toDp(this)))
+        searchSuggestions.adapter = SearchSuggestionsAdapter(this)
 
-    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
-        menuInflater.inflate(R.menu.main_bar, menu)
-        return true
+//        initButtons()
     }
 
     override fun onDestroy() {
@@ -212,16 +224,131 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         }
     }
 
+    // MARK: Tab Bar
+
+    override fun onCreateOptionsMenu(menu: Menu?): Boolean {
+        menuInflater.inflate(R.menu.main_bar, menu)
+
+        val searchMenuItem = menu?.findItem(R.id.app_bar_menu_search)
+        val searchView = searchMenuItem?.actionView as SearchView
+        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
+        searchView.isSubmitButtonEnabled = true
+
+        val array = listOf<SearchItem>(
+            SearchItem("budikpet", "Petr Budík", ItemType.PERSON),
+            SearchItem("balikm", "Miroslav Balík", ItemType.PERSON),
+            SearchItem("T9:350", "", ItemType.ROOM)
+        )
+
+        val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter
+
+        // Watch for user input
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextChange(text: String?): Boolean {
+                Log.i(TAG, "Changed: <$text>")
+                adapter.updateValues(array)
+                return true
+            }
+
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                Log.i(TAG, "Submitted: <$query>")
+                return true
+            }
+
+        })
+
+        // Watch when the user closes the searchView
+        searchMenuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                // User entered the searchView
+                searchSuggestions.visibility = View.VISIBLE
+                return true
+            }
+
+            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                // User left the searchView
+                adapter.clear()
+                searchSuggestions.visibility = View.GONE
+                return true
+            }
+
+        })
+
+        return super.onCreateOptionsMenu(menu)
+    }
+
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (item!!.itemId == R.id.itemSync) {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             viewModel.updateAllCalendars()
+//            test()
 
             return true
         }
 
 
         return false
+    }
+
+    private fun test() {
+        val retryMax: Long = 5
+        var retries: Long = 0
+        var retries2: Long = 0
+
+        val test = Observable.create<Int> {
+            for (i in 0..10) {
+                if (i == 4 && retries <= retryMax - 2) {
+                    Log.i(TAG, "onError")
+                    it.onError(NotImplementedError("onError1"))
+                    break
+                } else if (i == 5) {
+                    Log.i(TAG, "throw")
+//                    throw NotOwnerException()
+                } else it.onNext(i)
+
+            }
+
+            it.onComplete()
+        }
+            .retry { t1, t2 ->
+                Log.i(TAG, "Retry count: $retries")
+                retries += 1
+                retries <= retryMax + 1
+            }
+            .collect({ mutableListOf<Int>() }, { list, value ->
+                list.add(value)
+                Log.i(TAG, "Added $value, list has ${list.count()} values.")
+            })
+            .map { it.distinct() }
+            .flatMapObservable { list ->
+                Observable.create<Int> {
+                    for (i in list) {
+                        if (i == 4 && retries2 <= retryMax - 2) {
+                            Log.i(TAG, "onError2")
+                            it.onError(NotImplementedError("onError2"))
+                            break
+                        } else if (i == 5) {
+                            Log.i(TAG, "throw")
+//                            throw NotOwnerException()
+                        } else it.onNext(i)
+
+                    }
+
+                    it.onComplete()
+                }
+            }
+            .retry { t1, t2 ->
+                Log.i(TAG, "Retry2 count: $retries2")
+                retries2 += 1
+                retries2 <= retryMax + 6
+            }
+            .subscribe(
+                { result ->
+                    Log.i(TAG, "Result: $result")
+                },
+                { error -> Log.e(TAG, "Chain ended with error: ${error}") }
+            )
     }
 
     // MARK: Permissions
@@ -232,5 +359,18 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
     override fun quitApplication() {
         finishAffinity()
+    }
+}
+
+class MarginItemDecoration(private val spaceHeight: Int) : RecyclerView.ItemDecoration() {
+    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+        with(outRect) {
+            if (parent.getChildAdapterPosition(view) == 0) {
+                top = spaceHeight
+            }
+            left = spaceHeight
+            right = spaceHeight
+            bottom = spaceHeight
+        }
     }
 }
