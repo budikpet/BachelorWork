@@ -92,11 +92,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
         checkGoogleLogin()
 
-        searchSuggestions = this.findViewById(R.id.searchSuggestions)
-        searchSuggestions.layoutManager = LinearLayoutManager(this)
-        searchSuggestions.addItemDecoration(MarginItemDecoration(4.toDp(this)))
-        searchSuggestions.adapter = SearchSuggestionsAdapter(this)
-
 //        initButtons()
     }
 
@@ -247,12 +242,21 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         searchView.isSubmitButtonEnabled = true
 
-        val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter
+        // Init searchSuggestions RecyclerView
+        val adapter = SearchSuggestionsAdapter(this, onItemClickFunction = {
+            searchMenuItem.collapseActionView()
+            viewModel.username.postValue(it.id)
+        })
+
+        searchSuggestions = this.findViewById(R.id.searchSuggestions)
+        searchSuggestions.layoutManager = LinearLayoutManager(this)
+        searchSuggestions.addItemDecoration(MarginItemDecoration(4.toDp(this)))
+        searchSuggestions.adapter = adapter
 
         // Watch for user input
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
             override fun onQueryTextChange(query: String?): Boolean {
-                if (query != null && query.count() >= 2) {
+                if (query != null && query.count() >= 1) {
                     viewModel.searchSirius(query)
                 }
                 return true
