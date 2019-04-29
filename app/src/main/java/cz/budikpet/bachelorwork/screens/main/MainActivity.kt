@@ -2,6 +2,7 @@ package cz.budikpet.bachelorwork.screens.main
 
 import android.accounts.AccountManager
 import android.app.SearchManager
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.content.Intent
@@ -22,7 +23,6 @@ import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.Event
-import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
@@ -83,6 +83,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         }
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        subscribeObservers()
 
         // Check logins
         val response = AuthorizationResponse.fromIntent(intent)
@@ -93,7 +94,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
         searchSuggestions = this.findViewById(R.id.searchSuggestions)
         searchSuggestions.layoutManager = LinearLayoutManager(this)
-        searchSuggestions.addItemDecoration(MarginItemDecoration(2.toDp(this)))
+        searchSuggestions.addItemDecoration(MarginItemDecoration(4.toDp(this)))
         searchSuggestions.adapter = SearchSuggestionsAdapter(this)
 
 //        initButtons()
@@ -103,6 +104,17 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         super.onDestroy()
         // TODO: Need to test disposing
         viewModel.onDestroy()
+    }
+
+    private fun subscribeObservers() {
+        viewModel.searchItems.observe(this, Observer { searchItems ->
+            if (searchItems != null) {
+                if (searchItems.isNotEmpty()) {
+                    val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter
+                    adapter.updateValues(searchItems)
+                }
+            }
+        })
     }
 
     private fun initButtons() {
@@ -235,19 +247,14 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
         searchView.isSubmitButtonEnabled = true
 
-        val array = listOf<SearchItem>(
-            SearchItem("budikpet", "Petr Budík", ItemType.PERSON),
-            SearchItem("balikm", "Miroslav Balík", ItemType.PERSON),
-            SearchItem("T9:350", "", ItemType.ROOM)
-        )
-
         val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter
 
         // Watch for user input
         searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextChange(text: String?): Boolean {
-                Log.i(TAG, "Changed: <$text>")
-                adapter.updateValues(array)
+            override fun onQueryTextChange(query: String?): Boolean {
+                if (query != null && query.count() >= 2) {
+                    viewModel.searchSirius(query)
+                }
                 return true
             }
 

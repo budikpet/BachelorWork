@@ -10,6 +10,7 @@ import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.CalendarListItem
+import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
@@ -52,6 +53,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * Any exception that was thrown and must be somehow shown to the user.
      */
     val thrownException = MutableLiveData<Throwable>()
+
+    val searchItems = MutableLiveData<List<SearchItem>>()
 
     @Inject
     internal lateinit var repository: Repository
@@ -119,11 +122,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         repository.signOut()
     }
 
-    fun signedInToGoogle() {
-        val username: String = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), "")
-        this.username.postValue(username)
-    }
-
     /**
      * Uses Sirius API to get events of the specified thing.
      *
@@ -144,13 +142,32 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                     // TODO: Implement
 //                    events.postValue(result.events)
                 },
-                { error -> Log.e(TAG, "Error: ${error}") }
+                { error -> Log.e(TAG, "Error: $error") }
             )
 
         compositeDisposable.add(disposable)
     }
 
+    fun searchSirius(query: String) {
+        val test = repository.searchSirius(query)
+            .retry(21)
+            .toList()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { list ->
+                    searchItems.postValue(list)
+                },
+                { error -> Log.e(TAG, "Error: $error") }
+            )
+    }
+
     // MARK: Google Calendar
+
+    fun signedInToGoogle() {
+        val username: String = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), "")
+        this.username.postValue(username)
+    }
 
     /**
      * Updates all calendars used by the application with data from Sirius API.
