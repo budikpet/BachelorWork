@@ -5,21 +5,14 @@ import android.content.Context
 import android.content.Intent
 import android.support.v4.app.Fragment
 import android.util.Log
+import cz.budikpet.bachelorwork.R
 import pub.devrel.easypermissions.AfterPermissionGranted
 import pub.devrel.easypermissions.AppSettingsDialog
 import pub.devrel.easypermissions.EasyPermissions
 import pub.devrel.easypermissions.PermissionRequest
 
-// TODO: Isn't it possible to use a normal kotlin class which somehow implements needed methods of activities?
 /**
- * A simple [Fragment] subclass.
- * It is used to display permission dialogs until the user agrees to all the required permissions.
- *
- * Activities that contain this fragment must implement the
- * [PermissionsCheckerFragment.Callback] interface to handle interaction events.
- * Use the [PermissionsCheckerFragment.newInstance] factory method to
- * create an instance of this fragment.
- *
+ * Purpose of this fragment is to check whether the application has needed permissions and ask for them.
  */
 class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallbacks, EasyPermissions.PermissionCallbacks {
     private val TAG = "AMY_${this.javaClass.simpleName}"
@@ -44,9 +37,6 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
             Manifest.permission.READ_SYNC_STATS,
             Manifest.permission.GET_ACCOUNTS
         )
-
-        @JvmStatic
-        fun newInstance() = PermissionsCheckerFragment()
     }
 
     override fun onAttach(context: Context) {
@@ -120,8 +110,8 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
 
         EasyPermissions.requestPermissions(
             PermissionRequest.Builder(this, BASE_PERMISSIONS_REQUEST, *perms.toTypedArray())
-                .setRationale("PermsCheck. We need them.")
-                .setNegativeButtonText("Quit")
+                .setRationale(getString(R.string.permissions_rationale))
+                .setNegativeButtonText(R.string.alertDialog_quit)
                 .build()
         )
     }
@@ -136,7 +126,7 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
             Log.i(TAG, "Some permissions permanently denied.")
             AppSettingsDialog.Builder(this)
-                .setNegativeButton("Quit")
+                .setNegativeButton(getString(R.string.alertDialog_quit))
                 .build()
                 .show()
         } else {

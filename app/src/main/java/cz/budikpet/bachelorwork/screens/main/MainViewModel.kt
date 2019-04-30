@@ -61,7 +61,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     val title = MutableLiveData<String>()
 
     /** Indicates whether some operation is running. */
-    val operationRunning = MutableLiveData<Boolean>()       // TODO: Different loading animation or thing for AllCalendarsUpdate?
+    val operationRunning =
+        MutableLiveData<Boolean>()       // TODO: Different loading animation or thing for AllCalendarsUpdate?
     val lastAllCalendarsUpdate = MutableLiveData<DateTime>()
 
     /** Any exception that was thrown and must be somehow shown to the user.*/
@@ -119,32 +120,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     fun signOut() {
         repository.signOut()
-    }
-
-    /**
-     * Uses Sirius API to get events of the specified thing.
-     *
-     * @param id identification of the item whose events we want.
-     * @param itemType type of the item whose events we want.
-     */
-    fun getSiriusEventsOf(
-        itemType: ItemType,
-        id: String,
-        dateStart: DateTime = dateMonday,
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate)
-    ) {
-        val disposable = repository.getSiriusEventsOf(itemType, id, dateStart, dateEnd)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { result ->
-                    // TODO: Implement
-//                    events.postValue(result.events)
-                },
-                { error -> Log.e(TAG, "Error: $error") }
-            )
-
-        compositeDisposable.add(disposable)
     }
 
     fun searchSirius(query: String) {
@@ -400,38 +375,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         compositeDisposable.add(disposable)
     }
 
-    // MARK: Multiday
-
-    override fun onAddEventClicked(startTime: DateTime, endTime: DateTime) {
-        Log.i(
-            TAG,
-            "Add event clicked: ${startTime.toString("dd.MM")}<${startTime.toString("HH:mm")} – ${endTime.toString("HH:mm")}>"
-        )
-    }
-
-    override fun onEventClicked(event: TimetableEvent) {
-        Log.i(TAG, "Event clicked: $event")
-    }
-
     // MARK: Mostly methods used for testing
-
-    fun getGoogleCalendarList() {
-        val disposable = repository.getGoogleCalendarList()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { result ->
-                    for (calendar in result) {
-                        Log.i(TAG, "CalendarName: ${calendar.summary}")
-                    }
-                },
-                { error ->
-                    Log.e(TAG, "GetCalendarEvents: $error")
-                }
-            )
-
-        compositeDisposable.add(disposable)
-    }
 
     /**
      * Gets a list of calendar display names and ids using the android calendar provider.
@@ -448,36 +392,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                     Log.e(TAG, "GetCalendarEvents: $error")
                 }
             )
-
-        compositeDisposable.add(disposable)
-    }
-
-//    fun getGoogleCalendarEvents(calId: Int) {
-//        val disposable = repository.getCalendarEvents(calId)
-//            .subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
-//            .subscribe(
-//                { result ->
-//                    Log.i(TAG, "AddGoogleCalendar")
-//                    Log.i(TAG, result.toString())
-//                },
-//                { error ->
-//                    Log.e(TAG, "AddGoogleCalendar: ${error}")
-//                })
-//        compositeDisposable.add(disposable)
-//    }
-
-    fun addSecondaryGoogleCalendar(name: String) {
-        val disposable = repository.addSecondaryGoogleCalendar(name)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .onErrorComplete { exception ->
-                Log.e(TAG, "AddSecondaryCalendar: $exception")
-                true   // TODO: Show error toast
-            }
-            .subscribe {
-                Log.i(TAG, "Calendar added successfully.")
-            }
 
         compositeDisposable.add(disposable)
     }
@@ -538,5 +452,18 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
 
         compositeDisposable.add(disposable)
+    }
+
+    // MARK: Multiday
+
+    override fun onAddEventClicked(startTime: DateTime, endTime: DateTime) {
+        Log.i(
+            TAG,
+            "Add event clicked: ${startTime.toString("dd.MM")}<${startTime.toString("HH:mm")} – ${endTime.toString("HH:mm")}>"
+        )
+    }
+
+    override fun onEventClicked(event: TimetableEvent) {
+        Log.i(TAG, "Event clicked: $event")
     }
 }

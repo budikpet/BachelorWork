@@ -8,6 +8,7 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import cz.budikpet.bachelorwork.MyApplication
+import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.main.MainActivity
 import cz.budikpet.bachelorwork.util.AppAuthManager
@@ -28,7 +29,6 @@ import javax.inject.Inject
 class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
-    // TODO: Do StartAuthorization better
     @Inject
     internal lateinit var appAuthManager: AppAuthManager
 
@@ -62,15 +62,14 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
             setPreferences()
 
             AlertDialog.Builder(this)
-                .setTitle("Notice")
+                .setTitle(getString(R.string.alertDialog_title_firstNotice))
                 .setMessage(
-                    "The application uses CTU timetable and Google Calendar. " +
-                            "The user has to be logged into a CTU account and a Google account."
+                    getString(R.string.alertDialog_message_firstNotice)
                 )
-                .setPositiveButton("Continue") { dialog, id ->
+                .setPositiveButton(getString(R.string.alertDialog_positive_firstNotice)) { dialog, id ->
                     permissionsCheckerFragment.checkPermissions()
                 }
-                .setNegativeButton("Quit") { dialog, id ->
+                .setNegativeButton(getString(R.string.alertDialog_quit)) { dialog, id ->
                     finishAffinity()
                 }
                 .show()
@@ -112,7 +111,7 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
      * A user is redirected to CTU login page to provide username and password.
      */
     private fun startAuthorization() {
-        val authService = AuthorizationService(this) // TODO: No way to fix this better?
+        val authService = AuthorizationService(this)
 
         val cancelIntent = Intent(this, CTULoginActivity::class.java)
         cancelIntent.putExtra("isCancelIntent", true)

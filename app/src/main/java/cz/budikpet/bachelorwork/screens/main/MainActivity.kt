@@ -198,12 +198,12 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 Log.i(TAG, "Google account not specified.")
 
                 AlertDialog.Builder(this)
-                    .setTitle("Google Account was not specified")
-                    .setMessage("Google Account is needed.")
-                    .setPositiveButton("Log in") { dialog, id ->
+                    .setTitle(getString(R.string.alterDialog_title_googleAccount))
+                    .setMessage(getString(R.string.alertDialog_message_googleAccount))
+                    .setPositiveButton(getString(R.string.alertDialog_positive_googleAccount)) { dialog, id ->
                         checkGoogleLogin()
                     }
-                    .setNegativeButton("Quit") { dialog, id ->
+                    .setNegativeButton(getString(R.string.alertDialog_quit)) { dialog, id ->
                         quitApplication()
                     }
                     .show()

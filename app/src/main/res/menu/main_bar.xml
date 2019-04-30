@@ -2,10 +2,11 @@
 <menu xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
     <item
             android:id="@+id/app_bar_menu_search"
-            android:title="Search"
+            android:title="@string/menu_item_search"
             app:actionViewClass="android.support.v7.widget.SearchView"
             app:showAsAction="ifRoom|collapseActionView" android:icon="@android:drawable/ic_menu_search"/>
-    <item android:title="Synchronize" android:icon="@android:drawable/ic_popup_sync" android:id="@+id/itemSync"
+    <item android:title="@string/menu_item_sync" android:icon="@android:drawable/ic_popup_sync"
+          android:id="@+id/itemSync"
           app:showAsAction="ifRoom"/>
 
 </menu>
