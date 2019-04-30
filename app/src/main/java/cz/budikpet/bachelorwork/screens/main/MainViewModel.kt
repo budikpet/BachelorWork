@@ -29,33 +29,9 @@ import javax.inject.Inject
 import kotlin.collections.ArrayList
 
 // TODO: Parts of AllCalendarUpdate code can be reused
-// TODO: Check created observables for possible exception throws
 
 class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     private val TAG = "MY_${this.javaClass.simpleName}"
-
-    /**
-     * Username of the currently selected timetable.
-     */
-    val timetableOwner = MutableLiveData<Pair<String, ItemType>>()
-
-    /**
-     * Events of the currently selected timetable.
-     */
-    val events = MutableLiveData<List<TimetableEvent>>()
-
-    /**
-     * Indicates whether the AllCalendars update is running.
-     */
-    val allCalendarsUpdating = MutableLiveData<Boolean>()
-
-    /**
-     * Any exception that was thrown and must be somehow shown to the user.
-     */
-    val thrownException = MutableLiveData<Throwable>()
-
-    val searchItems = MutableLiveData<List<SearchItem>>()
-    var lastSearchQuery = ""
 
     @Inject
     internal lateinit var repository: Repository
@@ -71,6 +47,27 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             SharedPreferencesKeys.NUM_OF_WEEKS_TO_UPDATE.toString(), 1
         )
     }
+
+    // MARK: Data
+
+    /** Username of the currently selected timetable. */
+    val timetableOwner = MutableLiveData<Pair<String, ItemType>>()
+
+    /** Events of the currently selected timetable. */
+    val events = MutableLiveData<List<TimetableEvent>>()
+
+    // MARK: State
+
+    val title = MutableLiveData<String>()
+
+    /** Indicates whether the AllCalendars update is running. */
+    val allCalendarsUpdating = MutableLiveData<Boolean>()
+
+    /** Any exception that was thrown and must be somehow shown to the user.*/
+    val thrownException = MutableLiveData<Throwable>()
+
+    val searchItems = MutableLiveData<List<SearchItem>>()
+    var lastSearchQuery = ""
 
     init {
         MyApplication.appComponent.inject(this)
@@ -150,8 +147,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     }
 
     fun searchSirius(query: String) {
-        val test = repository.searchSirius(query)
-            .retry(21)
+        val disposable = repository.searchSirius(query)
             .toList()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -161,6 +157,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                 },
                 { error -> Log.e(TAG, "Error: $error") }
             )
+
+        compositeDisposable.add(disposable)
     }
 
     // MARK: Google Calendar
@@ -201,7 +199,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API
                 val siriusObs = getSiriusEventsList(calendarListItem)
-                    .retry(21)
 
                 val calendarObs = getGoogleCalendarEventsList(calendarListItem)
 

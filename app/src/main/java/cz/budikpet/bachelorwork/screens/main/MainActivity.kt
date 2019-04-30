@@ -90,8 +90,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         viewModel.checkSiriusAuthorization(response, exception)
 
         checkGoogleLogin()
-
-//        initButtons()
     }
 
     override fun onDestroy() {
@@ -105,6 +103,15 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             if (searchItems != null && searchItems.isNotEmpty()) {
                 val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter?
                 adapter?.updateValues(searchItems)
+            }
+        })
+
+        viewModel.title.observe(this, Observer { title ->
+            val username = viewModel.timetableOwner.value?.first
+
+            supportActionBar?.title = title
+            if (username != null && username != "") {
+                supportActionBar?.subtitle = username
             }
         })
     }
@@ -257,7 +264,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             // There are searchItems now
             searchMenuItem.expandActionView()
             searchView.setQuery(query, false)
-//            searchView.setQuery(viewModel.lastSearchQuery, false)
         }
 
         return super.onCreateOptionsMenu(menu)

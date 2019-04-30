@@ -16,6 +16,7 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
 import org.joda.time.DateTime
+import org.joda.time.DateTimeConstants
 import retrofit2.HttpException
 
 class MultidayFragmentHolder : Fragment() {
@@ -25,10 +26,10 @@ class MultidayFragmentHolder : Fragment() {
 
     private lateinit var viewPager: ViewPager
     private lateinit var progressBar: ProgressBar
-    private var isGoToTodayVisible = false
 
-    private val todayDate = DateTime().withTimeAtStartOfDay()
-    private var currentDate = todayDate
+    private var daysPerFragment = 7 // TODO: Remove
+    private var todayDate = DateTime().withTimeAtStartOfDay()
+    private var pagerPosition = PREFILLED_WEEKS / 2
 
     private lateinit var viewModel: MainViewModel
 
@@ -58,7 +59,6 @@ class MultidayFragmentHolder : Fragment() {
             if (pair != null) {
                 val username = pair.first
                 val itemType = pair.second
-                // TODO: Changes to other parts of the UI like ToolBar
 
                 // New pair was loaded
                 viewModel.loadEvents(username, itemType)
@@ -94,32 +94,47 @@ class MultidayFragmentHolder : Fragment() {
     }
 
     private fun setupFragment() {
-        val multidayAdapter = ViewPagerAdapter(activity!!.supportFragmentManager, 7, PREFILLED_WEEKS)
+        val multidayAdapter = ViewPagerAdapter(activity!!.supportFragmentManager, daysPerFragment, PREFILLED_WEEKS)
+
+        if (daysPerFragment == 7)
+            todayDate = todayDate.withDayOfWeek(DateTimeConstants.MONDAY)
 
         viewPager.apply {
             adapter = multidayAdapter
-            currentItem = PREFILLED_WEEKS / 2
+            currentItem = pagerPosition
 
             addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
                 override fun onPageScrollStateChanged(state: Int) {}
 
                 override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
 
-                override fun onPageSelected(position: Int) {
-                    Log.i(TAG, "Selected page: $position")
-
-//                    currentWeekTS = weekTSs[position]
-//                    val shouldGoToTodayBeVisible = shouldGoToTodayBeVisible()
-//                    if (isGoToTodayVisible != shouldGoToTodayBeVisible) {
-//                        (activity as? MainActivity)?.toggleGoToTodayVisibility(shouldGoToTodayBeVisible)
-//                        isGoToTodayVisible = shouldGoToTodayBeVisible
-//                    }
-//
-//                    setupWeeklyActionbarTitle(weekTSs[position])
+                override fun onPageSelected(currPosition: Int) {
+                    changeTitle(currPosition)
                 }
             })
         }
-//        updateActionBarTitle()
+
+        changeTitle(pagerPosition)
+    }
+
+    /**
+     * Changes title according to the current position in the view pager.
+     */
+    private fun changeTitle(currPosition: Int) {
+        val currDate = when {
+            currPosition > pagerPosition -> todayDate.plusDays((currPosition - pagerPosition) * daysPerFragment)
+            else -> todayDate.minusDays((pagerPosition - currPosition) * daysPerFragment)
+        }
+
+
+        val lastDate = currDate.plusDays(daysPerFragment)
+        val title = when {
+            currDate.monthOfYear == lastDate.monthOfYear -> currDate.monthOfYear().getAsText(null).capitalize()
+            else -> "${currDate.monthOfYear().getAsText(null).capitalize()} - " +
+                    lastDate.monthOfYear().getAsText(null).capitalize()
+        }
+
+        viewModel.title.postValue(title)
     }
 
     private fun handleException(exception: Throwable) {

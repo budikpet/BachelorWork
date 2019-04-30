@@ -108,7 +108,7 @@ class MultidayViewFragment : Fragment() {
             } else {
                 val currDate = firstDate.plusDays(i)
                 val dayText = currDate.dayOfWeek().getAsShortText(null).capitalize()
-                dayTextView.text = "$dayText\n${currDate.dayOfMonth().get()}"
+                dayTextView.text = "$dayText\n${currDate.toString("dd")}"
             }
         }
 
@@ -386,7 +386,7 @@ class MultidayViewFragment : Fragment() {
 
             when {
                 columnCount < 1 -> columnCount = 1
-                columnCount > 7 -> columnCount = 7
+                columnCount > MAX_COLUMNS -> columnCount = MAX_COLUMNS
             }
 
             return MultidayViewFragment().apply {
