@@ -65,20 +65,13 @@ class MultidayFragmentHolder : Fragment() {
             }
         })
 
-        viewModel.allCalendarsUpdating.observe(this, Observer { updating ->
-            val pair = viewModel.timetableOwner.value
-
-
+        viewModel.operationRunning.observe(this, Observer { updating ->
             Log.i(TAG, "Calendars updating: $updating")
 
-            if (updating != null && pair != null) {
-                val username = pair.first
-                val itemType = pair.second
-
+            if (updating != null) {
                 if (!updating) {
                     // Update done
                     progressBar.visibility = View.GONE
-                    viewModel.loadEvents(username, itemType)
                 } else {
                     // Update started
                     progressBar.visibility = View.VISIBLE

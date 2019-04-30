@@ -107,11 +107,23 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         })
 
         viewModel.title.observe(this, Observer { title ->
-            val username = viewModel.timetableOwner.value?.first
-
             supportActionBar?.title = title
+        })
+
+        viewModel.timetableOwner.observe(this, Observer { pair ->
+            val username = pair?.first
             if (username != null && username != "") {
                 supportActionBar?.subtitle = username
+            }
+        })
+
+        viewModel.lastAllCalendarsUpdate.observe(this, Observer {
+            val pair = viewModel.timetableOwner.value
+
+            if (pair != null) {
+                val username = pair.first
+                val itemType = pair.second
+                viewModel.loadEvents(username, itemType)
             }
         })
     }

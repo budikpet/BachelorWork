@@ -60,8 +60,9 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     val title = MutableLiveData<String>()
 
-    /** Indicates whether the AllCalendars update is running. */
-    val allCalendarsUpdating = MutableLiveData<Boolean>()
+    /** Indicates whether some operation is running. */
+    val operationRunning = MutableLiveData<Boolean>()       // TODO: Different loading animation or thing for AllCalendarsUpdate?
+    val lastAllCalendarsUpdate = MutableLiveData<DateTime>()
 
     /** Any exception that was thrown and must be somehow shown to the user.*/
     val thrownException = MutableLiveData<Throwable>()
@@ -178,7 +179,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     fun updateAllCalendars() {
         compositeDisposable.clear()
 
-        allCalendarsUpdating.postValue(true)
+        operationRunning.postValue(true)
 
         val disposable = repository.getGoogleCalendarList()
             .observeOn(Schedulers.computation())
@@ -220,7 +221,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .subscribe {
                 Log.i(TAG, "Update done")
-                allCalendarsUpdating.postValue(false)
+                operationRunning.postValue(false)
+                lastAllCalendarsUpdate.postValue(DateTime())
                 repository.startCalendarRefresh()
             }
 
@@ -366,6 +368,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
         dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
     ) {
+        operationRunning.postValue(true)
+
         val disposable = repository.getLocalCalendarListItems()
             .filter { it.displayName == "${username}_${MyApplication.calendarsName}" }
             .flatMap { repository.getCalendarEvents(it.id, dateStart, dateEnd) }
@@ -385,9 +389,11 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .subscribe(
                 { events ->
                     this.events.postValue(events)
+                    operationRunning.postValue(false)
                 },
                 { error ->
                     Log.e(TAG, "loadEvents: $error")
+                    operationRunning.postValue(false)
                 }
             )
 
