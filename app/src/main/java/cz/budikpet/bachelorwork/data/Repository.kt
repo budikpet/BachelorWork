@@ -70,7 +70,7 @@ class Repository @Inject constructor(private val context: Context) {
 
         val transport = NetHttpTransport.Builder().build()
         calendarService = Calendar.Builder(transport, GsonFactory.getDefaultInstance(), setHttpTimeout(credential))
-            .setApplicationName(MyApplication.calendarsName)
+            .setApplicationName(MyApplication.CALENDARS_NAME)
             .build()
     }
 
@@ -280,7 +280,7 @@ class Repository @Inject constructor(private val context: Context) {
                 return@retry count < 21
             }
             .flatMapObservable { Observable.fromIterable(it.items) }
-            .filter { it.summary.contains(MyApplication.calendarsName) }
+            .filter { it.summary.contains(MyApplication.CALENDARS_NAME) }
             .toList()
     }
 
@@ -312,7 +312,7 @@ class Repository @Inject constructor(private val context: Context) {
         val uri: Uri = CalendarContract.Calendars.CONTENT_URI
         val selection =
             "${CalendarContract.Events.CALENDAR_DISPLAY_NAME} LIKE ?"
-        val selectionArgs: Array<String> = arrayOf("%_${MyApplication.calendarsName}%")
+        val selectionArgs: Array<String> = arrayOf("%_${MyApplication.CALENDARS_NAME}%")
 
         return Observable.create { emitter ->
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
@@ -518,7 +518,7 @@ class Repository @Inject constructor(private val context: Context) {
 
     fun sharePersonalCalendar(email: String): Single<AclRule> {
         val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
-        val calendarName = "${username}_${MyApplication.calendarsName}"
+        val calendarName = "${username}_${MyApplication.CALENDARS_NAME}"
 
         // Create access rule with associated scope
         val rule = AclRule()
@@ -541,7 +541,7 @@ class Repository @Inject constructor(private val context: Context) {
 
     fun unsharePersonalCalendar(email: String): Completable {
         val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
-        val calendarName = "${username}_${MyApplication.calendarsName}"
+        val calendarName = "${username}_${MyApplication.CALENDARS_NAME}"
 
         val ruleId = "user:$email"
 

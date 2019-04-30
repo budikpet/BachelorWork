@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-            android:id="@+id/app_bar_menu_search"
-            android:title="@string/menu_item_search"
+            android:id="@+id/itemSearch"
+            android:title="@string/menuItem_search"
             app:actionViewClass="android.support.v7.widget.SearchView"
             app:showAsAction="ifRoom|collapseActionView" android:icon="@android:drawable/ic_menu_search"/>
-    <item android:title="@string/menu_item_sync" android:icon="@android:drawable/ic_popup_sync"
+    <item android:title="@string/menuItem_goToToday" android:id="@+id/itemGoToToday" app:showAsAction="never"
+    />
+    <item android:title="@string/menuItem_goToDate" app:showAsAction="never"
+          android:id="@+id/itemGoToDate"/>
+    <item android:title="@string/menuItem_sync" android:icon="@android:drawable/ic_popup_sync"
           android:id="@+id/itemSync"
           app:showAsAction="ifRoom"/>
 

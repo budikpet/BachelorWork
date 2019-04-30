@@ -38,6 +38,20 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
     private lateinit var permissionsCheckerFragment: PermissionsCheckerFragment
     private var onResumeCalled = false
 
+    private val alertDialogBuilder: AlertDialog.Builder by lazy {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.alertDialog_title_firstNotice))
+            .setMessage(
+                getString(R.string.alertDialog_message_firstNotice)
+            )
+            .setPositiveButton(getString(R.string.alertDialog_positive_firstNotice)) { dialog, id ->
+                permissionsCheckerFragment.checkPermissions()
+            }
+            .setNegativeButton(getString(R.string.alertDialog_quit)) { dialog, id ->
+                finishAffinity()
+            }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         MyApplication.appComponent.inject(this)
@@ -60,19 +74,7 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
             permissionsCheckerFragment.checkPermissions()
         } else {
             setPreferences()
-
-            AlertDialog.Builder(this)
-                .setTitle(getString(R.string.alertDialog_title_firstNotice))
-                .setMessage(
-                    getString(R.string.alertDialog_message_firstNotice)
-                )
-                .setPositiveButton(getString(R.string.alertDialog_positive_firstNotice)) { dialog, id ->
-                    permissionsCheckerFragment.checkPermissions()
-                }
-                .setNegativeButton(getString(R.string.alertDialog_quit)) { dialog, id ->
-                    finishAffinity()
-                }
-                .show()
+            alertDialogBuilder.show()
         }
 
     }
@@ -87,7 +89,6 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
             putInt(SharedPreferencesKeys.LESSONS_START_TIME.toString(), lessonsStartTime)
             putInt(SharedPreferencesKeys.LENGTH_OF_BREAK.toString(), 15)
             putInt(SharedPreferencesKeys.LENGTH_OF_LESSON.toString(), 90)
-            putInt(SharedPreferencesKeys.NUM_OF_WEEKS_TO_UPDATE.toString(), 4)
         }
 
     }

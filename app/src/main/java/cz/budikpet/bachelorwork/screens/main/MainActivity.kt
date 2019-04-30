@@ -20,12 +20,9 @@ import android.view.View
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
-import cz.budikpet.bachelorwork.data.models.Event
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
-import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
 import cz.budikpet.bachelorwork.util.*
-import kotlinx.android.synthetic.main.activity_main_old.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import pub.devrel.easypermissions.EasyPermissions
@@ -54,6 +51,18 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
     private lateinit var permissionsCheckerFragment: PermissionsCheckerFragment
     private lateinit var multidayFragmentHolder: MultidayFragmentHolder
+
+    private val alertDialogBuilder: AlertDialog.Builder by lazy {
+        AlertDialog.Builder(this)
+            .setTitle(getString(R.string.alterDialog_title_googleAccount))
+            .setMessage(getString(R.string.alertDialog_message_googleAccount))
+            .setPositiveButton(getString(R.string.alertDialog_positive_googleAccount)) { dialog, id ->
+                checkGoogleLogin()
+            }
+            .setNegativeButton(getString(R.string.alertDialog_quit)) { dialog, id ->
+                quitApplication()
+            }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -128,6 +137,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         })
     }
 
+    /*
     private fun initButtons() {
         signoutBtn.setOnClickListener {
             viewModel.signOut()
@@ -147,6 +157,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
         showData.text = builder.toString()
     }
+*/
 
     // MARK: Google account
 
@@ -196,18 +207,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 viewModel.updateAllCalendars()
             } else {
                 Log.i(TAG, "Google account not specified.")
-
-                AlertDialog.Builder(this)
-                    .setTitle(getString(R.string.alterDialog_title_googleAccount))
-                    .setMessage(getString(R.string.alertDialog_message_googleAccount))
-                    .setPositiveButton(getString(R.string.alertDialog_positive_googleAccount)) { dialog, id ->
-                        checkGoogleLogin()
-                    }
-                    .setNegativeButton(getString(R.string.alertDialog_quit)) { dialog, id ->
-                        quitApplication()
-                    }
-                    .show()
-
+                alertDialogBuilder.show()
             }
 
         }
@@ -218,7 +218,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_bar, menu)
 
-        val searchMenuItem = menu?.findItem(R.id.app_bar_menu_search)!!
+        val searchMenuItem = menu?.findItem(R.id.itemSearch)!!
         val searchView = searchMenuItem.actionView as SearchView
         val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
         searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
@@ -282,7 +282,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        if (item!!.itemId == R.id.itemSync) {
+        if (item?.itemId == R.id.itemSync) {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             viewModel.updateAllCalendars()
 
@@ -290,7 +290,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         }
 
 
-        return false
+        return super.onOptionsItemSelected(item)
     }
 
     // MARK: Permissions

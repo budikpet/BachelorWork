@@ -1,19 +1,21 @@
 <resources>
     <string name="app_name">BachelorWork</string>
-    <string name="alertDialog_message_googleAccount">The application needs to have access to a valid Google Account.
+    <string name="alertDialog_message_googleAccount">The application needs to have access to a valid Google Account
+        because it uses its Google Calendar to store data from CTU timetable..
     </string>
     <string name="alterDialog_title_googleAccount">Google Account is not specified</string>
     <string name="alertDialog_quit">Quit</string>
     <string name="alertDialog_positive_googleAccount">Log in</string>
-    <string name="menu_item_sync">Synchronize</string>
-    <string name="menu_item_search">Search</string>
+    <string name="menuItem_sync">Synchronize</string>
+    <string name="menuItem_search">Search</string>
     <string name="alertDialog_message_firstNotice">The application uses CTU timetable and Google Calendar. The user has
-        to
-        be logged into a CTU account and a Google account.
+        to be logged into a CTU account and a Google account.
     </string>
     <string name="alertDialog_positive_firstNotice">Continue</string>
     <string name="alertDialog_title_firstNotice">Notice</string>
     <string name="permissions_rationale">The application needs these permissions to store data from CTU timetable in a
         Google Calendar.
     </string>
+    <string name="menuItem_goToToday">Go to today</string>
+    <string name="menuItem_goToDate">Go to date</string>
 </resources>

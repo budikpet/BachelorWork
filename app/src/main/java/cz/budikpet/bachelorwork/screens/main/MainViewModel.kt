@@ -42,11 +42,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     private var compositeDisposable = CompositeDisposable()
 
     private val dateMonday = DateTime().withDayOfWeek(DateTimeConstants.MONDAY).withTimeAtStartOfDay()
-    private val numOfWeeksToUpdate by lazy {
-        sharedPreferences.getInt(
-            SharedPreferencesKeys.NUM_OF_WEEKS_TO_UPDATE.toString(), 1
-        )
-    }
 
     // MARK: Data
 
@@ -157,10 +152,10 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         operationRunning.postValue(true)
 
         val disposable = repository.getGoogleCalendarList()
-            .observeOn(Schedulers.computation())
             .flatMapCompletable {
                 // Check if personal calendar exists and unhide hidden calendars in Google Calendar service
                 checkGoogleCalendars(it)
+                    .observeOn(Schedulers.computation())
                     .andThen(repository.getLocalCalendarListItems())
                     .filter { !it.syncEvents }
                     .map { it.with(syncEvents = true) }
@@ -209,7 +204,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      */
     private fun checkGoogleCalendars(calendars: MutableList<CalendarListEntry>): Completable {
         val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
-        val personalCalendarName = "${username}_${MyApplication.calendarsName}"
+        val personalCalendarName = "${username}_${MyApplication.CALENDARS_NAME}"
         var personalCalendarFound = false
         var hiddenCalendars = mutableListOf<CalendarListEntry>()
 
@@ -244,8 +239,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      */
     private fun getSiriusEventsList(
         calendarListItem: CalendarListItem,
-        dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
+        dateStart: DateTime = dateMonday.minusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE),
+        dateEnd: DateTime = dateStart.plusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE * 2)
     ): Observable<ArrayList<TimetableEvent>> {
         // Get id from calendar display name - username, room number...
         val id = calendarListItem.displayName.substringBefore("_")
@@ -273,8 +268,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      */
     private fun getGoogleCalendarEventsList(
         calendarListItem: CalendarListItem,
-        dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
+        dateStart: DateTime = dateMonday.minusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE),
+        dateEnd: DateTime = dateStart.plusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE * 2)
     ): Observable<ArrayList<TimetableEvent>> {
         return repository.getCalendarEvents(calendarListItem.id, dateStart, dateEnd)
             .filter { event -> event.siriusId != null && !event.deleted }   // TODO: Move to methods that use the list?
@@ -340,13 +335,13 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     fun loadEvents(
         username: String,
         itemType: ItemType,
-        dateStart: DateTime = dateMonday.minusWeeks(numOfWeeksToUpdate),
-        dateEnd: DateTime = dateStart.plusWeeks(numOfWeeksToUpdate * 2)
+        dateStart: DateTime = dateMonday.minusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE),
+        dateEnd: DateTime = dateStart.plusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE * 2)
     ) {
         operationRunning.postValue(true)
 
         val disposable = repository.getLocalCalendarListItems()
-            .filter { it.displayName == "${username}_${MyApplication.calendarsName}" }
+            .filter { it.displayName == "${username}_${MyApplication.CALENDARS_NAME}" }
             .flatMap { repository.getCalendarEvents(it.id, dateStart, dateEnd) }
             .switchIfEmpty(
                 repository.getSiriusEventsOf(itemType, username, dateStart, dateEnd)
