@@ -144,12 +144,19 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     }
 
     /**
-     * Updates all calendars used by the application with data from Sirius API.
+     * Updates one or all calendars used by the application with data from Sirius API.
+     *
+     * @param username if a username is provided then only its calendar is updated
      */
-    fun updateAllCalendars() {
+    fun updateCalendars(username: String? = null) {
         compositeDisposable.clear()
 
         operationRunning.postValue(true)
+
+        val calendarName = when {
+            username != null -> "${username}_${MyApplication.CALENDARS_NAME}"
+            else -> null
+        }
 
         val disposable = repository.getGoogleCalendarList()
             .flatMapCompletable {
@@ -166,6 +173,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .andThen(repository.refreshCalendars())
             .andThen(repository.getLocalCalendarListItems())
+            .filter { username == null || it.displayName == calendarName }
             .observeOn(Schedulers.io())
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API

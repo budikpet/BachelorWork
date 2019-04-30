@@ -204,7 +204,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
                 viewModel.signedInToGoogle()
 
-                viewModel.updateAllCalendars()
+                viewModel.updateCalendars()
             } else {
                 Log.i(TAG, "Google account not specified.")
                 alertDialogBuilder.show()
@@ -284,7 +284,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (item?.itemId == R.id.itemSync) {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
-            viewModel.updateAllCalendars()
+            viewModel.updateCalendars()
 
             return true
         }
