@@ -7,9 +7,9 @@ import org.joda.time.DateTime
 
 class ViewPagerAdapter(
     fm: FragmentManager,
-    var daysPerFragment: Int,
+    private val daysPerFragment: Int,
     private val numOfFragments: Int,
-    var firstDate: DateTime
+    private val firstDate: DateTime
 ) :
     FragmentStatePagerAdapter(fm) {
 
@@ -19,9 +19,12 @@ class ViewPagerAdapter(
         val todayPosition = numOfFragments / 2
         val currDate = when {
             position < todayPosition -> firstDate.minusDays(daysPerFragment * (todayPosition - position))
+            position == todayPosition -> firstDate
             else -> firstDate.plusDays(daysPerFragment * (position - todayPosition))
         }
 
         return MultidayViewFragment.newInstance(daysPerFragment, currDate)
     }
+
+
 }
