@@ -148,7 +148,11 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      *
      * @param username if a username is provided then only its calendar is updated
      */
-    fun updateCalendars(username: String? = null) {
+    fun updateCalendars(
+        username: String? = null,
+        dateStart: DateTime = dateMonday.minusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE),
+        dateEnd: DateTime = dateStart.plusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE * 2)
+    ) {
         compositeDisposable.clear()
 
         operationRunning.postValue(true)
@@ -177,9 +181,9 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .observeOn(Schedulers.io())
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API
-                val siriusObs = getSiriusEventsList(calendarListItem)
+                val siriusObs = getSiriusEventsList(calendarListItem, dateStart, dateEnd)
 
-                val calendarObs = getGoogleCalendarEventsList(calendarListItem)
+                val calendarObs = getGoogleCalendarEventsList(calendarListItem, dateStart, dateEnd)
 
                 val updateObs = Observable.zip(siriusObs, calendarObs,
                     BiFunction { siriusEvents: ArrayList<TimetableEvent>, calendarEvents: ArrayList<TimetableEvent> ->
