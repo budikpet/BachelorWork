@@ -3,6 +3,7 @@ package cz.budikpet.bachelorwork.screens.main
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.SharedPreferences
+import android.graphics.Typeface
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.constraint.ConstraintSet
@@ -108,7 +109,13 @@ class MultidayViewFragment : Fragment() {
             } else {
                 val currDate = firstDate.plusDays(i)
                 val dayText = currDate.dayOfWeek().getAsShortText(null).capitalize()
-                dayTextView.text = "$dayText\n${currDate.toString("dd")}"
+                dayTextView.apply {
+                    text = "$dayText\n${currDate.toString("dd")}"
+
+                    if (currDate.toLocalDate().isEqual(LocalDate())) {
+                        setTypeface(null, Typeface.BOLD)
+                    }
+                }
             }
         }
 
