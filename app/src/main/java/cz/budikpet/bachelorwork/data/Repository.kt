@@ -111,7 +111,10 @@ class Repository @Inject constructor(private val context: Context) {
                     .flatMap { searchResult ->
                         Observable.fromIterable(searchResult.results)
                     }
-//                    .collect({ArrayList<SearchResult>()}, {arrayList, item: SearchResult -> arrayList.add(item) } )
+            }
+            .retry { count, error ->
+                Log.w(TAG, "SearchSirius retries: $count. Error: $error")
+                return@retry count < 21
             }
     }
 
@@ -121,7 +124,8 @@ class Repository @Inject constructor(private val context: Context) {
      * @return An observable @EventsResult endpoint.
      */
     fun getSiriusEventsOf(
-        itemType: ItemType, id: String, dateStart: DateTime,
+        itemType: ItemType, id: String,
+        dateStart: DateTime,
         dateEnd: DateTime
     ): Observable<EventsResult> {
         return appAuthManager.getFreshAccessToken()
@@ -129,6 +133,10 @@ class Repository @Inject constructor(private val context: Context) {
             .observeOn(Schedulers.io()) // Observe the refreshAccessToken operation on a non-main thread.
             .flatMapObservable { accessToken ->
                 getSiriusEventsOf(itemType, id, accessToken, dateStart, dateEnd)
+            }
+            .retry { count, error ->
+                Log.w(TAG, "GetSiriusEventsOf retries: $count. Error: $error")
+                return@retry count < 21
             }
     }
 
@@ -172,7 +180,7 @@ class Repository @Inject constructor(private val context: Context) {
         }
     }
 
-    // MARK: Google Calendar API
+    // MARK: Google Calendar
 
     /**
      * Starts the refresh of all calendars of the used google account asynchronously.
@@ -267,6 +275,10 @@ class Repository @Inject constructor(private val context: Context) {
                 .setFields(FEED_FIELDS).setShowHidden(true).setMaxResults(240)
                 .execute()
         }
+            .retry { count, error ->
+                Log.w(TAG, "GetGoogleCalendarList retries: $count. Error: $error")
+                return@retry count < 21
+            }
             .flatMapObservable { Observable.fromIterable(it.items) }
             .filter { it.summary.contains(MyApplication.calendarsName) }
             .toList()
@@ -277,6 +289,10 @@ class Repository @Inject constructor(private val context: Context) {
      */
     fun updateGoogleCalendarList(entry: CalendarListEntry): Single<CalendarListEntry> {
         return Single.fromCallable { calendarService.calendarList().update(entry.id, entry).execute() }
+            .retry { count, error ->
+                Log.w(TAG, "UpdateGoogleCalendarList retries: $count. Error: $error")
+                return@retry count < 21
+            }
     }
 
     /**
@@ -467,7 +483,7 @@ class Repository @Inject constructor(private val context: Context) {
     }
 
     /**
-     * Create and add a new secondary Google calendar using GoogleCalendar API.
+     * Create and add a new secondary Google calendar using Google Calendar API.
      *
      * @param name name of the new calendar.
      */
@@ -482,7 +498,10 @@ class Repository @Inject constructor(private val context: Context) {
                 .setFields("id,summary")
                 .execute()
         }
-            .subscribeOn(Schedulers.io())
+            .retry { count, error ->
+                Log.w(TAG, "AddSecondaryGoogleCalendar retries: $count. Error: $error")
+                return@retry count < 21
+            }
             .observeOn(Schedulers.io())
             .flatMap { createdCalendar ->
                 Log.i(TAG, "Calendar created, changing its settings.")
@@ -513,6 +532,10 @@ class Repository @Inject constructor(private val context: Context) {
                     return@fromCallable calendarService.acl().insert(calendar.id, rule).setSendNotifications(false)
                         .execute()
                 }
+            }
+            .retry { count, error ->
+                Log.w(TAG, "SharePersonalCalendar retries: $count. Error: $error")
+                return@retry count < 21
             }
     }
 
