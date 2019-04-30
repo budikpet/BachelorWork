@@ -1,5 +1,6 @@
 package cz.budikpet.bachelorwork.screens.main
 
+import android.app.DatePickerDialog
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
@@ -8,6 +9,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.view.ViewPager
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ProgressBar
@@ -28,13 +30,23 @@ class MultidayFragmentHolder : Fragment() {
     private lateinit var progressBar: ProgressBar
 
     private var daysPerFragment = 7 // TODO: Remove
-    private var todayDate = DateTime().withTimeAtStartOfDay()
     private var pagerPosition = PREFILLED_WEEKS / 2
+    private var firstDate = DateTime().withTimeAtStartOfDay()
 
     private lateinit var viewModel: MainViewModel
 
+    private val datePickerDialog: DatePickerDialog by lazy {
+        val listener = DatePickerDialog.OnDateSetListener { datePicker, year, month, dayOfMonth ->
+            val date = DateTime(year, month + 1, dayOfMonth, 0, 0)
+            resetViewPager(date)
+        }
+
+        DatePickerDialog(context, listener, firstDate.year,firstDate.monthOfYear - 1,firstDate.dayOfMonth)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        setHasOptionsMenu(true)
 
         // Receive MainViewModel reference in a fragment
         viewModel = activity?.run {
@@ -50,6 +62,29 @@ class MultidayFragmentHolder : Fragment() {
         progressBar = layout.progressBar
         setupFragment()
         return layout
+    }
+
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        if (item?.itemId == R.id.itemGoToToday) {
+            // Move the viewPager to today
+            resetViewPager()
+        } else if(item?.itemId == R.id.itemGoToDate) {
+            // TODO: DatePicker
+            datePickerDialog.show()
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
+    private fun resetViewPager(date: DateTime = DateTime()) {
+        pagerPosition = PREFILLED_WEEKS / 2
+
+        firstDate = date
+        if(daysPerFragment == MultidayViewFragment.MAX_COLUMNS)
+            firstDate = firstDate.withTimeAtStartOfDay().withDayOfWeek(DateTimeConstants.MONDAY)
+
+        viewPager.adapter = ViewPagerAdapter(activity!!.supportFragmentManager, daysPerFragment, PREFILLED_WEEKS, firstDate)
+        viewPager.setCurrentItem(pagerPosition, false)
     }
 
     private fun subscribeObservers() {
@@ -87,13 +122,11 @@ class MultidayFragmentHolder : Fragment() {
     }
 
     private fun setupFragment() {
-        val multidayAdapter = ViewPagerAdapter(activity!!.supportFragmentManager, daysPerFragment, PREFILLED_WEEKS)
-
-        if (daysPerFragment == 7)
-            todayDate = todayDate.withDayOfWeek(DateTimeConstants.MONDAY)
+        if (daysPerFragment == MultidayViewFragment.MAX_COLUMNS)
+            firstDate = firstDate.withDayOfWeek(DateTimeConstants.MONDAY)
 
         viewPager.apply {
-            adapter = multidayAdapter
+            adapter = ViewPagerAdapter(activity!!.supportFragmentManager, daysPerFragment, PREFILLED_WEEKS, firstDate)
             currentItem = pagerPosition
 
             addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
@@ -115,8 +148,8 @@ class MultidayFragmentHolder : Fragment() {
      */
     private fun changeTitle(currPosition: Int) {
         val currDate = when {
-            currPosition > pagerPosition -> todayDate.plusDays((currPosition - pagerPosition) * daysPerFragment)
-            else -> todayDate.minusDays((pagerPosition - currPosition) * daysPerFragment)
+            currPosition > pagerPosition -> firstDate.plusDays((currPosition - pagerPosition) * daysPerFragment)
+            else -> firstDate.minusDays((pagerPosition - currPosition) * daysPerFragment)
         }
 
 
