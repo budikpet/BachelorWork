@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">BachelorWork</string>
+	<string name="alertDialog_message_firstNotice">Aplikace používá rozvrh hodin z ČVUT v Praze a Kalendář Google.
+		Proto musíte být přihlášeni k ČVUT a Google účtům.
+	</string>
+	<string name="alertDialog_positive_firstNotice">Pokračovat</string>
+	<string name="alertDialog_positive_googleAccount">Přihlásit se</string>
+	<string name="alertDialog_quit">Odejít</string>
+	<string name="alertDialog_settings">Nastavení</string>
+	<string name="alertDialog_title_firstNotice">Upozornění</string>
+	<string name="alterDialog_title_googleAccount">Účet Google nebyl nalezen</string>
+	<string name="menuItem_goToDate">Přejít na datum</string>
+	<string name="menuItem_goToToday">Přejít na dnes</string>
+	<string name="menuItem_search">Vyhledat</string>
+	<string name="menuItem_sync">Synchronizovat rozvrhy</string>
+	<string name="permissions_rationale">Aplikace potřebuje následující povolení pro ukládání rozvrhů hodin z databáze
+		ČVUT v Praze do Kalendáře Google.\nBez těchto povolení nemůže aplikace fungovat.
+	</string>
+	<string name="permissions_rationale_permanent">%1$s\nOtevřete nastavení aplikace a povolení upravte.</string>
+	<string name="roomDefault">Neznámé</string>
+	<string name="alertDialog_message_googleAccount">Aplikace potřebuje mít přístup k validnímu Google účtu, protože
+		používá s ním svázaný Kalendář Google pro ukládání rozvrhů hodin z databáze ČVUT v Praze.
+	</string>
+</resources>

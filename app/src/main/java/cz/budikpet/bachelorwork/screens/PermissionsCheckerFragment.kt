@@ -17,6 +17,17 @@ import pub.devrel.easypermissions.PermissionRequest
 class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallbacks, EasyPermissions.PermissionCallbacks {
     private val TAG = "AMY_${this.javaClass.simpleName}"
 
+    private val appSettingsDialogBuilder by lazy {
+        val basicRationale = resources.getString(R.string.permissions_rationale)
+        val permanentAddition = resources.getString(R.string.permissions_rationale_permanent)
+
+        AppSettingsDialog.Builder(this)
+            .setNegativeButton(getString(R.string.alertDialog_quit))
+            .setPositiveButton(R.string.alertDialog_settings)
+            .setRationale(String.format(permanentAddition, basicRationale))
+            .build()
+    }
+
     private var callback: Callback? = null
 
     // TODO: Use LiveData to pass information about granted permissions?
@@ -125,10 +136,7 @@ class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallback
         // Ask for the permissions again
         if (EasyPermissions.somePermissionPermanentlyDenied(this, perms)) {
             Log.i(TAG, "Some permissions permanently denied.")
-            AppSettingsDialog.Builder(this)
-                .setNegativeButton(getString(R.string.alertDialog_quit))
-                .build()
-                .show()
+            appSettingsDialogBuilder.show()
         } else {
             requestDeniedPermissions()
         }
