@@ -120,9 +120,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             if (username != null && username != "") {
                 supportActionBar?.subtitle = username
             }
-        })
 
-        viewModel.timetableOwner.observe(this, Observer { pair ->
             // User wishes to see a different timetable
             viewModel.loadEvents()
         })

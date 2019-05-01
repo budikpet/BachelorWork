@@ -40,9 +40,9 @@ class MultidayFragmentHolder : Fragment() {
         DatePickerDialog(
             context,
             listener,
-            viewModel.firstDate.year,
-            viewModel.firstDate.monthOfYear - 1,
-            viewModel.firstDate.dayOfMonth
+            viewModel.currentlySelectedDate.year,
+            viewModel.currentlySelectedDate.monthOfYear - 1,
+            viewModel.currentlySelectedDate.dayOfMonth
         )
     }
 
@@ -62,7 +62,11 @@ class MultidayFragmentHolder : Fragment() {
         super.onCreateOptionsMenu(menu, inflater)
 
         itemGoToToday = menu?.findItem(R.id.itemGoToToday)
-        itemGoToToday?.isVisible = false
+
+        val adapter = viewPager.adapter as ViewPagerAdapter
+
+        if (adapter != null)
+            updateAppBar(adapter.dateFromPosition(pagerPosition))
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -110,13 +114,13 @@ class MultidayFragmentHolder : Fragment() {
     private fun resetViewPager(date: DateTime = DateTime()) {
         pagerPosition = PREFILLED_WEEKS / 2
 
-        viewModel.firstDate = date
+        viewModel.currentlySelectedDate = date
 
         val adapter = ViewPagerAdapter(
             activity!!.supportFragmentManager,
             viewModel.daysPerMultidayViewFragment,
             PREFILLED_WEEKS,
-            viewModel.firstDate
+            viewModel.currentlySelectedDate
         )
         viewPager.adapter = adapter
 
@@ -130,7 +134,7 @@ class MultidayFragmentHolder : Fragment() {
             activity!!.supportFragmentManager,
             viewModel.daysPerMultidayViewFragment,
             PREFILLED_WEEKS,
-            viewModel.firstDate
+            viewModel.currentlySelectedDate
         )
 
         viewPager.apply {
@@ -147,23 +151,31 @@ class MultidayFragmentHolder : Fragment() {
                 }
             })
         }
-
-        updateAppBar(adapter.dateFromPosition(pagerPosition))
     }
 
     private fun updateViewPager(currPosition: Int) {
         val adapter = viewPager.adapter as ViewPagerAdapter?
         pagerPosition = currPosition
 
-        if(adapter != null) {
+        if (adapter != null) {
             val currDate = adapter.dateFromPosition(currPosition)
-            viewModel.firstDate = currDate
+            viewModel.currentlySelectedDate = currDate
             updateAppBar(currDate)
 
-            Log.d(TAG, "Is ${currDate.toString("dd.MM")} in loaded events: ${viewModel.loadedEventsInterval.start.toString("dd.MM")} - ${viewModel.loadedEventsInterval.end.toString("dd.MM")}")
-            Log.d(TAG, "UpdatedEvents: ${viewModel.updatedEventsInterval?.start?.toString("dd.MM")} - ${viewModel.updatedEventsInterval?.end?.toString("dd.MM")}")
+            Log.d(
+                TAG,
+                "Is ${currDate.toString("dd.MM")} in loaded events: ${viewModel.loadedEventsInterval.start.toString("dd.MM")} - ${viewModel.loadedEventsInterval.end.toString(
+                    "dd.MM"
+                )}"
+            )
+            Log.d(
+                TAG,
+                "UpdatedEvents: ${viewModel.updatedEventsInterval?.start?.toString("dd.MM")} - ${viewModel.updatedEventsInterval?.end?.toString(
+                    "dd.MM"
+                )}"
+            )
 
-            if(!viewModel.loadedEventsInterval.contains(currDate)) {
+            if (!viewModel.loadedEventsInterval.contains(currDate)) {
                 // User moved outside of loaded events
                 viewModel.loadEvents(currDate)
             }

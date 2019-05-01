@@ -8,7 +8,6 @@ import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.constraint.ConstraintSet
 import android.support.v4.app.Fragment
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -227,8 +226,8 @@ class MultidayViewFragment : Fragment() {
             }
             .map { return@map IndexedTimetableEvent(-1, it) }
 
-        if(preparedCollection.isEmpty()) {
-            if(!viewModel.areLoadedEventsUpdated()) {
+        if (preparedCollection.isEmpty()) {
+            if (!viewModel.areLoadedEventsUpdated()) {
                 // Loaded events haven't been updated yet
                 viewModel.updateCalendars(viewModel.timetableOwner.value!!.first)
             }
