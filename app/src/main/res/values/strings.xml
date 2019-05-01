@@ -23,9 +23,7 @@
 	<string name="roomDefault">Unknown</string>
 	<string name="itemCalendarSaved">Saved</string>
 	<string name="itemCalendarNotSaved">Not saved</string>
-
-	<!-- TODO: Remove or change this placeholder text -->
-	<string name="hello_blank_fragment">Hello blank fragment</string>
 	<string name="students">Students</string>
 	<string name="capacity">Capacity</string>
+	<string name="teachers">Teachers:</string>
 </resources>

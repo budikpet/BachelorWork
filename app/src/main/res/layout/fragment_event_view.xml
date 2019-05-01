@@ -67,7 +67,7 @@
 		android:id="@+id/eventType"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginTop="32dp"
+		android:layout_marginTop="16dp"
 		android:textSize="16sp"
 		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
 		app:layout_constraintTop_toBottomOf="@+id/headerView"
@@ -109,7 +109,7 @@
 		android:id="@+id/studentsCount"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginTop="32dp"
+		android:layout_marginTop="16dp"
 		android:textAlignment="center"
 		app:layout_constraintEnd_toEndOf="@+id/studentsCountText"
 		app:layout_constraintStart_toStartOf="@+id/studentsCountText"
@@ -120,7 +120,6 @@
 		android:id="@+id/studentsCountText"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginStart="8dp"
 		android:layout_marginTop="8dp"
 		android:text="@string/students"
 		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
@@ -130,7 +129,7 @@
 		android:id="@+id/capacity"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginTop="32dp"
+		android:layout_marginTop="16dp"
 		app:layout_constraintEnd_toEndOf="@+id/capacityText"
 		app:layout_constraintStart_toStartOf="@+id/capacityText"
 		app:layout_constraintTop_toBottomOf="@+id/divider1"
@@ -158,5 +157,14 @@
 		app:layout_constraintHorizontal_bias="1.0"
 		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
 		app:layout_constraintTop_toBottomOf="@+id/capacityText" />
+
+	<TextView
+		android:id="@+id/teachersText"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="16dp"
+		android:text="@string/teachers"
+		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+		app:layout_constraintTop_toBottomOf="@+id/divider2" />
 
 </android.support.constraint.ConstraintLayout>
