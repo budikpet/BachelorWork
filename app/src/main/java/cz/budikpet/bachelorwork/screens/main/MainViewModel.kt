@@ -40,6 +40,9 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     private var compositeDisposable = CompositeDisposable()
 
+    /** Username of the CTU account that was used to log in. */
+    val ctuUsername by lazy { repository.ctuUsername }
+
     // MARK: Data
 
     /** Username, ItemType of the currently selected timetable. */
@@ -122,10 +125,10 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                 repository.getLoggedUserInfo(accessToken)
             }
             .flatMapCompletable { userInfo ->
-                if (!sharedPreferences.contains(SharedPreferencesKeys.SIRIUS_USERNAME.toString())) {
+                if (!sharedPreferences.contains(SharedPreferencesKeys.CTU_USERNAME.toString())) {
                     // Store the Sirius username
                     sharedPreferences.edit {
-                        putString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), userInfo.username)
+                        putString(SharedPreferencesKeys.CTU_USERNAME.toString(), userInfo.username)
                     }
                 }
 
@@ -170,8 +173,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         val currOwner = timetableOwner.value
 
         if (currOwner == null) {
-            val username: String = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), "")
-            timetableOwner.postValue(Pair(username, ItemType.PERSON))
+            timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
         }
     }
 
@@ -257,8 +259,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * Checks Google Calendar list for calendars that are hidden and for the missing personal calendar.
      */
     private fun checkGoogleCalendars(calendars: MutableList<CalendarListEntry>): Completable {
-        val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
-        val personalCalendarName = "${username}_${MyApplication.CALENDARS_NAME}"
+        val personalCalendarName = "${ctuUsername}_${MyApplication.CALENDARS_NAME}"
         var personalCalendarFound = false
         var hiddenCalendars = mutableListOf<CalendarListEntry>()
 

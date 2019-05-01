@@ -56,6 +56,9 @@ class Repository @Inject constructor(private val context: Context) {
     @Inject
     internal lateinit var sharedPreferences: SharedPreferences
 
+    /** Username of the CTU account that was used to log in. */
+    val ctuUsername by lazy { sharedPreferences.getString(SharedPreferencesKeys.CTU_USERNAME.toString(), "") }
+
     private val calendarService: Calendar
         get() {
             if (credential.selectedAccountName != null) {
@@ -517,8 +520,7 @@ class Repository @Inject constructor(private val context: Context) {
     }
 
     fun sharePersonalCalendar(email: String): Single<AclRule> {
-        val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
-        val calendarName = "${username}_${MyApplication.CALENDARS_NAME}"
+        val calendarName = "${ctuUsername}_${MyApplication.CALENDARS_NAME}"
 
         // Create access rule with associated scope
         val rule = AclRule()
@@ -540,8 +542,7 @@ class Repository @Inject constructor(private val context: Context) {
     }
 
     fun unsharePersonalCalendar(email: String): Completable {
-        val username = sharedPreferences.getString(SharedPreferencesKeys.SIRIUS_USERNAME.toString(), null)
-        val calendarName = "${username}_${MyApplication.CALENDARS_NAME}"
+        val calendarName = "${ctuUsername}_${MyApplication.CALENDARS_NAME}"
 
         val ruleId = "user:$email"
 

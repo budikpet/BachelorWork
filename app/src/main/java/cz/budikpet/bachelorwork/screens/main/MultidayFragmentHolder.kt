@@ -7,11 +7,14 @@ import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
 import android.support.v4.view.ViewPager
+import android.support.v7.app.ActionBar
+import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.*
 import android.widget.ProgressBar
 import android.widget.Toast
 import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
 import org.joda.time.DateTime
@@ -25,6 +28,7 @@ class MultidayFragmentHolder : Fragment() {
 
     private lateinit var viewPager: ViewPager
     private lateinit var progressBar: ProgressBar
+    private lateinit var supportActionBar: ActionBar
     private var itemGoToToday: MenuItem? = null
 
     private var pagerPosition = PREFILLED_WEEKS / 2
@@ -58,6 +62,20 @@ class MultidayFragmentHolder : Fragment() {
         subscribeObservers()
     }
 
+    override fun onActivityCreated(savedInstanceState: Bundle?) {
+        super.onActivityCreated(savedInstanceState)
+
+        supportActionBar = (activity as AppCompatActivity).supportActionBar!!
+    }
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        val layout = inflater.inflate(R.layout.fragment_holder_multiday, container, false) as ConstraintLayout
+        viewPager = layout.viewPager
+        progressBar = layout.progressBar
+        setupViewPager()
+        return layout
+    }
+
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
         super.onCreateOptionsMenu(menu, inflater)
 
@@ -69,20 +87,14 @@ class MultidayFragmentHolder : Fragment() {
             updateAppBar(adapter.dateFromPosition(pagerPosition))
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val layout = inflater.inflate(R.layout.fragment_holder_multiday, container, false) as ConstraintLayout
-        viewPager = layout.viewPager
-        progressBar = layout.progressBar
-        setupViewPager()
-        return layout
-    }
-
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        if (item?.itemId == R.id.itemGoToToday) {
-            // Move the viewPager to today
-            resetViewPager()
-        } else if (item?.itemId == R.id.itemGoToDate) {
-            datePickerDialog.show()
+        when {
+            item?.itemId == R.id.itemGoToToday -> resetViewPager()
+            item?.itemId == R.id.itemGoToDate -> datePickerDialog.show()
+            item?.itemId == android.R.id.home -> {
+                // Go back to the users' timetable
+                viewModel.timetableOwner.postValue(Pair(viewModel.ctuUsername, ItemType.PERSON))
+            }
         }
 
         return super.onOptionsItemSelected(item)
@@ -102,6 +114,10 @@ class MultidayFragmentHolder : Fragment() {
                     progressBar.visibility = View.VISIBLE
                 }
             }
+        })
+
+        viewModel.timetableOwner.observe(this, Observer {
+            updateAppBar(viewModel.currentlySelectedDate)
         })
 
         viewModel.thrownException.observe(this, Observer {
@@ -183,6 +199,12 @@ class MultidayFragmentHolder : Fragment() {
         }
 
         activity?.title = title
+
+        // Update back button
+        val currUsername = viewModel.timetableOwner.value?.first
+        if(currUsername != null) {
+            supportActionBar.setDisplayHomeAsUpEnabled(currUsername != viewModel.ctuUsername)
+        }
     }
 
     private fun handleException(exception: Throwable) {
