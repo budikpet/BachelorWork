@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">BachelorWork</string>
+	<string name="app_name">CTU Timetable</string>
 	<string name="alertDialog_message_firstNotice">Aplikace používá rozvrh hodin z ČVUT v Praze a Kalendář Google.
 		Proto musíte být přihlášeni k ČVUT a Google účtům.
 	</string>

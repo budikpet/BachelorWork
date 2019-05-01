@@ -94,7 +94,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     /** Events that chronologically belong to this time interval have already been updated. */
     var updatedEventsInterval: Interval? = null
-        private set
 
     init {
         MyApplication.appComponent.inject(this)
@@ -211,7 +210,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .andThen(repository.refreshCalendars())
             .andThen(repository.getLocalCalendarListItems())
-            .filter { username == null || it.displayName == calendarName }
+            .filter { username == null || it.displayName == calendarName }  // If username is null, update all
             .observeOn(Schedulers.io())
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API

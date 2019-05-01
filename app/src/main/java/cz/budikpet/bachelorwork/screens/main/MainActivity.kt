@@ -121,8 +121,10 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 supportActionBar?.subtitle = username
             }
 
-            // User wishes to see a different timetable
+            // Load events of the newly selected timetable
+            viewModel.updatedEventsInterval = null
             viewModel.loadEvents()
+//            viewModel.updateCalendars(username)
         })
     }
 
@@ -216,6 +218,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         // Init searchSuggestions RecyclerView adapter
         val adapter = SearchSuggestionsAdapter(this, onItemClickFunction = {
             searchMenuItem.collapseActionView()
+
+            // Get events of the picked item
             viewModel.timetableOwner.postValue(Pair(it.id, it.type))
         })
         searchSuggestions.adapter = adapter

@@ -162,19 +162,6 @@ class MultidayFragmentHolder : Fragment() {
             viewModel.currentlySelectedDate = currDate
             updateAppBar(currDate)
 
-            Log.d(
-                TAG,
-                "Is ${currDate.toString("dd.MM")} in loaded events: ${viewModel.loadedEventsInterval.start.toString("dd.MM")} - ${viewModel.loadedEventsInterval.end.toString(
-                    "dd.MM"
-                )}"
-            )
-            Log.d(
-                TAG,
-                "UpdatedEvents: ${viewModel.updatedEventsInterval?.start?.toString("dd.MM")} - ${viewModel.updatedEventsInterval?.end?.toString(
-                    "dd.MM"
-                )}"
-            )
-
             if (!viewModel.loadedEventsInterval.contains(currDate)) {
                 // User moved outside of loaded events
                 viewModel.loadEvents(currDate)

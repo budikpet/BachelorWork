@@ -14,7 +14,7 @@ class MyApplication : Application() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     companion object {
-        const val CALENDARS_NAME = "BachelorWork"
+        const val CALENDARS_NAME = "CTUTimetable"
         const val NUM_OF_WEEKS_TO_UPDATE = 4
 
         internal lateinit var appComponent: AppComponent

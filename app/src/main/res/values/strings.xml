@@ -1,5 +1,5 @@
 <resources>
-	<string name="app_name">BachelorWork</string>
+	<string name="app_name">CTU Timetable</string>
 	<string name="alertDialog_message_googleAccount">The application needs to have access to a valid Google Account
 		because it uses its Google Calendar to store data from CTU timetable.
 	</string>
