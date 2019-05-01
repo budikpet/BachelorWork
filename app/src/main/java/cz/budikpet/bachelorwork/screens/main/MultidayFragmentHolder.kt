@@ -16,6 +16,7 @@ import android.widget.Toast
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
+import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
 import org.joda.time.DateTime
 import org.joda.time.Interval
@@ -219,6 +220,9 @@ class MultidayFragmentHolder : Fragment() {
             if (exception.code() == 500) {
                 text = "CTU internal server error occured. Please try again."
             }
+        } else if(exception is NoInternetConnectionException) {
+            Log.e(TAG, "Could not connect to the internet.")
+            text = exception.message!!
         } else {
             Log.e(TAG, "Unknown exception occurred: $exception")
         }

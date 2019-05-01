@@ -21,10 +21,7 @@ import cz.budikpet.bachelorwork.api.SiriusApiService
 import cz.budikpet.bachelorwork.api.SiriusAuthApiService
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
-import cz.budikpet.bachelorwork.util.AppAuthManager
-import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
-import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
-import cz.budikpet.bachelorwork.util.createMyEntry
+import cz.budikpet.bachelorwork.util.*
 import io.reactivex.Completable
 import io.reactivex.CompletableEmitter
 import io.reactivex.Observable
@@ -95,10 +92,26 @@ class Repository @Inject constructor(private val context: Context) {
     }
 
     /**
+     *
+     * @throws NoInternetConnectionException when the device could not connect to the internet.
+     */
+    private fun hasInternetConnection(): Single<Boolean> {
+        return Single.just(checkInternetConnection())
+            .map {
+                if (!it) {
+                    throw NoInternetConnectionException()
+                }
+
+                return@map it
+            }
+            .retry(5)
+    }
+
+    /**
      * Checks whether the device has internet connection. WiFi and/or Cellular if enabled.
      * @return true if the device is connected to the internet.
      */
-    fun hasInternetConnection(): Boolean {
+    private fun checkInternetConnection(): Boolean {
         val useMobileDate = sharedPreferences.getBoolean(SharedPreferencesKeys.USE_MOBILE_DATA.toString(), false)
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -122,11 +135,13 @@ class Repository @Inject constructor(private val context: Context) {
     // MARK: Sirius API
 
     fun getLoggedUserInfo(accessToken: String): Observable<AuthUserInfo> {
-        return siriusAuthApiService.getUserInfo(accessToken)
+        return hasInternetConnection()
+            .flatMapObservable { siriusAuthApiService.getUserInfo(accessToken) }
     }
 
     fun checkSiriusAuthorization(response: AuthorizationResponse?, exception: AuthorizationException?): Single<String> {
-        return appAuthManager.checkSiriusAuthorization(response, exception)
+        return hasInternetConnection()
+            .flatMap { appAuthManager.checkSiriusAuthorization(response, exception) }
     }
 
     fun signOut() {
@@ -137,7 +152,8 @@ class Repository @Inject constructor(private val context: Context) {
      * Uses search endpoint.
      */
     fun searchSirius(query: String): Observable<SearchItem> {
-        return appAuthManager.getFreshAccessToken()
+        return hasInternetConnection()
+            .flatMap { appAuthManager.getFreshAccessToken() }
             .toObservable()
             .observeOn(Schedulers.io())
             .flatMap { accessToken ->
@@ -148,7 +164,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "SearchSirius retries: $count. Error: $error")
-                return@retry count < 21
+                return@retry count < 21 && error !is NoInternetConnectionException
             }
     }
 
@@ -162,7 +178,8 @@ class Repository @Inject constructor(private val context: Context) {
         dateStart: DateTime,
         dateEnd: DateTime
     ): Observable<EventsResult> {
-        return appAuthManager.getFreshAccessToken()
+        return hasInternetConnection()
+            .flatMap { appAuthManager.getFreshAccessToken() }
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io()) // Observe the refreshAccessToken operation on a non-main thread.
             .flatMapObservable { accessToken ->
@@ -170,7 +187,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "GetSiriusEventsOf retries: $count. Error: $error")
-                return@retry count < 21
+                return@retry count < 21 && error !is NoInternetConnectionException
             }
     }
 
@@ -241,12 +258,15 @@ class Repository @Inject constructor(private val context: Context) {
      * @return A completable which completes when the refresh finishes.
      */
     fun refreshCalendars(): Completable {
-        return Completable.create { emitter ->
-            // Start refresh
-            startCalendarRefresh()
+        return appAuthManager.getFreshAccessToken()
+            .flatMapCompletable {
+                Completable.create { emitter ->
+                    // Start refresh
+                    startCalendarRefresh()
 
-            waitRefreshEnd(emitter)
-        }
+                    waitRefreshEnd(emitter)
+                }
+            }
     }
 
     /**
@@ -290,6 +310,9 @@ class Repository @Inject constructor(private val context: Context) {
                 loopCnt = 0
                 restarted = true
                 startCalendarRefresh()
+            } else if (!checkInternetConnection()) {
+                emitter.onError(NoInternetConnectionException())
+                break
             }
 
             // Lower sleep needed when we're waiting for refresh to start
@@ -304,14 +327,17 @@ class Repository @Inject constructor(private val context: Context) {
         val FIELDS = "id,summary,hidden"
         val FEED_FIELDS = "items($FIELDS)"
 
-        return Single.fromCallable {
-            calendarService.calendarList().list()
-                .setFields(FEED_FIELDS).setShowHidden(true).setMaxResults(240)
-                .execute()
-        }
+        return hasInternetConnection()
+            .flatMap {
+                Single.fromCallable {
+                    calendarService.calendarList().list()
+                        .setFields(FEED_FIELDS).setShowHidden(true).setMaxResults(240)
+                        .execute()
+                }
+            }
             .retry { count, error ->
                 Log.w(TAG, "GetGoogleCalendarList retries: $count. Error: $error")
-                return@retry count < 21
+                return@retry count < 21 && error !is NoInternetConnectionException
             }
             .flatMapObservable { Observable.fromIterable(it.items) }
             .filter { it.summary.contains(MyApplication.CALENDARS_NAME) }
@@ -322,10 +348,13 @@ class Repository @Inject constructor(private val context: Context) {
      * Updates the CalendarList in the Google Calendar service using Google Calendar API.
      */
     fun updateGoogleCalendarList(entry: CalendarListEntry): Single<CalendarListEntry> {
-        return Single.fromCallable { calendarService.calendarList().update(entry.id, entry).execute() }
+        return hasInternetConnection()
+            .flatMap {
+                Single.fromCallable { calendarService.calendarList().update(entry.id, entry).execute() }
+            }
             .retry { count, error ->
                 Log.w(TAG, "UpdateGoogleCalendarList retries: $count. Error: $error")
-                return@retry count < 21
+                return@retry count < 21 && error !is NoInternetConnectionException
             }
     }
 
@@ -479,6 +508,9 @@ class Repository @Inject constructor(private val context: Context) {
         }
     }
 
+    /**
+     * Removes an event from the calendar using Android calendar provider.
+     */
     fun deleteGoogleCalendarEvent(eventId: Long): Single<Int> {
         val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
         return Single.fromCallable {
@@ -522,19 +554,22 @@ class Repository @Inject constructor(private val context: Context) {
      * @param name name of the new calendar.
      */
     fun addSecondaryGoogleCalendar(name: String): Completable {
-        return Single.fromCallable {
-            // Create the calendar
-            val calendarModel = com.google.api.services.calendar.model.Calendar()
-            calendarModel.summary = name
+        return hasInternetConnection()
+            .flatMap {
+                Single.fromCallable {
+                    // Create the calendar
+                    val calendarModel = com.google.api.services.calendar.model.Calendar()
+                    calendarModel.summary = name
 
-            calendarService.calendars()
-                .insert(calendarModel)
-                .setFields("id,summary")
-                .execute()
-        }
+                    calendarService.calendars()
+                        .insert(calendarModel)
+                        .setFields("id,summary")
+                        .execute()
+                }
+            }
             .retry { count, error ->
                 Log.w(TAG, "AddSecondaryGoogleCalendar retries: $count. Error: $error")
-                return@retry count < 21
+                return@retry count < 21 && error !is NoInternetConnectionException
             }
             .observeOn(Schedulers.io())
             .flatMap { createdCalendar ->
@@ -550,6 +585,9 @@ class Repository @Inject constructor(private val context: Context) {
             .ignoreElement()
     }
 
+    /**
+     * Shares calendar of the user with other person using Google Calendar API.
+     */
     fun sharePersonalCalendar(email: String): Single<AclRule> {
         val calendarName = "${ctuUsername}_${MyApplication.CALENDARS_NAME}"
 
@@ -559,7 +597,8 @@ class Repository @Inject constructor(private val context: Context) {
         scope.setType("user").value = email
         rule.setScope(scope).role = "reader"
 
-        return getGoogleCalendar(calendarName)
+        return hasInternetConnection()
+            .flatMap { getGoogleCalendar(calendarName) }
             .flatMap { calendar ->
                 Single.fromCallable {
                     return@fromCallable calendarService.acl().insert(calendar.id, rule).setSendNotifications(false)
@@ -568,16 +607,20 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "SharePersonalCalendar retries: $count. Error: $error")
-                return@retry count < 21
+                return@retry count < 21 && error !is NoInternetConnectionException
             }
     }
 
+    /**
+     * Stops sharing calendar of the user with the selected person.
+     */
     fun unsharePersonalCalendar(email: String): Completable {
         val calendarName = "${ctuUsername}_${MyApplication.CALENDARS_NAME}"
 
         val ruleId = "user:$email"
 
-        return getGoogleCalendar(calendarName)
+        return hasInternetConnection()
+            .flatMap { getGoogleCalendar(calendarName) }
             .flatMapCompletable { calendar ->
                 Completable.fromCallable {
                     calendarService.acl().delete(calendar.id, ruleId).execute()

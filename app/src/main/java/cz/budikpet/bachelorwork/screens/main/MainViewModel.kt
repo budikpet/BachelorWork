@@ -25,6 +25,7 @@ import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
 import org.joda.time.Interval
+import java.lang.Exception
 import javax.inject.Inject
 
 // TODO: Parts of AllCalendarUpdate code can be reused
@@ -138,7 +139,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
                 Log.e(TAG, "Authorization: $exception")
-                false
+                thrownException.postValue(exception)
+                true
             }
             .subscribe {
                 //                Log.i(TAG, "Thread: ${Thread.currentThread().name}")
@@ -161,7 +163,10 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                 { list ->
                     searchItems.postValue(list)
                 },
-                { error -> Log.e(TAG, "Error: $error") }
+                { error ->
+                    Log.e(TAG, "SearchSirius error: $error")
+                    thrownException.postValue(error)
+                }
             )
 
         compositeDisposable.add(disposable)
@@ -232,8 +237,9 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
-            .onErrorComplete { throwable ->
-                thrownException.postValue(throwable)
+            .onErrorComplete { exception ->
+                Log.e(TAG, "UpdateCalendars error: $exception")
+                thrownException.postValue(exception)
                 return@onErrorComplete true
             }
             .subscribe {
@@ -310,7 +316,6 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .filter { !it.deleted }
             .map { event -> TimetableEvent.from(event) }
             .toList()
-//            .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
             .toObservable()
     }
 
@@ -413,7 +418,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                     operationRunning.postValue(false)
                 },
                 { error ->
-                    Log.e(TAG, "loadEvents: $error")
+                    Log.e(TAG, "LoadEvents error: $error")
+                    thrownException.postValue(error)
                     operationRunning.postValue(false)
                 }
             )
@@ -436,6 +442,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                 },
                 { error ->
                     Log.e(TAG, "GetCalendarEvents: $error")
+                    thrownException.postValue(error)
                 }
             )
 
@@ -464,6 +471,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                 },
                 { error ->
                     Log.e(TAG, "addGoogleCalendarEvent: $error")
+                    thrownException.postValue(error)
                 })
 
         compositeDisposable.add(disposable)
@@ -480,6 +488,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
                 },
                 { error ->
                     Log.e(TAG, "sharePersonalCalendar: $error")
+                    thrownException.postValue(error)
                 })
 
         compositeDisposable.add(disposable)
@@ -491,7 +500,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
                 Log.e(TAG, "Unshare: $exception")
-                true   // TODO: Show error toast
+                thrownException.postValue(exception)
+                true
             }
             .subscribe {
                 Log.i(TAG, "Calendar unshared successfully.")
