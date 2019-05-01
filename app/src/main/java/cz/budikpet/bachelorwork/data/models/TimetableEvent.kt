@@ -8,7 +8,7 @@ import java.util.*
 
 data class TimetableEvent(
     val siriusId: Int? = null,
-    val room: String,
+    val room: String? = "Unknown",      // Can be null
     val acronym: String,
     val fullName: String = acronym,
     val event_type: EventType,

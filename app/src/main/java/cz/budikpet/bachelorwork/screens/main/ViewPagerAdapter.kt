@@ -16,14 +16,16 @@ class ViewPagerAdapter(
     override fun getCount() = numOfFragments
 
     override fun getItem(position: Int): Fragment {
+        return MultidayViewFragment.newInstance(daysPerFragment, dateFromPosition(position))
+    }
+
+    fun dateFromPosition(position: Int): DateTime {
         val todayPosition = numOfFragments / 2
-        val currDate = when {
+        return when {
             position < todayPosition -> firstDate.minusDays(daysPerFragment * (todayPosition - position))
             position == todayPosition -> firstDate
             else -> firstDate.plusDays(daysPerFragment * (position - todayPosition))
         }
-
-        return MultidayViewFragment.newInstance(daysPerFragment, currDate)
     }
 
 

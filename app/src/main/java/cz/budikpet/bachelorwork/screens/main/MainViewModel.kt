@@ -24,6 +24,7 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
+import org.joda.time.Interval
 import java.util.*
 import javax.inject.Inject
 import kotlin.collections.ArrayList
@@ -41,11 +42,9 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     private var compositeDisposable = CompositeDisposable()
 
-    private val dateMonday = DateTime().withDayOfWeek(DateTimeConstants.MONDAY).withTimeAtStartOfDay()
-
     // MARK: Data
 
-    /** Username of the currently selected timetable. */
+    /** Username, ItemType of the currently selected timetable. */
     val timetableOwner = MutableLiveData<Pair<String, ItemType>>()
 
     /** Events of the currently selected timetable. */
@@ -53,21 +52,48 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     // MARK: State
 
-    val title = MutableLiveData<String>()
-
     /** Indicates whether some operation is running. */
-    val operationRunning =
-        MutableLiveData<Boolean>()       // TODO: Different loading animation or thing for AllCalendarsUpdate?
-    val lastAllCalendarsUpdate = MutableLiveData<DateTime>()
+    val operationRunning = MutableLiveData<Boolean>()   //TODO: Different loading animation or thing for AllCalendarsUpdate?
 
-    /** Any exception that was thrown and must be somehow shown to the user.*/
+    /** Any exception that was thrown and must be somehow shown to the user. */
     val thrownException = MutableLiveData<Throwable>()
 
+    /** Represents items received from Sirius API search endpoint. */
     val searchItems = MutableLiveData<List<SearchItem>>()
     var lastSearchQuery = ""
 
+    var firstDate = DateTime()
+        set(value) {
+            var today = value.withTimeAtStartOfDay()
+
+            if(daysPerMultidayViewFragment == MultidayViewFragment.MAX_COLUMNS)
+                today = today.withDayOfWeek(DateTimeConstants.MONDAY)
+
+            field = today
+        }
+
+    var daysPerMultidayViewFragment = 7
+        set(value) {
+            field = when {
+                value < 1 -> 1
+                value > MultidayViewFragment.MAX_COLUMNS -> MultidayViewFragment.MAX_COLUMNS
+                else -> value
+            }
+        }
+
+    /** Represents a time interval for events that are currently loaded in [MainViewModel.events]. */
+    var loadedEventsInterval = withMiddleDate(firstDate)
+        private set
+
+    /** Events that chronologically belong to this time interval have already been updated. */
+    var updatedEventsInterval: Interval? = null
+        private set
+
     init {
         MyApplication.appComponent.inject(this)
+
+        // Use custom setter
+        firstDate = DateTime()
     }
 
     fun onDestroy() {
@@ -144,23 +170,24 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     }
 
     /**
-     * Updates one or all calendars used by the application with data from Sirius API.
+     * Updates one or all calendars used by the application with data from Sirius API. Refreshes loaded events in [MainViewModel.events].
      *
-     * @param username if a username is provided then only its calendar is updated
+     * Uses [MainViewModel.loadedEventsInterval]. Events that are chronologically in the [MainViewModel.loadedEventsInterval]
+     * are the only ones updated and loaded.
+     *
+     * @param username if a username is provided then only its calendar is updated and loaded
      */
-    fun updateCalendars(
-        username: String? = null,
-        dateStart: DateTime = dateMonday.minusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE),
-        dateEnd: DateTime = dateStart.plusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE * 2)
-    ) {
-        compositeDisposable.clear()
-
-        operationRunning.postValue(true)
-
+    fun updateCalendars(username: String? = null) {
         val calendarName = when {
             username != null -> "${username}_${MyApplication.CALENDARS_NAME}"
             else -> null
         }
+
+        Log.i(TAG, "Update started")
+        updatedEventsInterval = loadedEventsInterval
+
+        operationRunning.postValue(true)
+        compositeDisposable.clear()
 
         val disposable = repository.getGoogleCalendarList()
             .flatMapCompletable {
@@ -181,12 +208,12 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .observeOn(Schedulers.io())
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API
-                val siriusObs = getSiriusEventsList(calendarListItem, dateStart, dateEnd)
+                val siriusObs = getSiriusEventsList(calendarListItem)
 
-                val calendarObs = getGoogleCalendarEventsList(calendarListItem, dateStart, dateEnd)
+                val calendarObs = getGoogleCalendarEventsList(calendarListItem)
 
                 val updateObs = Observable.zip(siriusObs, calendarObs,
-                    BiFunction { siriusEvents: ArrayList<TimetableEvent>, calendarEvents: ArrayList<TimetableEvent> ->
+                    BiFunction { siriusEvents: MutableList<TimetableEvent>, calendarEvents: MutableList<TimetableEvent> ->
                         Pair(siriusEvents, calendarEvents)
                     })
                     .flatMapCompletable { pair ->
@@ -204,11 +231,20 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
             .subscribe {
                 Log.i(TAG, "Update done")
                 operationRunning.postValue(false)
-                lastAllCalendarsUpdate.postValue(DateTime())
+                loadEvents()
+
                 repository.startCalendarRefresh()
             }
 
         compositeDisposable.add(disposable)
+    }
+
+    /**
+     * @return true if the currently loaded events in [MainViewModel.events] have already been updated.
+     */
+    fun areLoadedEventsUpdated(): Boolean {
+        val updatedEventsInterval = this.updatedEventsInterval
+        return updatedEventsInterval != null && updatedEventsInterval.isEqual(loadedEventsInterval)
     }
 
     /**
@@ -249,28 +285,25 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * Gets Sirius API events of the selected calendar.
      * @return An observable holding a list of TimetableEvents.
      */
-    private fun getSiriusEventsList(
-        calendarListItem: CalendarListItem,
-        dateStart: DateTime = dateMonday.minusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE),
-        dateEnd: DateTime = dateStart.plusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE * 2)
-    ): Observable<ArrayList<TimetableEvent>> {
+    private fun getSiriusEventsList(calendarListItem: CalendarListItem): Observable<MutableList<TimetableEvent>>? {
         // Get id from calendar display name - username, room number...
         val id = calendarListItem.displayName.substringBefore("_")
 
         return repository.searchSirius(id)
             .filter { searchItem -> searchItem.id == id }
             .flatMap { searchItem ->
-                repository.getSiriusEventsOf(searchItem.type, searchItem.id, dateStart, dateEnd)
+                repository.getSiriusEventsOf(
+                    searchItem.type,
+                    searchItem.id,
+                    loadedEventsInterval.start,
+                    loadedEventsInterval.end
+                )
             }
             .flatMap { Observable.fromIterable(it.events) }
             .filter { !it.deleted }
             .map { event -> TimetableEvent.from(event) }
-            .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
-            .map { list ->
-                Log.i(TAG, "Received ${list.count()} events from SiriusAPI timetable ${list.first().siriusId}.")
-                list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
-                return@map list
-            }
+            .toList()
+//            .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
             .toObservable()
     }
 
@@ -278,18 +311,10 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      * Gets events from the selected calendar.
      * @return An observable holding a list of TimetableEvents.
      */
-    private fun getGoogleCalendarEventsList(
-        calendarListItem: CalendarListItem,
-        dateStart: DateTime = dateMonday.minusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE),
-        dateEnd: DateTime = dateStart.plusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE * 2)
-    ): Observable<ArrayList<TimetableEvent>> {
-        return repository.getCalendarEvents(calendarListItem.id, dateStart, dateEnd)
+    private fun getGoogleCalendarEventsList(calendarListItem: CalendarListItem): Observable<MutableList<TimetableEvent>>? {
+        return repository.getCalendarEvents(calendarListItem.id, loadedEventsInterval.start, loadedEventsInterval.end)
             .filter { event -> event.siriusId != null && !event.deleted }   // TODO: Move to methods that use the list?
-            .collect({ ArrayList<TimetableEvent>() }, { arrayList, item -> arrayList.add(item) })
-            .map { list ->
-                list.sortWith(Comparator { event1, event2 -> event1.siriusId!! - event2.siriusId!! })
-                return@map list
-            }
+            .toList()
             .toObservable()
     }
 
@@ -301,7 +326,7 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
      */
     private fun getActionsCompletable(
         calendarId: Long,
-        pair: Pair<ArrayList<TimetableEvent>, ArrayList<TimetableEvent>>
+        pair: Pair<MutableList<TimetableEvent>, MutableList<TimetableEvent>>
     ): Completable {
         // Sort events out into lists by what action they should be used for
         val new = pair.first.minus(pair.second)
@@ -344,28 +369,34 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
         return Completable.mergeArray(deleteObs, createObs, changedObs)
     }
 
-    fun loadEvents(
-        username: String,
-        itemType: ItemType,
-        dateStart: DateTime = dateMonday.minusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE),
-        dateEnd: DateTime = dateStart.plusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE * 2)
-    ) {
-        operationRunning.postValue(true)
+    /**
+     * Loads events into [MainViewModel.events].
+     */
+    fun loadEvents(middleDate: DateTime = firstDate) {
+        val pair = timetableOwner.value
 
+        if(pair == null) {
+            Log.e(TAG, "Timetable owner not specified.")
+            return
+        }
+
+        loadedEventsInterval = withMiddleDate(middleDate)
+
+        operationRunning.postValue(true)
         val disposable = repository.getLocalCalendarListItems()
-            .filter { it.displayName == "${username}_${MyApplication.CALENDARS_NAME}" }
-            .flatMap { repository.getCalendarEvents(it.id, dateStart, dateEnd) }
+            .filter { it.displayName == "${pair.first}_${MyApplication.CALENDARS_NAME}" }
+            .flatMap { repository.getCalendarEvents(it.id, loadedEventsInterval.start, loadedEventsInterval.end) }
             .switchIfEmpty(
-                repository.getSiriusEventsOf(itemType, username, dateStart, dateEnd)
+                repository.getSiriusEventsOf(pair.second, pair.first, loadedEventsInterval.start, loadedEventsInterval.end)
                     .flatMap { Observable.fromIterable(it.events) }
                     .filter { !it.deleted }
                     .map { event -> TimetableEvent.from(event) }
             )
             .toList()
-            .map { list ->
-                list.sortWith(Comparator { event1, event2 -> event1.compare(event2) })
-                return@map list
-            }
+//            .map { list ->
+//                list.sortWith(Comparator { event1, event2 -> event1.compare(event2) })
+//                return@map list
+//            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
@@ -472,5 +503,14 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     override fun onEventClicked(event: TimetableEvent) {
         Log.i(TAG, "Event clicked: $event")
+    }
+
+    companion object {
+        fun withMiddleDate(date: DateTime): Interval {
+            val dateStart = date.minusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE).withTimeAtStartOfDay()
+            val dateEnd = date.plusWeeks(MyApplication.NUM_OF_WEEKS_TO_UPDATE).withTimeAtStartOfDay()
+
+            return Interval(dateStart, dateEnd)
+        }
     }
 }

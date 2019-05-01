@@ -15,7 +15,6 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
 import org.joda.time.DateTime
-import org.joda.time.DateTimeConstants
 import org.joda.time.Interval
 import retrofit2.HttpException
 
@@ -28,9 +27,7 @@ class MultidayFragmentHolder : Fragment() {
     private lateinit var progressBar: ProgressBar
     private var itemGoToToday: MenuItem? = null
 
-    private var daysPerFragment = 7 // TODO: Remove
     private var pagerPosition = PREFILLED_WEEKS / 2
-    private var firstDate = DateTime().withTimeAtStartOfDay()
 
     private lateinit var viewModel: MainViewModel
 
@@ -40,7 +37,13 @@ class MultidayFragmentHolder : Fragment() {
             resetViewPager(date)
         }
 
-        DatePickerDialog(context, listener, firstDate.year, firstDate.monthOfYear - 1, firstDate.dayOfMonth)
+        DatePickerDialog(
+            context,
+            listener,
+            viewModel.firstDate.year,
+            viewModel.firstDate.monthOfYear - 1,
+            viewModel.firstDate.dayOfMonth
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -83,17 +86,6 @@ class MultidayFragmentHolder : Fragment() {
 
     private fun subscribeObservers() {
 
-        // Observer created only once
-        viewModel.timetableOwner.observe(this, Observer { pair ->
-            if (pair != null) {
-                val username = pair.first
-                val itemType = pair.second
-
-                // New pair was loaded
-                viewModel.loadEvents(username, itemType)
-            }
-        })
-
         viewModel.operationRunning.observe(this, Observer { updating ->
             Log.i(TAG, "Calendars updating: $updating")
 
@@ -118,23 +110,31 @@ class MultidayFragmentHolder : Fragment() {
     private fun resetViewPager(date: DateTime = DateTime()) {
         pagerPosition = PREFILLED_WEEKS / 2
 
-        firstDate = date
-        if (daysPerFragment == MultidayViewFragment.MAX_COLUMNS)
-            firstDate = firstDate.withTimeAtStartOfDay().withDayOfWeek(DateTimeConstants.MONDAY)
+        viewModel.firstDate = date
 
-        viewPager.adapter =
-            ViewPagerAdapter(activity!!.supportFragmentManager, daysPerFragment, PREFILLED_WEEKS, firstDate)
+        val adapter = ViewPagerAdapter(
+            activity!!.supportFragmentManager,
+            viewModel.daysPerMultidayViewFragment,
+            PREFILLED_WEEKS,
+            viewModel.firstDate
+        )
+        viewPager.adapter = adapter
+
         viewPager.setCurrentItem(pagerPosition, false)
 
-        updateAppBar(pagerPosition)
+        updateViewPager(pagerPosition)
     }
 
     private fun setupViewPager() {
-        if (daysPerFragment == MultidayViewFragment.MAX_COLUMNS)
-            firstDate = firstDate.withDayOfWeek(DateTimeConstants.MONDAY)
+        val adapter = ViewPagerAdapter(
+            activity!!.supportFragmentManager,
+            viewModel.daysPerMultidayViewFragment,
+            PREFILLED_WEEKS,
+            viewModel.firstDate
+        )
 
         viewPager.apply {
-            adapter = ViewPagerAdapter(activity!!.supportFragmentManager, daysPerFragment, PREFILLED_WEEKS, firstDate)
+            this.adapter = adapter
             currentItem = pagerPosition
 
             addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
@@ -143,34 +143,47 @@ class MultidayFragmentHolder : Fragment() {
                 override fun onPageScrolled(position: Int, positionOffset: Float, positionOffsetPixels: Int) {}
 
                 override fun onPageSelected(currPosition: Int) {
-                    updateAppBar(currPosition)
+                    updateViewPager(currPosition)
                 }
             })
         }
 
-        updateAppBar(pagerPosition)
+        updateAppBar(adapter.dateFromPosition(pagerPosition))
     }
 
-    private fun updateAppBar(currPosition: Int) {
-        val currDate = when {
-            currPosition > pagerPosition -> firstDate.plusDays((currPosition - pagerPosition) * daysPerFragment)
-            currPosition == pagerPosition -> firstDate
-            else -> firstDate.minusDays((pagerPosition - currPosition) * daysPerFragment)
-        }
+    private fun updateViewPager(currPosition: Int) {
+        val adapter = viewPager.adapter as ViewPagerAdapter?
+        pagerPosition = currPosition
 
+        if(adapter != null) {
+            val currDate = adapter.dateFromPosition(currPosition)
+            viewModel.firstDate = currDate
+            updateAppBar(currDate)
+
+            Log.d(TAG, "Is ${currDate.toString("dd.MM")} in loaded events: ${viewModel.loadedEventsInterval.start.toString("dd.MM")} - ${viewModel.loadedEventsInterval.end.toString("dd.MM")}")
+            Log.d(TAG, "UpdatedEvents: ${viewModel.updatedEventsInterval?.start?.toString("dd.MM")} - ${viewModel.updatedEventsInterval?.end?.toString("dd.MM")}")
+
+            if(!viewModel.loadedEventsInterval.contains(currDate)) {
+                // User moved outside of loaded events
+                viewModel.loadEvents(currDate)
+            }
+        }
+    }
+
+    private fun updateAppBar(currDate: DateTime) {
         // Update GoToToday menu item
-        val interval = Interval(currDate, currDate?.plusDays(daysPerFragment))
+        val interval = Interval(currDate, currDate.plusDays(viewModel.daysPerMultidayViewFragment))
         itemGoToToday?.isVisible = !interval.contains(DateTime().withTimeAtStartOfDay())
 
         // Update title
-        val lastDate = currDate.plusDays(daysPerFragment)
+        val lastDate = currDate.plusDays(viewModel.daysPerMultidayViewFragment)
         val title = when {
             currDate.monthOfYear == lastDate.monthOfYear -> currDate.monthOfYear().getAsText(null).capitalize()
             else -> "${currDate.monthOfYear().getAsText(null).capitalize()} - " +
                     lastDate.monthOfYear().getAsText(null).capitalize()
         }
 
-        viewModel.title.postValue(title)
+        activity?.title = title
     }
 
     private fun handleException(exception: Throwable) {
@@ -186,7 +199,7 @@ class MultidayFragmentHolder : Fragment() {
                 text = "CTU internal server error occured. Please try again."
             }
         } else {
-            Log.e(TAG, "Unknown exception occurred in update: $exception")
+            Log.e(TAG, "Unknown exception occurred: $exception")
         }
 
         Toast.makeText(context, text, Toast.LENGTH_LONG).show()

@@ -8,6 +8,7 @@ import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.constraint.ConstraintSet
 import android.support.v4.app.Fragment
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -128,10 +129,7 @@ class MultidayViewFragment : Fragment() {
         viewModel.events.observe(this, Observer { events ->
             if (events != null) {
                 // Add events to the view
-
-                if (events.isNotEmpty()) {
-                    updateEventsView(events)
-                }
+                updateEventsView(events)
             }
         })
     }
@@ -216,10 +214,10 @@ class MultidayViewFragment : Fragment() {
      */
     private fun updateEventsView(events: List<TimetableEvent>) {
         var currIndex = 0
-        val lastDate = firstDate.plusDays(eventsColumnsCount)
         val preparedCollection = events
             .filter {
-                firstDate.isBefore(it.starts_at.millis) && lastDate.isAfter(it.starts_at.millis) && !it.deleted
+                firstDate.isBefore(it.starts_at.millis) && firstDate.plusDays(eventsColumnsCount).isAfter(it.starts_at.millis)
+                        && !it.deleted
             }
             .filter { it ->
                 return@filter when {
@@ -228,6 +226,15 @@ class MultidayViewFragment : Fragment() {
                 }
             }
             .map { return@map IndexedTimetableEvent(-1, it) }
+
+        if(preparedCollection.isEmpty()) {
+            if(!viewModel.areLoadedEventsUpdated()) {
+                // Loaded events haven't been updated yet
+                viewModel.updateCalendars(viewModel.timetableOwner.value!!.first)
+            }
+
+            return
+        }
 
         // Clear columns
         for (column in eventsColumns) {
@@ -388,21 +395,13 @@ class MultidayViewFragment : Fragment() {
         const val MAX_COLUMNS = 7
 
         @JvmStatic
-        fun newInstance(columnCount: Int, firstDate: DateTime): MultidayViewFragment {
-            var columnCount = columnCount
-
-            when {
-                columnCount < 1 -> columnCount = 1
-                columnCount > MAX_COLUMNS -> columnCount = MAX_COLUMNS
-            }
-
-            return MultidayViewFragment().apply {
+        fun newInstance(columnCount: Int, firstDate: DateTime): MultidayViewFragment =
+            MultidayViewFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_COLUMN_COUNT, columnCount)
                     putLong(ARG_START_DATE, firstDate.millis)
                 }
             }
-        }
     }
 
     /**

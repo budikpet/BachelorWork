@@ -259,7 +259,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
 
             // Lower sleep needed when we're waiting for refresh to start
-            Thread.sleep(if (refreshStarted) 1000 else 100)
+            Thread.sleep(if (refreshStarted) 1000 else 10)
         }
     }
 
