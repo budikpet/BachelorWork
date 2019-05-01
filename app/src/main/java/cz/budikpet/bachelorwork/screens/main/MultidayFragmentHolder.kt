@@ -202,7 +202,7 @@ class MultidayFragmentHolder : Fragment() {
 
         // Update back button
         val currUsername = viewModel.timetableOwner.value?.first
-        if(currUsername != null) {
+        if (currUsername != null) {
             supportActionBar.setDisplayHomeAsUpEnabled(currUsername != viewModel.ctuUsername)
         }
     }

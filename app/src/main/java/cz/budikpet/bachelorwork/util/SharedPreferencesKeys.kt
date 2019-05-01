@@ -8,5 +8,6 @@ enum class SharedPreferencesKeys {
     LENGTH_OF_BREAK,
     LENGTH_OF_LESSON,
     LESSONS_START_TIME,
+    USE_MOBILE_DATA,
     FIRST_DAY_OF_THE_WEEK
 }

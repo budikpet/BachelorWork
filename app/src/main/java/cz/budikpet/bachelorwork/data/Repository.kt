@@ -1,6 +1,8 @@
 package cz.budikpet.bachelorwork.data
 
 import android.content.*
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
 import android.provider.CalendarContract
@@ -59,6 +61,10 @@ class Repository @Inject constructor(private val context: Context) {
     /** Username of the CTU account that was used to log in. */
     val ctuUsername by lazy { sharedPreferences.getString(SharedPreferencesKeys.CTU_USERNAME.toString(), "") }
 
+    private val connectivityManager by lazy {
+        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+    }
+
     private val calendarService: Calendar
         get() {
             if (credential.selectedAccountName != null) {
@@ -86,6 +92,31 @@ class Repository @Inject constructor(private val context: Context) {
             httpRequest.connectTimeout = 3 * 60000  // 3 minutes connect timeout
             httpRequest.readTimeout = 3 * 60000  // 3 minutes read timeout
         }
+    }
+
+    /**
+     * Checks whether the device has internet connection. WiFi and/or Cellular if enabled.
+     * @return true if the device is connected to the internet.
+     */
+    fun hasInternetConnection(): Boolean {
+        val useMobileDate = sharedPreferences.getBoolean(SharedPreferencesKeys.USE_MOBILE_DATA.toString(), false)
+
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
+            val activeNetwork = connectivityManager.activeNetwork
+            val capabilities: NetworkCapabilities? = connectivityManager.getNetworkCapabilities(activeNetwork)
+
+            if (capabilities != null) {
+                var result = capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+
+                if (useMobileDate) {
+                    result = result || capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+                }
+
+                return result
+            }
+        }
+
+        return false
     }
 
     // MARK: Sirius API

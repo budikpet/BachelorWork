@@ -6,6 +6,7 @@
 	These permissions are set only for Android 22 and lower.
 	Android 23 and higher have to ask for them at the runtime.
 	 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.GET_ACCOUNTS"/>
     <uses-permission android:name="android.permission.READ_CALENDAR"/>

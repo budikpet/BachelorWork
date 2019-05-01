@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
+import cz.budikpet.bachelorwork.BuildConfig
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
@@ -89,6 +90,7 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
             putInt(SharedPreferencesKeys.LESSONS_START_TIME.toString(), lessonsStartTime)
             putInt(SharedPreferencesKeys.LENGTH_OF_BREAK.toString(), 15)
             putInt(SharedPreferencesKeys.LENGTH_OF_LESSON.toString(), 90)
+            putBoolean(SharedPreferencesKeys.USE_MOBILE_DATA.toString(), BuildConfig.DEBUG)
         }
 
     }
