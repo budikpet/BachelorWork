@@ -18,4 +18,5 @@
     </string>
     <string name="menuItem_goToToday">Go to today</string>
     <string name="menuItem_goToDate">Go to date</string>
+    <string name="roomDefault">Unknown</string>
 </resources>
