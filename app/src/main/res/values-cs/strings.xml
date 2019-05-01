@@ -22,4 +22,8 @@
 	<string name="alertDialog_message_googleAccount">Aplikace potřebuje mít přístup k validnímu Google účtu, protože
 		používá s ním svázaný Kalendář Google pro ukládání rozvrhů hodin z databáze ČVUT v Praze.
 	</string>
+	<string name="itemCalendarSaved">Uložen</string>
+	<string name="itemCalendarNotSaved">Neuložen</string>
+	<string name="students">Studentů</string>
+	<string name="capacity">Kapacita</string>
 </resources>

@@ -20,6 +20,7 @@ import android.view.View
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.screens.EventViewFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.util.*
@@ -51,6 +52,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
     private lateinit var permissionsCheckerFragment: PermissionsCheckerFragment
     private lateinit var multidayFragmentHolder: MultidayFragmentHolder
+    private lateinit var eventViewFragment: EventViewFragment
 
     private val alertDialogBuilder: AlertDialog.Builder by lazy {
         AlertDialog.Builder(this)
@@ -69,22 +71,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         setContentView(R.layout.activity_main)
         MyApplication.appComponent.inject(this)
 
-        if (savedInstanceState == null) {
-            permissionsCheckerFragment = PermissionsCheckerFragment()
-            multidayFragmentHolder = MultidayFragmentHolder()
-
-            supportFragmentManager.inTransaction {
-                add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
-                add(R.id.fragmentHolder, multidayFragmentHolder)
-            }
-
-        } else {
-            permissionsCheckerFragment =
-                supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
-
-            multidayFragmentHolder =
-                supportFragmentManager.findFragmentById(R.id.fragmentHolder) as MultidayFragmentHolder
-        }
+        initFragments(savedInstanceState)
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         searchSuggestions = this.findViewById(R.id.searchSuggestions)
@@ -99,6 +86,30 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         viewModel.checkSiriusAuthorization(response, exception)
 
         checkGoogleLogin()
+    }
+
+    private fun initFragments(savedInstanceState: Bundle?) {
+        if (savedInstanceState == null) {
+            permissionsCheckerFragment = PermissionsCheckerFragment()
+            multidayFragmentHolder = MultidayFragmentHolder()
+            eventViewFragment = EventViewFragment()
+
+            supportFragmentManager.inTransaction {
+                add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
+                add(R.id.multidayViewFragmentHolder, multidayFragmentHolder)
+                add(R.id.eventViewFragmentHolder, eventViewFragment)
+                hide(eventViewFragment)
+            }
+
+        } else {
+            permissionsCheckerFragment =
+                supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
+
+            multidayFragmentHolder =
+                supportFragmentManager.findFragmentById(R.id.multidayViewFragmentHolder) as MultidayFragmentHolder
+
+            eventViewFragment = supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder) as EventViewFragment
+        }
     }
 
     override fun onDestroy() {
@@ -124,7 +135,21 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             // Load events of the newly selected timetable
             viewModel.updatedEventsInterval = null
             viewModel.loadEvents()
-//            viewModel.updateCalendars(username)
+        })
+
+        viewModel.selectedEvent.observe(this, Observer { selectedEvent ->
+            supportFragmentManager.inTransaction {
+                setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+                if(selectedEvent != null) {
+                    supportActionBar?.hide()
+                    show(eventViewFragment)
+                    hide(multidayFragmentHolder)
+                } else {
+                    supportActionBar?.show()
+                    hide(eventViewFragment)
+                    show(multidayFragmentHolder)
+                }
+            }
         })
     }
 

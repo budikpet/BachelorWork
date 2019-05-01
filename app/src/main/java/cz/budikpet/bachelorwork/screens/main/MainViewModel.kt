@@ -30,7 +30,7 @@ import javax.inject.Inject
 
 // TODO: Parts of AllCalendarUpdate code can be reused
 
-class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
+class MainViewModel : ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject
@@ -64,6 +64,8 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
     /** Represents items received from Sirius API search endpoint. */
     val searchItems = MutableLiveData<List<SearchItem>>()
     var lastSearchQuery = ""
+
+    val selectedEvent = MutableLiveData<TimetableEvent?>()
 
     /**
      * The date that corresponds to the currently selected MultidayFragment.
@@ -512,15 +514,11 @@ class MainViewModel : ViewModel(), MultidayViewFragment.Callback {
 
     // MARK: Multiday
 
-    override fun onAddEventClicked(startTime: DateTime, endTime: DateTime) {
+    fun onAddEventClicked(startTime: DateTime, endTime: DateTime) {
         Log.i(
             TAG,
             "Add event clicked: ${startTime.toString("dd.MM")}<${startTime.toString("HH:mm")} – ${endTime.toString("HH:mm")}>"
         )
-    }
-
-    override fun onEventClicked(event: TimetableEvent) {
-        Log.i(TAG, "Event clicked: $event")
     }
 
     companion object {

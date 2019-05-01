@@ -157,7 +157,7 @@ class MultidayViewFragment : Fragment() {
         }
 
         onEventClickListener = View.OnClickListener { eventView ->
-            viewModel.onEventClicked(eventView.tag as TimetableEvent)
+            viewModel.selectedEvent.postValue(eventView.tag as TimetableEvent)
         }
     }
 
@@ -379,12 +379,6 @@ class MultidayViewFragment : Fragment() {
     }
 
     // MARK: Initializers
-
-    interface Callback {
-        fun onAddEventClicked(startTime: DateTime, endTime: DateTime)
-
-        fun onEventClicked(event: TimetableEvent)
-    }
 
     companion object {
 
