@@ -8,7 +8,7 @@
 	<string name="alertDialog_positive_googleAccount">Přihlásit se</string>
 	<string name="alertDialog_quit">Odejít</string>
 	<string name="alertDialog_settings">Nastavení</string>
-	<string name="alertDialog_title_firstNotice">Upozornění</string>
+	<string name="alertDialog_title_notice">Upozornění</string>
 	<string name="alterDialog_title_googleAccount">Účet Google nebyl nalezen</string>
 	<string name="menuItem_goToDate">Přejít na datum</string>
 	<string name="menuItem_goToToday">Přejít na dnes</string>
@@ -27,4 +27,7 @@
 	<string name="students">Studentů</string>
 	<string name="capacity">Kapacita</string>
 	<string name="teachers">Vyučující:</string>
+	<string name="alertDialog_negative_no">Ne</string>
+	<string name="alertDialog_positive_yes">Ano</string>
+	<string name="alertDialog_message_eventViewTextClicked">Chcete zobrazit rozvrh hodin pro %1$s?</string>
 </resources>

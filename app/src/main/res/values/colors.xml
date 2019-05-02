@@ -11,4 +11,5 @@
     <color name="eventTutorial">#75A754</color>
     <color name="eventExam">#ff6060</color>
     <color name="eventOther">#e0dbdb</color>
+    <color name="clickableText">#FF0099CC</color>
 </resources>

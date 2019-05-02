@@ -3,8 +3,6 @@ package cz.budikpet.bachelorwork.screens.main
 import android.app.DatePickerDialog
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.graphics.Color
-import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
@@ -193,7 +191,7 @@ class MultidayFragmentHolder : Fragment() {
         val interval = Interval(currDate, currDate.plusDays(viewModel.daysPerMultidayViewFragment))
         itemGoToToday?.isVisible = !interval.contains(DateTime().withTimeAtStartOfDay())
 
-        // Update title
+        // Update name
         val lastDate = currDate.plusDays(viewModel.daysPerMultidayViewFragment)
         val title = when {
             currDate.monthOfYear == lastDate.monthOfYear -> currDate.monthOfYear().getAsText(null).capitalize()
@@ -223,7 +221,7 @@ class MultidayFragmentHolder : Fragment() {
             if (exception.code() == 500) {
                 text = "CTU internal server error occured. Please try again."
             }
-        } else if(exception is NoInternetConnectionException) {
+        } else if (exception is NoInternetConnectionException) {
             Log.e(TAG, "Could not connect to the internet.")
             text = exception.message!!
         } else {

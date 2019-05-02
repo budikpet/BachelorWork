@@ -25,7 +25,6 @@ import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
 import org.joda.time.Interval
-import java.lang.Exception
 import javax.inject.Inject
 
 // TODO: Parts of AllCalendarUpdate code can be reused

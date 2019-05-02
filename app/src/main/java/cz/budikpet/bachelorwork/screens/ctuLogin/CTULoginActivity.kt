@@ -41,7 +41,7 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
 
     private val alertDialogBuilder: AlertDialog.Builder by lazy {
         AlertDialog.Builder(this)
-            .setTitle(getString(R.string.alertDialog_title_firstNotice))
+            .setTitle(getString(R.string.alertDialog_title_notice))
             .setMessage(
                 getString(R.string.alertDialog_message_firstNotice)
             )

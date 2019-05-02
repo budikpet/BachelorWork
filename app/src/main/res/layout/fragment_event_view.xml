@@ -1,170 +1,249 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<android.support.v4.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto"
 	xmlns:tools="http://schemas.android.com/tools"
-	android:id="@+id/eventViewLayout"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:background="#00FFFFFF"
-	tools:context=".screens.EventViewFragment">
+	android:descendantFocusability="blocksDescendants"
+	android:overScrollMode="never">
 
-	<android.support.constraint.Guideline
-		android:id="@+id/headerGuideline"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="horizontal"
-		app:layout_constraintGuide_percent="0.2" />
+	<android.support.constraint.ConstraintLayout
+		android:id="@+id/eventViewLayout"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent"
+		android:background="#00FFFFFF">
 
-	<android.support.constraint.Guideline
-		android:id="@+id/textStartGuideline"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="vertical"
-		app:layout_constraintGuide_percent="0.10218978" />
+		<android.support.constraint.Guideline
+			android:id="@+id/headerGuideline"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:orientation="horizontal"
+			app:layout_constraintGuide_begin="80dp" />
 
-	<android.support.constraint.Guideline
-		android:id="@+id/guideline4"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:orientation="vertical"
-		app:layout_constraintGuide_percent="0.5" />
+		<android.support.constraint.Guideline
+			android:id="@+id/textStartGuideline"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:orientation="vertical"
+			app:layout_constraintGuide_percent="0.15" />
 
-	<View
-		android:id="@+id/headerView"
-		android:layout_width="0dp"
-		android:layout_height="0dp"
-		android:background="#E64343"
-		app:layout_constraintBottom_toTopOf="@+id/headerGuideline"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintHorizontal_bias="1.0"
-		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toTopOf="parent"
-		app:layout_constraintVertical_bias="1.0" />
+		<android.support.constraint.Guideline
+			android:id="@+id/middleGuideline"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:orientation="vertical"
+			app:layout_constraintGuide_percent="0.5" />
 
-	<ImageView
-		android:id="@+id/exit"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginStart="8dp"
-		android:layout_marginTop="8dp"
-		android:src="@android:drawable/ic_menu_close_clear_cancel"
-		app:layout_constraintStart_toStartOf="parent"
-		app:layout_constraintTop_toTopOf="parent" />
+		<View
+			android:id="@+id/headerView"
+			android:layout_width="0dp"
+			android:layout_height="0dp"
+			android:background="#E64343"
+			app:layout_constraintBottom_toTopOf="@+id/headerGuideline"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent"
+			app:layout_constraintVertical_bias="1.0" />
 
-	<TextView
-		android:id="@+id/acronym"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginBottom="16dp"
-		android:textAlignment="center"
-		android:textSize="30sp"
-		android:textStyle="bold"
-		app:layout_constraintBottom_toTopOf="@+id/headerGuideline"
-		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
-		tools:text="MI-IOS" />
+		<ImageView
+			android:id="@+id/exit"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
+			android:src="@android:drawable/ic_menu_close_clear_cancel"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent" />
 
-	<TextView
-		android:id="@+id/eventType"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="16dp"
-		android:textSize="16sp"
-		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
-		app:layout_constraintTop_toBottomOf="@+id/headerView"
-		tools:text="Lecture" />
+		<TextView
+			android:id="@+id/acronym"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginBottom="8dp"
+			android:textAlignment="center"
+			android:textSize="30sp"
+			android:textStyle="bold"
+			app:layout_constraintBottom_toTopOf="@+id/headerGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			tools:text="MI-IOS" />
 
-	<TextView
-		android:id="@+id/eventName"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="8dp"
-		android:textSize="16sp"
-		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
-		app:layout_constraintTop_toBottomOf="@+id/eventType"
-		tools:text="MI-IOS" />
+		<TextView
+			android:id="@+id/eventType"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="16dp"
+			android:textSize="16sp"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/headerView"
+			tools:text="Lecture" />
 
-	<TextView
-		android:id="@+id/eventRoom"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="8dp"
-		android:textSize="16sp"
-		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
-		app:layout_constraintTop_toBottomOf="@+id/eventName"
-		tools:text="T9:443" />
+		<TextView
+			android:id="@+id/eventName"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp"
+			android:clickable="true"
+			android:textColor="@color/clickableText"
+			android:textSize="16sp"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/eventType"
+			tools:text="MI-IOS" />
 
-	<View
-		android:id="@+id/divider1"
-		android:layout_width="0dp"
-		android:layout_height="2dp"
-		android:layout_marginTop="8dp"
-		android:layout_marginEnd="8dp"
-		android:background="@color/divider_grey"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintHorizontal_bias="0.0"
-		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
-		app:layout_constraintTop_toBottomOf="@+id/eventRoom" />
+		<ImageView
+			android:id="@+id/placeImage"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="8dp"
+			android:src="@drawable/ic_place_black_24dp"
+			app:layout_constraintBottom_toBottomOf="@+id/eventRoom"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="@+id/eventRoom" />
 
-	<TextView
-		android:id="@+id/studentsCount"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="16dp"
-		android:textAlignment="center"
-		app:layout_constraintEnd_toEndOf="@+id/studentsCountText"
-		app:layout_constraintStart_toStartOf="@+id/studentsCountText"
-		app:layout_constraintTop_toBottomOf="@+id/divider1"
-		tools:text="0" />
+		<TextView
+			android:id="@+id/eventRoom"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp"
+			android:textColor="@color/clickableText"
+			android:textSize="16sp"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/eventName"
+			tools:text="T9:443" />
 
-	<TextView
-		android:id="@+id/studentsCountText"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="8dp"
-		android:text="@string/students"
-		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
-		app:layout_constraintTop_toBottomOf="@+id/studentsCount" />
+		<View
+			android:id="@+id/divider0"
+			android:layout_width="0dp"
+			android:layout_height="2dp"
+			android:layout_marginTop="8dp"
+			android:layout_marginEnd="8dp"
+			android:background="@color/divider_grey"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.0"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/eventRoom" />
 
-	<TextView
-		android:id="@+id/capacity"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="16dp"
-		app:layout_constraintEnd_toEndOf="@+id/capacityText"
-		app:layout_constraintStart_toStartOf="@+id/capacityText"
-		app:layout_constraintTop_toBottomOf="@+id/divider1"
-		tools:text="0" />
+		<ImageView
+			android:id="@+id/calendarImage"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="8dp"
+			android:src="@drawable/ic_today_black_24dp"
+			app:layout_constraintBottom_toBottomOf="@+id/eventDate"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="@+id/eventDate" />
 
-	<TextView
-		android:id="@+id/capacityText"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="8dp"
-		android:layout_marginEnd="8dp"
-		android:text="@string/capacity"
-		app:layout_constraintEnd_toStartOf="@+id/guideline4"
-		app:layout_constraintStart_toStartOf="@+id/guideline4"
-		app:layout_constraintTop_toBottomOf="@+id/capacity" />
+		<TextView
+			android:id="@+id/eventDate"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="16dp"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/divider0"
+			tools:text="12.1.2019" />
 
-	<View
-		android:id="@+id/divider2"
-		android:layout_width="0dp"
-		android:layout_height="2dp"
-		android:layout_marginTop="8dp"
-		android:layout_marginEnd="8dp"
-		android:background="@color/divider_grey"
-		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintHorizontal_bias="1.0"
-		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
-		app:layout_constraintTop_toBottomOf="@+id/capacityText" />
+		<TextView
+			android:id="@+id/eventTime"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/eventDate"
+			tools:text="7:30 - 9:00" />
 
-	<TextView
-		android:id="@+id/teachersText"
-		android:layout_width="wrap_content"
-		android:layout_height="wrap_content"
-		android:layout_marginTop="16dp"
-		android:text="@string/teachers"
-		app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
-		app:layout_constraintTop_toBottomOf="@+id/divider2" />
+		<View
+			android:id="@+id/divider1"
+			android:layout_width="0dp"
+			android:layout_height="2dp"
+			android:layout_marginTop="8dp"
+			android:layout_marginEnd="8dp"
+			android:background="@color/divider_grey"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.0"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/eventTime" />
 
-</android.support.constraint.ConstraintLayout>
+		<TextView
+			android:id="@+id/studentsCount"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="16dp"
+			android:textAlignment="center"
+			app:layout_constraintEnd_toEndOf="@+id/studentsCountText"
+			app:layout_constraintStart_toStartOf="@+id/studentsCountText"
+			app:layout_constraintTop_toBottomOf="@+id/divider1"
+			tools:text="0" />
+
+		<TextView
+			android:id="@+id/studentsCountText"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp"
+			android:text="@string/students"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/studentsCount" />
+
+		<TextView
+			android:id="@+id/capacity"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="16dp"
+			app:layout_constraintEnd_toEndOf="@+id/capacityText"
+			app:layout_constraintStart_toStartOf="@+id/capacityText"
+			app:layout_constraintTop_toBottomOf="@+id/divider1"
+			tools:text="0" />
+
+		<TextView
+			android:id="@+id/capacityText"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp"
+			android:layout_marginEnd="8dp"
+			android:text="@string/capacity"
+			app:layout_constraintEnd_toStartOf="@+id/middleGuideline"
+			app:layout_constraintStart_toStartOf="@+id/middleGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/capacity" />
+
+		<View
+			android:id="@+id/divider2"
+			android:layout_width="0dp"
+			android:layout_height="2dp"
+			android:layout_marginTop="8dp"
+			android:layout_marginEnd="8dp"
+			android:background="@color/divider_grey"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="1.0"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/capacityText" />
+
+		<ImageView
+			android:id="@+id/personImage"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="8dp"
+			android:src="@drawable/ic_person_black_24dp"
+			app:layout_constraintBottom_toBottomOf="@+id/teachersText"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="@+id/teachersText" />
+
+		<TextView
+			android:id="@+id/teachersText"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="16dp"
+			android:text="@string/teachers"
+			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@+id/divider2" />
+
+		<LinearLayout
+			android:id="@+id/teachersList"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp"
+			android:orientation="vertical"
+			app:layout_constraintBottom_toBottomOf="parent"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="@id/textStartGuideline"
+			app:layout_constraintTop_toBottomOf="@id/teachersText"></LinearLayout>
+
+	</android.support.constraint.ConstraintLayout>
+</android.support.v4.widget.NestedScrollView>

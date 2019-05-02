@@ -13,7 +13,7 @@
 		to be logged into a CTU account and a Google account.
 	</string>
 	<string name="alertDialog_positive_firstNotice">Continue</string>
-	<string name="alertDialog_title_firstNotice">Notice</string>
+	<string name="alertDialog_title_notice">Notice</string>
 	<string name="permissions_rationale">The application needs these permissions to store data from CTU timetable in a
 		Google Calendar.\nThe application cannot work without these permissions.
 	</string>
@@ -26,4 +26,7 @@
 	<string name="students">Students</string>
 	<string name="capacity">Capacity</string>
 	<string name="teachers">Teachers:</string>
+	<string name="alertDialog_negative_no">No</string>
+	<string name="alertDialog_positive_yes">Yes</string>
+	<string name="alertDialog_message_eventViewTextClicked">Do you wish to display timetable of %1$s?</string>
 </resources>

@@ -20,9 +20,9 @@ import android.view.View
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
-import cz.budikpet.bachelorwork.screens.EventViewFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
+import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
 import cz.budikpet.bachelorwork.util.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -108,7 +108,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             multidayFragmentHolder =
                 supportFragmentManager.findFragmentById(R.id.multidayViewFragmentHolder) as MultidayFragmentHolder
 
-            eventViewFragment = supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder) as EventViewFragment
+            eventViewFragment =
+                supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder) as EventViewFragment
         }
     }
 
@@ -140,7 +141,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         viewModel.selectedEvent.observe(this, Observer { selectedEvent ->
             supportFragmentManager.inTransaction {
                 setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                if(selectedEvent != null) {
+                if (selectedEvent != null) {
                     supportActionBar?.hide()
                     show(eventViewFragment)
                     hide(multidayFragmentHolder)
