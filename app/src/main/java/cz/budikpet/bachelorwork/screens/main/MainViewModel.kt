@@ -12,6 +12,7 @@ import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.CalendarListItem
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
 import io.reactivex.Completable

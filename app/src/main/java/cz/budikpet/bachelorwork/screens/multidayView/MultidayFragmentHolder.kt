@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork.screens.main
+package cz.budikpet.bachelorwork.screens.multidayView
 
 import android.app.DatePickerDialog
 import android.arch.lifecycle.Observer
@@ -15,6 +15,7 @@ import android.widget.ProgressBar
 import android.widget.Toast
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
+import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
@@ -193,13 +194,7 @@ class MultidayFragmentHolder : Fragment() {
 
         // Update name
         val lastDate = currDate.plusDays(viewModel.daysPerMultidayViewFragment)
-        val title = when {
-            currDate.monthOfYear == lastDate.monthOfYear -> currDate.monthOfYear().getAsText(null).capitalize()
-            else -> "${currDate.monthOfYear().getAsText(null).capitalize()} - " +
-                    lastDate.monthOfYear().getAsText(null).capitalize()
-        }
-
-        activity?.title = title
+        supportActionBar.subtitle = "${currDate.toString("dd.MM")} – ${lastDate.toString("dd.MM")}"
 
         // Update back button
         val currUsername = viewModel.timetableOwner.value?.first

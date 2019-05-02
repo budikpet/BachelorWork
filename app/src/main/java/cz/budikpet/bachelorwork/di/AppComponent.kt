@@ -4,7 +4,7 @@ import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
 import cz.budikpet.bachelorwork.screens.main.MainActivity
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
-import cz.budikpet.bachelorwork.screens.main.MultidayViewFragment
+import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import dagger.Component
 import javax.inject.Singleton
 

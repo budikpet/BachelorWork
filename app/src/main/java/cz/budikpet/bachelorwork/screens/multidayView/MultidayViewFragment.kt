@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork.screens.main
+package cz.budikpet.bachelorwork.screens.multidayView
 
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
@@ -16,6 +16,7 @@ import android.widget.TextView
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.toDp
 import kotlinx.android.synthetic.main.fragment_multidayview_list.view.*
@@ -36,7 +37,8 @@ class MultidayViewFragment : Fragment() {
      */
     private var selectedEmptySpace: View? = null
 
-    private var eventsColumnsCount = MAX_COLUMNS
+    private var eventsColumnsCount =
+        MAX_COLUMNS
     private val eventPadding by lazy { 2f.toDp(context!!) }
     private lateinit var firstDate: DateTime
     private val dpPerMinRatio = 1
@@ -224,7 +226,11 @@ class MultidayViewFragment : Fragment() {
                     else -> true
                 }
             }
-            .map { return@map IndexedTimetableEvent(-1, it) }
+            .map { return@map IndexedTimetableEvent(
+                -1,
+                it
+            )
+            }
 
         if (preparedCollection.isEmpty()) {
             if (!viewModel.areLoadedEventsUpdated()) {

@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork.screens.main
+package cz.budikpet.bachelorwork.screens.multidayView
 
 import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
@@ -16,7 +16,10 @@ class ViewPagerAdapter(
     override fun getCount() = numOfFragments
 
     override fun getItem(position: Int): Fragment {
-        return MultidayViewFragment.newInstance(daysPerFragment, dateFromPosition(position))
+        return MultidayViewFragment.newInstance(
+            daysPerFragment,
+            dateFromPosition(position)
+        )
     }
 
     fun dateFromPosition(position: Int): DateTime {

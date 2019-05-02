@@ -23,6 +23,7 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
+import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
 import cz.budikpet.bachelorwork.util.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -130,7 +131,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         viewModel.timetableOwner.observe(this, Observer { pair ->
             val username = pair?.first
             if (username != null && username != "") {
-                supportActionBar?.subtitle = username
+                supportActionBar?.title = username
             }
 
             // Load events of the newly selected timetable
