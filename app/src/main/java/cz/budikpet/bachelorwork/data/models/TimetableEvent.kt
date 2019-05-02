@@ -11,14 +11,14 @@ data class TimetableEvent(
     val room: String? = null,      // Can be null
     val acronym: String,
     val fullName: String = acronym,
-    val event_type: EventType,
+    val event_type: EventType = EventType.OTHER,
     val starts_at: DateTime,
     val ends_at: DateTime,
     var deleted: Boolean = false,
     val changed: Boolean = false,
-    val capacity: Int,
+    val capacity: Int = 0,
     val occupied: Int = 0,
-    val teachers: ArrayList<String>,
+    val teachers: ArrayList<String> = arrayListOf(),
     val students: ArrayList<String>? = null,
     var color: Int = defaultColor(event_type)
 ) {
