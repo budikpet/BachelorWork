@@ -81,7 +81,7 @@ class EventViewFragment : Fragment() {
         // Update info
         this.headerView.setBackgroundColor(resources.getColor(selectedEvent.color, null))
         this.acronym.text = selectedEvent.acronym
-        this.eventType.text = selectedEvent.event_type.nameString
+        this.eventType.text = selectedEvent.event_type.getLabel(context!!)
         this.eventRoom.text = selectedEvent.room
         this.studentsCount.text = selectedEvent.occupied.toString()
         this.capacity.text = selectedEvent.capacity.toString()
