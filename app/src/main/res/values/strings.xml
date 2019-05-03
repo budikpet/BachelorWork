@@ -37,4 +37,8 @@
 	<string name="eventType_Tutorial">Tutorial</string>
 	<string name="eventType_Teacher_timetable_slot">Teacher timetable slot</string>
 	<string name="eventType_Other">Other</string>
+	<string name="sidebar_settings">Settings</string>
+	<string name="sidebar_dayView">Day view</string>
+	<string name="sidebar_3DaysView">3 days view</string>
+	<string name="sidebar_WeekView">Week view</string>
 </resources>

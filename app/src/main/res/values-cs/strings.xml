@@ -38,5 +38,9 @@
 	<string name="eventType_Tutorial">Cvičení</string>
 	<string name="eventType_Teacher_timetable_slot">Omezení učitele</string>
 	<string name="eventType_Other">Ostatní</string>
+	<string name="sidebar_settings">Nastavení</string>
+	<string name="sidebar_dayView">Denní zobrazení</string>
+	<string name="sidebar_3DaysView">3denní zobrazení</string>
+	<string name="sidebar_WeekView">Týdenní zobrazení</string>
 
 </resources>

@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
+	<group android:id="@+id/changeViewGroup">
+		<item
+			android:id="@+id/dayView"
+			android:icon="@drawable/ic_view_day_black_24dp"
+			android:title="@string/sidebar_dayView" />
+		<item
+			android:id="@+id/threeDayView"
+			android:icon="@drawable/ic_view_week_black_24dp"
+			android:title="@string/sidebar_3DaysView" />
+		<item
+			android:id="@+id/weekView"
+			android:icon="@drawable/ic_view_week_black_24dp"
+			android:title="@string/sidebar_WeekView" />
+	</group>
 	<item
-		android:id="@+id/dayView"
-		android:title="Day view" />
-	<item
-		android:id="@+id/threeDayView"
-		android:title="3 days view" />
-	<item
-		android:id="@+id/weekView"
-		android:title="Week view" />
+		android:id="@+id/settings"
+		android:icon="@drawable/ic_settings_black_24dp"
+		android:title="@string/sidebar_settings" />
 </menu>
