@@ -365,8 +365,7 @@ class Repository @Inject constructor(private val context: Context) {
         val eventProjection: Array<String> = arrayOf(
             CalendarContract.Calendars._ID,
             CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
-            CalendarContract.Calendars.SYNC_EVENTS,
-            CalendarContract.Calendars.NAME
+            CalendarContract.Calendars.SYNC_EVENTS
         )
 
         val projectionIdIndex = 0
@@ -388,7 +387,6 @@ class Repository @Inject constructor(private val context: Context) {
                 val displayName = cursor.getString(projectionDisplayNameIndex)
                 val id = cursor.getLong(projectionIdIndex)
                 val syncEvents = cursor.getInt(projectionSyncEventsIndex) == 1
-                val name = cursor.getString(3)
 
                 emitter.onNext(CalendarListItem(id, displayName, syncEvents))
             }
