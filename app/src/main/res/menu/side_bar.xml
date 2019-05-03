@@ -3,20 +3,20 @@
 
 	<group android:id="@+id/changeViewGroup">
 		<item
-			android:id="@+id/dayView"
+			android:id="@+id/sidebarDayView"
 			android:icon="@drawable/ic_view_day_black_24dp"
 			android:title="@string/sidebar_dayView" />
 		<item
-			android:id="@+id/threeDayView"
+			android:id="@+id/sidebarThreeDayView"
 			android:icon="@drawable/ic_view_week_black_24dp"
 			android:title="@string/sidebar_3DaysView" />
 		<item
-			android:id="@+id/weekView"
+			android:id="@+id/sidebarWeekView"
 			android:icon="@drawable/ic_view_week_black_24dp"
 			android:title="@string/sidebar_WeekView" />
 	</group>
 	<item
-		android:id="@+id/settings"
+		android:id="@+id/sidebarSettings"
 		android:icon="@drawable/ic_settings_black_24dp"
 		android:title="@string/sidebar_settings" />
 </menu>

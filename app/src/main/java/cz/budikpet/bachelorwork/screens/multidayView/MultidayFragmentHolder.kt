@@ -129,7 +129,7 @@ class MultidayFragmentHolder : Fragment() {
         })
     }
 
-    private fun resetViewPager(date: DateTime = DateTime()) {
+    fun resetViewPager(date: DateTime = DateTime()) {
         pagerPosition = PREFILLED_WEEKS / 2
 
         viewModel.currentlySelectedDate = date

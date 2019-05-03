@@ -4,14 +4,14 @@
 	xmlns:tools="http://schemas.android.com/tools"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
+	android:background="@color/itemWhite"
 	android:descendantFocusability="blocksDescendants"
 	android:overScrollMode="never">
 
 	<android.support.constraint.ConstraintLayout
 		android:id="@+id/eventViewLayout"
 		android:layout_width="match_parent"
-		android:layout_height="match_parent"
-		android:background="#00FFFFFF">
+		android:layout_height="match_parent">
 
 		<android.support.constraint.Guideline
 			android:id="@+id/headerGuideline"

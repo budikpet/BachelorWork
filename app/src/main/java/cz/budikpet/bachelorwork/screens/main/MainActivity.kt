@@ -8,6 +8,8 @@ import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.support.design.widget.NavigationView
+import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
@@ -15,6 +17,7 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
 import android.support.v7.widget.Toolbar
 import android.util.Log
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -76,6 +79,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         val toolbar = findViewById<Toolbar>(R.id.customToolbar)
         setSupportActionBar(toolbar)
 
+        initSideBar()
+
         initFragments(savedInstanceState)
 
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
@@ -91,6 +96,33 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         viewModel.checkSiriusAuthorization(response, exception)
 
         checkGoogleLogin()
+    }
+
+    private fun initSideBar() {
+        val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
+        val sidebarNavView = findViewById<NavigationView>(R.id.sidebarNavView)
+
+        sidebarNavView.setNavigationItemSelectedListener {sidebarItem ->
+            when(sidebarItem.itemId) {
+                R.id.sidebarDayView -> {
+                    viewModel.daysPerMultidayViewFragment = 1
+                    multidayFragmentHolder.resetViewPager(viewModel.currentlySelectedDate)
+                }
+                R.id.sidebarThreeDayView -> {
+                    viewModel.daysPerMultidayViewFragment = 3
+                    multidayFragmentHolder.resetViewPager(viewModel.currentlySelectedDate)
+                }
+                R.id.sidebarWeekView -> {
+                    viewModel.daysPerMultidayViewFragment = 7
+                    multidayFragmentHolder.resetViewPager(viewModel.currentlySelectedDate)
+                }
+                R.id.sidebarSettings -> Log.i(TAG, "settings")
+            }
+
+            drawerLayout.closeDrawer(Gravity.START)
+
+            true
+        }
     }
 
     private fun initFragments(savedInstanceState: Bundle?) {
@@ -149,11 +181,9 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 if (selectedEvent != null) {
                     supportActionBar?.hide()
                     show(eventViewFragment)
-                    hide(multidayFragmentHolder)
                 } else {
                     supportActionBar?.show()
                     hide(eventViewFragment)
-                    show(multidayFragmentHolder)
                 }
             }
         })
