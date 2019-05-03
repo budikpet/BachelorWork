@@ -103,7 +103,7 @@ class EventViewFragment : Fragment() {
         clickableTextView(textView, teacher, ItemType.PERSON)
 
         val layoutParams =
-            LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
         layoutParams.bottomMargin = 2.toDp(context!!)
         textView.layoutParams = layoutParams
 
