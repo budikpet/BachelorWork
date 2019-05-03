@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.SearchView
+import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
@@ -71,6 +72,9 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         MyApplication.appComponent.inject(this)
+
+        val toolbar = findViewById<Toolbar>(R.id.customToolbar)
+        setSupportActionBar(toolbar)
 
         initFragments(savedInstanceState)
 

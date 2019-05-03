@@ -1,41 +1,66 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout
+<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
 
-        xmlns:app="http://schemas.android.com/apk/res-auto"
-        xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-        android:layout_height="match_parent" android:id="@+id/main_activity">
+	<android.support.constraint.ConstraintLayout
+		android:id="@+id/main_activity"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
 
-    <FrameLayout
-        android:id="@+id/multidayViewFragmentHolder"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+		<include
+			android:id="@+id/customToolbar"
+			layout="@layout/custom_toolbar"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent" />
 
-    </FrameLayout>
+		<FrameLayout
+			android:id="@+id/multidayViewFragmentHolder"
+			android:layout_width="0dp"
+			android:layout_height="0dp"
+			app:layout_constraintBottom_toBottomOf="parent"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@id/customToolbar">
 
-    <android.support.v7.widget.RecyclerView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" android:id="@+id/searchSuggestions"
-            app:layout_constraintStart_toStartOf="parent" app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            android:background="@color/itemWhite" android:visibility="gone">
+		</FrameLayout>
 
-    </android.support.v7.widget.RecyclerView>
+		<android.support.v7.widget.RecyclerView
+			android:id="@+id/searchSuggestions"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:background="@color/itemWhite"
+			android:visibility="gone"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@id/customToolbar">
 
-    <FrameLayout
-        android:id="@+id/eventViewFragmentHolder"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+		</android.support.v7.widget.RecyclerView>
 
-    </FrameLayout>
+		<FrameLayout
+			android:id="@+id/eventViewFragmentHolder"
+			android:layout_width="0dp"
+			android:layout_height="0dp"
+			app:layout_constraintBottom_toBottomOf="parent"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toBottomOf="@id/customToolbar">
 
-</android.support.constraint.ConstraintLayout>
+		</FrameLayout>
+
+	</android.support.constraint.ConstraintLayout>
+
+	<android.support.design.widget.NavigationView
+		android:layout_width="wrap_content"
+		android:layout_height="match_parent"
+		android:layout_gravity="start"
+		app:headerLayout="@layout/sidebar_header"
+		app:menu="@menu/side_bar">
+
+	</android.support.design.widget.NavigationView>
+
+</android.support.v4.widget.DrawerLayout>
