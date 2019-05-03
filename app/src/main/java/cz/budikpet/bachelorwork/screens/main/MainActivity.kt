@@ -166,15 +166,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             finish()
         }
     }
-
-    private fun showString(result: List<Event>) {
-        var builder = StringBuilder()
-        for (event in result) {
-            builder.append("${event.links.course} ${event.event_type}: ${event.starts_at}\n")
-        }
-
-        showData.text = builder.toString()
-    }
 */
 
     // MARK: Google account
@@ -277,6 +268,11 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
                 // User entered the searchView
                 searchSuggestions.visibility = View.VISIBLE
+
+                if(!viewModel.checkInternetConnection()) {
+                    viewModel.thrownException.postValue(NoInternetConnectionException())
+                }
+
                 return true
             }
 

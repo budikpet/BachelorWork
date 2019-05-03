@@ -111,7 +111,7 @@ class Repository @Inject constructor(private val context: Context) {
      * Checks whether the device has internet connection. WiFi and/or Cellular if enabled.
      * @return true if the device is connected to the internet.
      */
-    private fun checkInternetConnection(): Boolean {
+    fun checkInternetConnection(): Boolean {
         val useMobileDate = sharedPreferences.getBoolean(SharedPreferencesKeys.USE_MOBILE_DATA.toString(), false)
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -365,7 +365,8 @@ class Repository @Inject constructor(private val context: Context) {
         val eventProjection: Array<String> = arrayOf(
             CalendarContract.Calendars._ID,
             CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
-            CalendarContract.Calendars.SYNC_EVENTS
+            CalendarContract.Calendars.SYNC_EVENTS,
+            CalendarContract.Calendars.NAME
         )
 
         val projectionIdIndex = 0
@@ -387,6 +388,7 @@ class Repository @Inject constructor(private val context: Context) {
                 val displayName = cursor.getString(projectionDisplayNameIndex)
                 val id = cursor.getLong(projectionIdIndex)
                 val syncEvents = cursor.getInt(projectionSyncEventsIndex) == 1
+                val name = cursor.getString(3)
 
                 emitter.onNext(CalendarListItem(id, displayName, syncEvents))
             }
@@ -413,7 +415,7 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Gets calendar events from a calendar using Android calendar provider.
      *
-     * @param calId id of the calendar we add event to. Received from a list of calendars using Android Calendar provider.
+     * @param calId id of the calendar we get events from. Received from a list of calendars using Android Calendar provider.
      */
     fun getCalendarEvents(
         calId: Long,

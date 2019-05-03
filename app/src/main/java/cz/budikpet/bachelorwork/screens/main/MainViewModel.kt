@@ -113,6 +113,14 @@ class MainViewModel : ViewModel() {
     }
 
     /**
+     * Checks whether the device has internet connection. WiFi and/or Cellular if enabled.
+     * @return true if the device is connected to the internet.
+     */
+    fun checkInternetConnection(): Boolean {
+        return repository.checkInternetConnection()
+    }
+
+    /**
      * Checks whether a user is fully authorized in Sirius API.
      *
      * If the user isn't fully authorized, authorization code exchange proceeds.
@@ -167,7 +175,7 @@ class MainViewModel : ViewModel() {
                 },
                 { error ->
                     Log.e(TAG, "SearchSirius error: $error")
-                    thrownException.postValue(error)
+                    // Throwing error not necessary
                 }
             )
 
