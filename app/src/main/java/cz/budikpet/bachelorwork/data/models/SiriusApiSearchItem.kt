@@ -7,6 +7,6 @@ data class SearchItem(
     /** Acronym - T9:350, balikm, BI-AG2 */
     val id: String,
     /** Name - null, Miroslav Balík, Algoritmy a grafy 2 */
-    val title: String?,
+    val title: String? = null,
     val type: ItemType
 )

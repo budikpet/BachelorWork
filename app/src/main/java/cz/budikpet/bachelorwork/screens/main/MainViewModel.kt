@@ -16,6 +16,7 @@ import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
 import io.reactivex.Completable
+import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
@@ -51,6 +52,9 @@ class MainViewModel : ViewModel() {
 
     /** Events of the currently selected timetable. */
     val events = MutableLiveData<List<TimetableEvent>>()
+
+    /** All timetables that were saved to the Google Calendar. */
+    val savedTimetables = MutableLiveData<List<SearchItem>>()
 
     // MARK: State
 
@@ -189,6 +193,7 @@ class MainViewModel : ViewModel() {
 
         if (currOwner == null) {
             timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
+            updateSavedTimetables()
         }
     }
 
@@ -256,19 +261,13 @@ class MainViewModel : ViewModel() {
                 Log.i(TAG, "Update done")
                 operationRunning.postValue(false)
                 loadEvents()
+                updateSavedTimetables()
 
+                // Refresh Google Calendar without waiting
                 repository.startCalendarRefresh()
             }
 
         compositeDisposable.add(disposable)
-    }
-
-    /**
-     * @return true if the currently loaded events in [MainViewModel.events] have already been updated.
-     */
-    fun areLoadedEventsUpdated(): Boolean {
-        val updatedEventsInterval = this.updatedEventsInterval
-        return updatedEventsInterval != null && updatedEventsInterval.isEqual(loadedEventsInterval)
     }
 
     /**
@@ -277,7 +276,7 @@ class MainViewModel : ViewModel() {
     private fun checkGoogleCalendars(calendars: MutableList<CalendarListEntry>): Completable {
         val personalCalendarName = "${ctuUsername}_${MyApplication.CALENDARS_NAME}"
         var personalCalendarFound = false
-        var hiddenCalendars = mutableListOf<CalendarListEntry>()
+        val hiddenCalendars = mutableListOf<CalendarListEntry>()
 
         for (calendar in calendars) {
             if (calendar.hidden != null) {
@@ -389,6 +388,46 @@ class MainViewModel : ViewModel() {
 
         // Create a completable which starts all actions
         return Completable.mergeArray(deleteObs, createObs, changedObs)
+    }
+
+    /**
+     * @return true if the currently loaded events in [MainViewModel.events] have already been updated.
+     */
+    fun areLoadedEventsUpdated(): Boolean {
+        val updatedEventsInterval = this.updatedEventsInterval
+        return updatedEventsInterval != null && updatedEventsInterval.isEqual(loadedEventsInterval)
+    }
+
+    /**
+     * Updates [savedTimetables] using SearchSirius endpoint.
+     *
+     * If the internet connection is unavailable the default SearchItems with usernames only are saved.
+     */
+    fun updateSavedTimetables() {
+        val disposable = repository.getLocalCalendarListItems()
+            .flatMapMaybe {
+                val username = it.displayName.substringBefore('_')
+
+                if(repository.checkInternetConnection()) {
+                    // We have internet connection so we can call search endpoint
+                    return@flatMapMaybe repository.searchSirius(username).firstElement()
+                }
+
+                return@flatMapMaybe Maybe.just(SearchItem(username, type = ItemType.UNKNOWN))
+            }
+            .toList()
+            .subscribeOn(Schedulers.io())
+            .subscribe(
+                { result ->
+                    savedTimetables.postValue(result)
+                },
+                { error ->
+                    Log.e(TAG, "UpdateSavedTimetables: $error")
+                    thrownException.postValue(error)
+                }
+            )
+
+        compositeDisposable.add(disposable)
     }
 
     /**

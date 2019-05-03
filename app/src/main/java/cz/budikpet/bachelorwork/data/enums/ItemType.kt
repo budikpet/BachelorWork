@@ -8,7 +8,8 @@ enum class ItemType {
     @SerializedName("room")
     ROOM,
     @SerializedName("person")
-    PERSON;
+    PERSON,
+    UNKNOWN;
 
     override fun toString(): String {
         return super.toString().toLowerCase()

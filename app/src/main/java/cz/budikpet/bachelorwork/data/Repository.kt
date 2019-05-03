@@ -228,6 +228,10 @@ class Repository @Inject constructor(private val context: Context) {
                 from = dateString,
                 to = endDateString
             )
+            ItemType.UNKNOWN -> {
+                Log.e(TAG, "getSiriusEventsOf: ItemType.Unknown")
+                Observable.empty()
+            }
         }
     }
 
