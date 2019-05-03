@@ -20,12 +20,13 @@
 			android:orientation="horizontal"
 			app:layout_constraintGuide_begin="80dp" />
 
-		<android.support.constraint.Guideline
-			android:id="@+id/textStartGuideline"
+		<android.support.constraint.Barrier
+			android:id="@+id/textStartBarrier"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
-			android:orientation="vertical"
-			app:layout_constraintGuide_percent="0.15" />
+			app:barrierDirection="end"
+			app:constraint_referenced_ids="calendarImage,exit,placeImage,personImage"
+			tools:layout_editor_absoluteX="411dp" />
 
 		<android.support.constraint.Guideline
 			android:id="@+id/middleGuideline"
@@ -51,7 +52,9 @@
 			android:layout_height="wrap_content"
 			android:layout_marginStart="8dp"
 			android:layout_marginTop="8dp"
+			android:layout_marginEnd="8dp"
 			android:src="@android:drawable/ic_menu_close_clear_cancel"
+			app:layout_constraintEnd_toStartOf="@id/textStartBarrier"
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toTopOf="parent" />
 
@@ -64,7 +67,7 @@
 			android:textSize="30sp"
 			android:textStyle="bold"
 			app:layout_constraintBottom_toTopOf="@+id/headerGuideline"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			tools:text="MI-IOS" />
 
 		<TextView
@@ -73,7 +76,7 @@
 			android:layout_height="wrap_content"
 			android:layout_marginTop="16dp"
 			android:textSize="16sp"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/headerView"
 			tools:text="Lecture" />
 
@@ -85,7 +88,7 @@
 			android:clickable="true"
 			android:textColor="@color/clickableText"
 			android:textSize="16sp"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/eventType"
 			tools:text="MI-IOS" />
 
@@ -106,7 +109,7 @@
 			android:layout_marginTop="8dp"
 			android:textColor="@color/clickableText"
 			android:textSize="16sp"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/eventName"
 			tools:text="T9:443" />
 
@@ -119,7 +122,7 @@
 			android:background="@color/divider_grey"
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintHorizontal_bias="0.0"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/eventRoom" />
 
 		<ImageView
@@ -137,7 +140,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="16dp"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/divider0"
 			tools:text="12.1.2019" />
 
@@ -146,7 +149,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/eventDate"
 			tools:text="7:30 - 9:00" />
 
@@ -159,7 +162,7 @@
 			android:background="@color/divider_grey"
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintHorizontal_bias="0.0"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/eventTime" />
 
 		<TextView
@@ -179,7 +182,7 @@
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
 			android:text="@string/students"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/studentsCount" />
 
 		<TextView
@@ -212,7 +215,7 @@
 			android:background="@color/divider_grey"
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintHorizontal_bias="1.0"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/capacityText" />
 
 		<ImageView
@@ -231,7 +234,7 @@
 			android:layout_height="wrap_content"
 			android:layout_marginTop="16dp"
 			android:text="@string/teachers"
-			app:layout_constraintStart_toStartOf="@+id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/divider2" />
 
 		<LinearLayout
@@ -242,7 +245,7 @@
 			android:orientation="vertical"
 			app:layout_constraintBottom_toBottomOf="parent"
 			app:layout_constraintEnd_toEndOf="parent"
-			app:layout_constraintStart_toStartOf="@id/textStartGuideline"
+			app:layout_constraintStart_toStartOf="@id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@id/teachersText"></LinearLayout>
 
 	</android.support.constraint.ConstraintLayout>
