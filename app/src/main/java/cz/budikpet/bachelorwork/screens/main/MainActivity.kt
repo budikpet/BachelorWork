@@ -134,7 +134,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder) as EventViewFragment
         }
 
-        displaySelectedFragment(viewModel.selectedSidebar)
+        displaySelectedFragment(viewModel.selectedSidebarItem)
     }
 
     private fun displaySelectedFragment(itemId: Int) {
@@ -159,7 +159,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             }
             setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
         }
-        viewModel.selectedSidebar = itemId
+        viewModel.selectedSidebarItem = itemId
     }
 
     private fun subscribeObservers() {

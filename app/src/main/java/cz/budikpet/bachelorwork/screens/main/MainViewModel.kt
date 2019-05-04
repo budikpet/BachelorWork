@@ -44,7 +44,7 @@ class MainViewModel : ViewModel() {
     private var compositeDisposable = CompositeDisposable()
 
     /** Contains ID of the selected sidebar item */
-    var selectedSidebar = R.id.sidebarWeekView
+    var selectedSidebarItem = R.id.sidebarWeekView
 
     /** Username of the CTU account that was used to log in. */
     val ctuUsername by lazy { repository.ctuUsername }
@@ -420,6 +420,11 @@ class MainViewModel : ViewModel() {
                 return@flatMapMaybe Maybe.just(SearchItem(username, type = ItemType.UNKNOWN))
             }
             .toList()
+            .map {
+                it.sortedWith(Comparator { searchItem1, searchItem2 ->
+                    searchItem1.type.ordinal - searchItem2.type.ordinal
+                })
+            }
             .subscribeOn(Schedulers.io())
             .subscribe(
                 { result ->
