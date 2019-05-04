@@ -1,27 +1,27 @@
 package cz.budikpet.bachelorwork.screens.multidayView
 
 import android.app.DatePickerDialog
+import android.app.SearchManager
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.content.Context
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
 import android.support.v4.view.ViewPager
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.SearchView
 import android.util.Log
 import android.view.*
 import android.widget.ProgressBar
-import android.widget.Toast
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
-import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
 import org.joda.time.DateTime
 import org.joda.time.Interval
-import retrofit2.HttpException
 
 class MultidayFragmentHolder : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
@@ -79,12 +79,65 @@ class MultidayFragmentHolder : Fragment() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+        inflater?.inflate(R.menu.multiday_view_bar, menu)
         super.onCreateOptionsMenu(menu, inflater)
+
+        val searchMenuItem = menu?.findItem(R.id.itemSearch)!!
+        val searchView = searchMenuItem.actionView as SearchView
+        val searchManager = activity?.getSystemService(Context.SEARCH_SERVICE) as SearchManager
+        searchView.setSearchableInfo(searchManager.getSearchableInfo(activity?.componentName))
+        searchView.isSubmitButtonEnabled = true
+
+        // Watch for user input
+        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
+            override fun onQueryTextChange(query: String?): Boolean {
+                if (query != null) {
+                    viewModel.lastSearchQuery = query
+
+                    if (query.count() >= 1) {
+                        viewModel.searchSirius(query)
+                    }
+                }
+                return true
+            }
+
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                Log.i(TAG, "Submitted: <$query>")
+                viewModel.lastSearchQuery = ""
+                return true
+            }
+
+        })
+
+        // Watch when the user closes the searchView
+        searchMenuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
+                // User entered the searchView
+                if(!viewModel.checkInternetConnection()) {
+                    viewModel.thrownException.postValue(NoInternetConnectionException())
+                }
+
+                return true
+            }
+
+            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
+                // User left the searchView
+                return true
+            }
+
+        })
+
+        // Restore the search view after configuration changes
+        val query = viewModel.lastSearchQuery
+        if (query.count() > 0) {
+            // There are searchItems now
+            searchMenuItem.expandActionView()
+            searchView.setQuery(query, false)
+        }
 
         itemGoToToday = menu?.findItem(R.id.itemGoToToday)
 
         val adapter = viewPager.adapter as ViewPagerAdapter
-
         if (adapter != null)
             updateAppBar(adapter.dateFromPosition(pagerPosition))
     }
@@ -122,10 +175,8 @@ class MultidayFragmentHolder : Fragment() {
             updateAppBar(viewModel.currentlySelectedDate)
         })
 
-        viewModel.thrownException.observe(this, Observer {
-            if (it != null) {
-                handleException(it)
-            }
+        viewModel.searchItems.observe(this, Observer { searchItemsList ->
+
         })
     }
 
@@ -200,29 +251,6 @@ class MultidayFragmentHolder : Fragment() {
         val currUsername = viewModel.timetableOwner.value?.first
         if (currUsername != null) {
             supportActionBar.setDisplayHomeAsUpEnabled(currUsername != viewModel.ctuUsername)
-//            supportActionBar.setBackgroundDrawable(ColorDrawable(Color.RED));
         }
-    }
-
-    private fun handleException(exception: Throwable) {
-        // TODO: Implement
-        var text = "Unknown exception occurred."
-
-        if (exception is GoogleAccountNotFoundException) {
-            // Prompt the user to select a new google account
-            Log.e(TAG, "Used google account not found.")
-        } else if (exception is HttpException) {
-            Log.e(TAG, "Retrofit 2 HTTP ${exception.code()} exception: ${exception.response()}")
-            if (exception.code() == 500) {
-                text = "CTU internal server error occured. Please try again."
-            }
-        } else if (exception is NoInternetConnectionException) {
-            Log.e(TAG, "Could not connect to the internet.")
-            text = exception.message!!
-        } else {
-            Log.e(TAG, "Unknown exception occurred: $exception")
-        }
-
-        Toast.makeText(context, text, Toast.LENGTH_LONG).show()
     }
 }

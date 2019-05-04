@@ -21,6 +21,7 @@ import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.Toast
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
@@ -33,6 +34,7 @@ import cz.budikpet.bachelorwork.util.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import pub.devrel.easypermissions.EasyPermissions
+import retrofit2.HttpException
 import javax.inject.Inject
 
 
@@ -84,9 +86,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
         initFragments(savedInstanceState)
 
-        searchSuggestions = this.findViewById(R.id.searchSuggestions)
-        searchSuggestions.layoutManager = LinearLayoutManager(this)
-        searchSuggestions.addItemDecoration(MarginItemDecoration(4.toDp(this)))
+        initSearchSuggestionRecyclerView()
 
         subscribeObservers()
 
@@ -162,6 +162,22 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         viewModel.selectedSidebarItem = itemId
     }
 
+    private fun initSearchSuggestionRecyclerView() {
+        searchSuggestions = this.findViewById(R.id.searchSuggestions)
+        searchSuggestions.layoutManager = LinearLayoutManager(this)
+        searchSuggestions.addItemDecoration(MarginItemDecoration(4.toDp(this)))
+        // Init searchSuggestions RecyclerView adapter
+        val adapter = SearchSuggestionsAdapter(this, onItemClickFunction = {
+            // Signal to exit search
+            viewModel.searchItems.postValue(listOf())
+            viewModel.lastSearchQuery = ""
+
+            // Get events of the picked item
+            viewModel.timetableOwner.postValue(Pair(it.id, it.type))
+        })
+        searchSuggestions.adapter = adapter
+    }
+
     private fun subscribeObservers() {
         viewModel.searchItems.observe(this, Observer { searchItems ->
             if (searchItems != null && searchItems.isNotEmpty()) {
@@ -191,6 +207,12 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                     supportActionBar?.show()
                     hide(eventViewFragment)
                 }
+            }
+        })
+
+        viewModel.thrownException.observe(this, Observer {
+            if (it != null) {
+                handleException(it)
             }
         })
     }
@@ -266,74 +288,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.main_bar, menu)
-
-        val searchMenuItem = menu?.findItem(R.id.itemSearch)!!
-        val searchView = searchMenuItem.actionView as SearchView
-        val searchManager = getSystemService(Context.SEARCH_SERVICE) as SearchManager
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(componentName))
-        searchView.isSubmitButtonEnabled = true
-
-        // Init searchSuggestions RecyclerView adapter
-        val adapter = SearchSuggestionsAdapter(this, onItemClickFunction = {
-            searchMenuItem.collapseActionView()
-
-            // Get events of the picked item
-            viewModel.timetableOwner.postValue(Pair(it.id, it.type))
-        })
-        searchSuggestions.adapter = adapter
-
-        // Watch for user input
-        searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-            override fun onQueryTextChange(query: String?): Boolean {
-                if (query != null) {
-                    viewModel.lastSearchQuery = query
-
-                    if (query.count() >= 1) {
-                        viewModel.searchSirius(query)
-                    }
-                }
-                return true
-            }
-
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                Log.i(TAG, "Submitted: <$query>")
-                viewModel.lastSearchQuery = ""
-                return true
-            }
-
-        })
-
-        // Watch when the user closes the searchView
-        searchMenuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
-            override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
-                // User entered the searchView
-                searchSuggestions.visibility = View.VISIBLE
-
-                if(!viewModel.checkInternetConnection()) {
-                    viewModel.thrownException.postValue(NoInternetConnectionException())
-                }
-
-                return true
-            }
-
-            override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
-                // User left the searchView
-                adapter.clear()
-                viewModel.lastSearchQuery = ""
-                searchSuggestions.visibility = View.GONE
-                return true
-            }
-
-        })
-
-        // Restore the search view after configuration changes
-        val query = viewModel.lastSearchQuery
-        if (query.count() > 0) {
-            // There are searchItems now
-            searchMenuItem.expandActionView()
-            searchView.setQuery(query, false)
-        }
-
         return super.onCreateOptionsMenu(menu)
     }
 
@@ -344,9 +298,32 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
             return true
         }
-
-
+        
         return super.onOptionsItemSelected(item)
+    }
+
+    // MARK: Exceptions
+
+    private fun handleException(exception: Throwable) {
+        // TODO: Implement
+        var text = "Unknown exception occurred."
+
+        if (exception is GoogleAccountNotFoundException) {
+            // Prompt the user to select a new google account
+            Log.e(TAG, "Used google account not found.")
+        } else if (exception is HttpException) {
+            Log.e(TAG, "Retrofit 2 HTTP ${exception.code()} exception: ${exception.response()}")
+            if (exception.code() == 500) {
+                text = "CTU internal server error occured. Please try again."
+            }
+        } else if (exception is NoInternetConnectionException) {
+            Log.e(TAG, "Could not connect to the internet.")
+            text = exception.message!!
+        } else {
+            Log.e(TAG, "Unknown exception occurred: $exception")
+        }
+
+        Toast.makeText(this, text, Toast.LENGTH_LONG).show()
     }
 
     // MARK: Permissions
