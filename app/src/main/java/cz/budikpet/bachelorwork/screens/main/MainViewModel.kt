@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.google.api.services.calendar.model.CalendarListEntry
 import cz.budikpet.bachelorwork.MyApplication
+import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
@@ -42,6 +43,9 @@ class MainViewModel : ViewModel() {
 
     private var compositeDisposable = CompositeDisposable()
 
+    /** Contains ID of the selected sidebar item */
+    var selectedSidebar = R.id.sidebarWeekView
+
     /** Username of the CTU account that was used to log in. */
     val ctuUsername by lazy { repository.ctuUsername }
 
@@ -54,7 +58,7 @@ class MainViewModel : ViewModel() {
     val events = MutableLiveData<List<TimetableEvent>>()
 
     /** All timetables that were saved to the Google Calendar. */
-    val savedTimetables = MutableLiveData<List<SearchItem>>()
+    val savedTimetables = MutableLiveData<ArrayList<SearchItem>>()
 
     // MARK: State
 
@@ -419,7 +423,7 @@ class MainViewModel : ViewModel() {
             .subscribeOn(Schedulers.io())
             .subscribe(
                 { result ->
-                    savedTimetables.postValue(result)
+                    savedTimetables.postValue(ArrayList(result))
                 },
                 { error ->
                     Log.e(TAG, "UpdateSavedTimetables: $error")

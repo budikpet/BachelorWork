@@ -14,6 +14,9 @@
 			android:id="@+id/sidebarWeekView"
 			android:icon="@drawable/ic_view_week_black_24dp"
 			android:title="@string/sidebar_WeekView" />
+		<item
+			android:id="@+id/sidebarSavedCalendars"
+			android:title="@string/sidebar_SavedCalendars" />
 	</group>
 	<item
 		android:id="@+id/sidebarSettings"

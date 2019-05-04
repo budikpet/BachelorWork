@@ -42,5 +42,6 @@
 	<string name="sidebar_dayView">Denní zobrazení</string>
 	<string name="sidebar_3DaysView">3denní zobrazení</string>
 	<string name="sidebar_WeekView">Týdenní zobrazení</string>
+	<string name="sidebar_SavedCalendars">Uložené kalendáře</string>
 
 </resources>

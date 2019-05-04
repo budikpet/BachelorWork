@@ -26,6 +26,7 @@ import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
+import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
 import cz.budikpet.bachelorwork.util.*
@@ -56,7 +57,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     private lateinit var searchSuggestions: RecyclerView
 
     private lateinit var permissionsCheckerFragment: PermissionsCheckerFragment
-    private lateinit var multidayFragmentHolder: MultidayFragmentHolder
     private lateinit var eventViewFragment: EventViewFragment
 
     private val alertDialogBuilder: AlertDialog.Builder by lazy {
@@ -75,6 +75,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         MyApplication.appComponent.inject(this)
+        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
         val toolbar = findViewById<Toolbar>(R.id.customToolbar)
         setSupportActionBar(toolbar)
@@ -83,7 +84,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
         initFragments(savedInstanceState)
 
-        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
         searchSuggestions = this.findViewById(R.id.searchSuggestions)
         searchSuggestions.layoutManager = LinearLayoutManager(this)
         searchSuggestions.addItemDecoration(MarginItemDecoration(4.toDp(this)))
@@ -98,29 +98,19 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         checkGoogleLogin()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        // TODO: Need to test disposing
+        viewModel.onDestroy()
+    }
+
     private fun initSideBar() {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
         val sidebarNavView = findViewById<NavigationView>(R.id.sidebarNavView)
 
         sidebarNavView.setNavigationItemSelectedListener {sidebarItem ->
-            when(sidebarItem.itemId) {
-                R.id.sidebarDayView -> {
-                    viewModel.daysPerMultidayViewFragment = 1
-                    multidayFragmentHolder.resetViewPager(viewModel.currentlySelectedDate)
-                }
-                R.id.sidebarThreeDayView -> {
-                    viewModel.daysPerMultidayViewFragment = 3
-                    multidayFragmentHolder.resetViewPager(viewModel.currentlySelectedDate)
-                }
-                R.id.sidebarWeekView -> {
-                    viewModel.daysPerMultidayViewFragment = 7
-                    multidayFragmentHolder.resetViewPager(viewModel.currentlySelectedDate)
-                }
-                R.id.sidebarSettings -> Log.i(TAG, "settings")
-            }
-
+            displaySelectedFragment(sidebarItem.itemId)
             drawerLayout.closeDrawer(Gravity.START)
-
             true
         }
     }
@@ -128,12 +118,10 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     private fun initFragments(savedInstanceState: Bundle?) {
         if (savedInstanceState == null) {
             permissionsCheckerFragment = PermissionsCheckerFragment()
-            multidayFragmentHolder = MultidayFragmentHolder()
             eventViewFragment = EventViewFragment()
 
             supportFragmentManager.inTransaction {
                 add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
-                add(R.id.multidayViewFragmentHolder, multidayFragmentHolder)
                 add(R.id.eventViewFragmentHolder, eventViewFragment)
                 hide(eventViewFragment)
             }
@@ -142,18 +130,36 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             permissionsCheckerFragment =
                 supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
 
-            multidayFragmentHolder =
-                supportFragmentManager.findFragmentById(R.id.multidayViewFragmentHolder) as MultidayFragmentHolder
-
             eventViewFragment =
                 supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder) as EventViewFragment
         }
+
+        displaySelectedFragment(viewModel.selectedSidebar)
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        // TODO: Need to test disposing
-        viewModel.onDestroy()
+    private fun displaySelectedFragment(itemId: Int) {
+        supportFragmentManager.inTransaction {
+            when(itemId) {
+                R.id.sidebarDayView -> {
+                    viewModel.daysPerMultidayViewFragment = 1
+                    replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
+                }
+                R.id.sidebarThreeDayView -> {
+                    viewModel.daysPerMultidayViewFragment = 3
+                    replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
+                }
+                R.id.sidebarWeekView -> {
+                    viewModel.daysPerMultidayViewFragment = 7
+                    replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
+                }
+                R.id.sidebarSavedCalendars -> {
+                    replace(R.id.mainFragmentHolder, CalendarsListFragment())
+                }
+                R.id.sidebarSettings -> Log.i(TAG, "settings")
+            }
+            setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+        }
+        viewModel.selectedSidebar = itemId
     }
 
     private fun subscribeObservers() {

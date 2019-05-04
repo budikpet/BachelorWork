@@ -41,4 +41,5 @@
 	<string name="sidebar_dayView">Day view</string>
 	<string name="sidebar_3DaysView">3 days view</string>
 	<string name="sidebar_WeekView">Week view</string>
+	<string name="sidebar_SavedCalendars">Saved Calendars</string>
 </resources>
