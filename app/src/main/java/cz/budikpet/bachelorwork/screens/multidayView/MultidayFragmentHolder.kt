@@ -19,6 +19,7 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
+import kotlinx.android.synthetic.main.fragment_holder_multiday.*
 import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
 import org.joda.time.DateTime
 import org.joda.time.Interval
@@ -29,9 +30,10 @@ class MultidayFragmentHolder : Fragment() {
     private val PREFILLED_WEEKS = 151
 
     private lateinit var viewPager: ViewPager
-    private lateinit var progressBar: ProgressBar
     private lateinit var supportActionBar: ActionBar
+
     private var itemGoToToday: MenuItem? = null
+    private lateinit var searchMenuItem: MenuItem
 
     private var pagerPosition = PREFILLED_WEEKS / 2
 
@@ -73,7 +75,6 @@ class MultidayFragmentHolder : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val layout = inflater.inflate(R.layout.fragment_holder_multiday, container, false) as ConstraintLayout
         viewPager = layout.viewPager
-        progressBar = layout.progressBar
         setupViewPager()
         return layout
     }
@@ -82,7 +83,7 @@ class MultidayFragmentHolder : Fragment() {
         inflater?.inflate(R.menu.multiday_view_bar, menu)
         super.onCreateOptionsMenu(menu, inflater)
 
-        val searchMenuItem = menu?.findItem(R.id.itemSearch)!!
+        searchMenuItem = menu?.findItem(R.id.itemSearch)!!
         val searchView = searchMenuItem.actionView as SearchView
         val searchManager = activity?.getSystemService(Context.SEARCH_SERVICE) as SearchManager
         searchView.setSearchableInfo(searchManager.getSearchableInfo(activity?.componentName))
@@ -135,9 +136,9 @@ class MultidayFragmentHolder : Fragment() {
             searchView.setQuery(query, false)
         }
 
-        itemGoToToday = menu?.findItem(R.id.itemGoToToday)
+        itemGoToToday = menu.findItem(R.id.itemGoToToday)
 
-        val adapter = viewPager.adapter as ViewPagerAdapter
+        val adapter = viewPager.adapter as ViewPagerAdapter?
         if (adapter != null)
             updateAppBar(adapter.dateFromPosition(pagerPosition))
     }
@@ -157,26 +158,14 @@ class MultidayFragmentHolder : Fragment() {
 
     private fun subscribeObservers() {
 
-        viewModel.operationRunning.observe(this, Observer { updating ->
-            Log.i(TAG, "Calendars updating: $updating")
-
-            if (updating != null) {
-                if (!updating) {
-                    // Update done
-                    progressBar.visibility = View.GONE
-                } else {
-                    // Update started
-                    progressBar.visibility = View.VISIBLE
-                }
-            }
-        })
-
         viewModel.timetableOwner.observe(this, Observer {
             updateAppBar(viewModel.currentlySelectedDate)
         })
 
         viewModel.searchItems.observe(this, Observer { searchItemsList ->
-
+            if(searchItemsList != null && searchItemsList.isEmpty() && viewModel.lastSearchQuery == "") {
+                // Deactivate searchView
+            }
         })
     }
 

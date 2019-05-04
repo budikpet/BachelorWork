@@ -21,6 +21,7 @@ import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
+import android.widget.ProgressBar
 import android.widget.Toast
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
@@ -31,6 +32,7 @@ import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
 import cz.budikpet.bachelorwork.util.*
+import kotlinx.android.synthetic.main.fragment_holder_multiday.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import pub.devrel.easypermissions.EasyPermissions
@@ -57,6 +59,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     internal lateinit var sharedPreferences: SharedPreferences
 
     private lateinit var searchSuggestions: RecyclerView
+    private lateinit var progressBar: ProgressBar
 
     private lateinit var permissionsCheckerFragment: PermissionsCheckerFragment
     private lateinit var eventViewFragment: EventViewFragment
@@ -81,6 +84,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
         val toolbar = findViewById<Toolbar>(R.id.customToolbar)
         setSupportActionBar(toolbar)
+        progressBar = findViewById(R.id.progressBar)
 
         initSideBar()
 
@@ -179,6 +183,20 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     }
 
     private fun subscribeObservers() {
+        viewModel.operationRunning.observe(this, Observer { updating ->
+            Log.i(TAG, "Calendars updating: $updating")
+
+            if (updating != null) {
+                if (!updating) {
+                    // Update done
+                    progressBar.visibility = View.GONE
+                } else {
+                    // Update started
+                    progressBar.visibility = View.VISIBLE
+                }
+            }
+        })
+
         viewModel.searchItems.observe(this, Observer { searchItems ->
             if (searchItems != null && searchItems.isNotEmpty()) {
                 val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter?
@@ -298,7 +316,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
             return true
         }
-        
+
         return super.onOptionsItemSelected(item)
     }
 
