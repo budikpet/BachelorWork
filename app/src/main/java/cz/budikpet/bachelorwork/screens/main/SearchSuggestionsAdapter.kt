@@ -5,6 +5,7 @@ import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
@@ -28,6 +29,7 @@ class SearchSuggestionsAdapter(
         val searchItem = items.elementAt(index)
         holder.id.text = searchItem.id
         holder.title.text = searchItem.title
+        setImage(searchItem, holder)
 
         holder.parentView.setOnClickListener(listener)
         holder.parentView.tag = searchItem
@@ -40,11 +42,21 @@ class SearchSuggestionsAdapter(
         }
     }
 
-
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val searchItemView = LayoutInflater.from(context).inflate(R.layout.search_item_card, parent, false)
         searchItemView.setOnClickListener(listener)
         return ViewHolder(searchItemView)
+    }
+
+    private fun setImage(searchItem: SearchItem, holder: ViewHolder) {
+        val itemId = when(searchItem.type) {
+            ItemType.ROOM -> R.drawable.ic_place_black_24dp
+            ItemType.PERSON -> R.drawable.ic_person_black_24dp
+            ItemType.COURSE -> R.drawable.ic_class_black_24dp
+            ItemType.UNKNOWN -> android.R.drawable.screen_background_light_transparent
+        }
+
+        holder.image.setImageResource(itemId);
     }
 
     fun clear() {
@@ -60,8 +72,9 @@ class SearchSuggestionsAdapter(
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val parentView = itemView
-        val id: TextView = itemView.searchItemId2
-        val title: TextView = itemView.searchItemTitle2
+        val id: TextView = itemView.searchItemId
+        val title: TextView = itemView.searchItemTitle
+        val image: ImageView = itemView.itemImage
     }
 
 }

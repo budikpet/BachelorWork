@@ -14,7 +14,7 @@
 		android:layout_height="match_parent">
 
 		<TextView
-			android:id="@+id/searchItemTitle2"
+			android:id="@+id/searchItemTitle"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginStart="8dp"
@@ -25,32 +25,33 @@
 			tools:text="DummyTitle" />
 
 		<TextView
-			android:id="@+id/searchItemId2"
+			android:id="@+id/searchItemId"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginStart="8dp"
 			android:layout_marginBottom="8dp"
 			card_view:layout_constraintBottom_toBottomOf="parent"
 			card_view:layout_constraintStart_toEndOf="@+id/barrier"
-			card_view:layout_constraintTop_toBottomOf="@+id/searchItemTitle2"
+			card_view:layout_constraintTop_toBottomOf="@+id/searchItemTitle"
 			tools:text="DummyId" />
 
 		<ImageView
-			android:id="@+id/imageView"
+			android:id="@+id/itemImage"
 			android:layout_width="36dp"
-			android:layout_height="35dp"
+			android:layout_height="0dp"
 			android:layout_marginStart="8dp"
-			card_view:layout_constraintBottom_toBottomOf="@+id/searchItemId2"
+			card_view:layout_constraintBottom_toBottomOf="@+id/searchItemId"
 			card_view:layout_constraintStart_toStartOf="parent"
-			card_view:layout_constraintTop_toTopOf="@+id/searchItemTitle2"
-			card_view:srcCompat="@drawable/ic_person_black_24dp" />
+			card_view:layout_constraintTop_toTopOf="@+id/searchItemTitle"
+			card_view:layout_constraintVertical_bias="0.0"
+			tools:srcCompat="@drawable/ic_person_black_24dp" />
 
 		<android.support.constraint.Barrier
 			android:id="@+id/barrier"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			card_view:barrierDirection="end"
-			card_view:constraint_referenced_ids="imageView"
+			card_view:constraint_referenced_ids="itemImage"
 			tools:layout_editor_absoluteX="411dp" />
 	</android.support.constraint.ConstraintLayout>
 
