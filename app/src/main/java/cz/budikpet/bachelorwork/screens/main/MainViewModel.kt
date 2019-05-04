@@ -403,7 +403,7 @@ class MainViewModel : ViewModel() {
      *
      * If the internet connection is unavailable the default SearchItems with usernames only are saved.
      */
-    fun updateSavedTimetables() {
+    private fun updateSavedTimetables() {
         val disposable = repository.getLocalCalendarListItems()
             .flatMapMaybe {
                 val username = it.displayName.substringBefore('_')

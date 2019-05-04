@@ -7,8 +7,9 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.SearchItem
-import kotlinx.android.synthetic.main.search_item.view.*
+import kotlinx.android.synthetic.main.search_item_card.view.*
 
 class SearchSuggestionsAdapter(
     val context: Context,
@@ -31,15 +32,17 @@ class SearchSuggestionsAdapter(
         holder.parentView.setOnClickListener(listener)
         holder.parentView.tag = searchItem
 
-        holder.title.visibility = when {
-            searchItem.title == "" -> View.GONE
-            else -> View.VISIBLE
+        if(searchItem.title == null || searchItem.title == "") {
+            holder.id.visibility = View.GONE
+            holder.title.text = searchItem.id
+        } else {
+            holder.id.visibility = View.VISIBLE
         }
     }
 
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-        val searchItemView = LayoutInflater.from(context).inflate(R.layout.search_item, parent, false)
+        val searchItemView = LayoutInflater.from(context).inflate(R.layout.search_item_card, parent, false)
         searchItemView.setOnClickListener(listener)
         return ViewHolder(searchItemView)
     }
@@ -57,8 +60,8 @@ class SearchSuggestionsAdapter(
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         val parentView = itemView
-        val id: TextView = itemView.searchItemId
-        val title: TextView = itemView.searchItemTitle
+        val id: TextView = itemView.searchItemId2
+        val title: TextView = itemView.searchItemTitle2
     }
 
 }
