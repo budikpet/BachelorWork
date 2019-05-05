@@ -7,6 +7,7 @@ import android.util.Log
 import com.google.api.services.calendar.model.CalendarListEntry
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.MyApplication.Companion.calendarNameFromId
+import cz.budikpet.bachelorwork.MyApplication.Companion.idFromCalendarName
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.EventType
@@ -198,7 +199,7 @@ class MainViewModel : ViewModel() {
 
         if (currOwner == null) {
             timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
-            updateSavedTimetables()
+            updateSavedTimetables(true)
         }
     }
 
@@ -303,7 +304,7 @@ class MainViewModel : ViewModel() {
 
         if (!personalCalendarFound) {
             Log.i(TAG, "Creating personal calendar: $personalCalendarName")
-            completable = completable.andThen(repository.addSecondaryGoogleCalendar(personalCalendarName))
+            completable = completable.andThen(repository.addGoogleCalendar(personalCalendarName))
         }
 
         return completable
@@ -315,7 +316,7 @@ class MainViewModel : ViewModel() {
      */
     private fun getSiriusEventsList(calendarListItem: CalendarListItem): Observable<MutableList<TimetableEvent>>? {
         // Get id from calendar display name - username, room number...
-        val id = calendarListItem.displayName.substringBefore("_")
+        val id = idFromCalendarName(calendarListItem.displayName)
 
         return repository.searchSirius(id)
             .filter { searchItem -> searchItem.id == id }
@@ -404,13 +405,26 @@ class MainViewModel : ViewModel() {
         return updatedEventsInterval != null && updatedEventsInterval.isEqual(loadedEventsInterval)
     }
 
+    /**
+     * @return true if the currently selected timetable is available offline.
+     */
+    fun isSelectedCalendarAvailableOffline(): Boolean {
+        val savedTimetables = this.savedTimetables.value
+        val timetableOwnerUsername = this.timetableOwner.value?.first
+
+        if(savedTimetables != null && timetableOwnerUsername != null) {
+            return savedTimetables.any { it.id == timetableOwnerUsername }
+        }
+
+        return false
+    }
+
     fun removeCalendar(calendarName: String) {
         val disposable = repository.getGoogleCalendar(calendarName)
             .flatMapCompletable {
                 repository.removeGoogleCalendar(it)
             }
             .subscribeOn(Schedulers.io())
-//            .observeOn(AndroidSchedulers.mainThread())
             .onErrorComplete { exception ->
                 Log.e(TAG, "RemoveCalendar error: $exception")
                 thrownException.postValue(exception)
@@ -418,9 +432,23 @@ class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Calendar removed")
+                updateSavedTimetables(true)
+            }
 
-                // Refresh Google Calendar without waiting
-                repository.startCalendarRefresh()
+        compositeDisposable.add(disposable)
+    }
+
+    fun addCalendar(calendarName: String) {
+        val disposable = repository.addGoogleCalendar(calendarName)
+            .subscribeOn(Schedulers.io())
+            .onErrorComplete { exception ->
+                Log.e(TAG, "AddCalendar error: $exception")
+                thrownException.postValue(exception)
+                return@onErrorComplete true
+            }
+            .subscribe {
+                Log.i(TAG, "Calendar added")
+                updateSavedTimetables(true)
             }
 
         compositeDisposable.add(disposable)
@@ -431,10 +459,17 @@ class MainViewModel : ViewModel() {
      *
      * If the internet connection is unavailable the default SearchItems with usernames only are saved.
      */
-    private fun updateSavedTimetables() {
-        val disposable = repository.getLocalCalendarListItems()
+    private fun updateSavedTimetables(refreshCalendars: Boolean = false) {
+        // Update calendars if needed
+        val obs = when(refreshCalendars) {
+            true -> repository.refreshCalendars().andThen(repository.getLocalCalendarListItems())
+            false -> repository.getLocalCalendarListItems()
+        }
+
+
+        val disposable = obs
             .flatMapMaybe {
-                val username = it.displayName.substringBefore('_')
+                val username = idFromCalendarName(it.displayName)
 
                 if(repository.checkInternetConnection()) {
                     // We have internet connection so we can call search endpoint

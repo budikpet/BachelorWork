@@ -577,15 +577,15 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Create and add a new secondary Google calendar using Google Calendar API.
      *
-     * @param name name of the new calendar.
+     * @param calendarName calendarName of the new calendar.
      */
-    fun addSecondaryGoogleCalendar(name: String): Completable {
+    fun addGoogleCalendar(calendarName: String): Completable {
         return hasInternetConnection()
             .flatMap {
                 Single.fromCallable {
                     // Create the calendar
                     val calendarModel = com.google.api.services.calendar.model.Calendar()
-                    calendarModel.summary = name
+                    calendarModel.summary = calendarName
 
                     calendarService.calendars()
                         .insert(calendarModel)

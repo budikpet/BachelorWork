@@ -30,34 +30,31 @@ class CalendarsListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
     /** Undo snackbar. */
     private val snackbar: Snackbar by lazy {
         val mainActivityLayout = activity?.findViewById<ConstraintLayout>(R.id.main_activity)
-        val snackbar = Snackbar.make(
-            mainActivityLayout!!, getString(R.string.snackbar_Text),
-            Snackbar.LENGTH_LONG
-        )
-        .setAction(getString(R.string.snackbar_Undo)) {
-            val adapter = calendarsList.adapter as CalendarsListAdapter?
-            adapter?.undoDelete()
-        }
-        snackbar.addCallback(object: Snackbar.Callback() {
-            override fun onDismissed(snackbar: Snackbar, event: Int) {
-                if(event != DISMISS_EVENT_ACTION) {
-                    // Undo button was not pressed, delete the calendar
-                    val adapter = calendarsList.adapter as CalendarsListAdapter?
-                    val deletedItem = adapter?.recentlyDeletedItem?.second
+        val snackbar = Snackbar
+            .make(
+                mainActivityLayout!!, getString(R.string.snackbar_CalendarUnavailable),
+                Snackbar.LENGTH_LONG
+            )
+            .setAction(getString(R.string.snackbar_Undo)) {
+                val adapter = calendarsList.adapter as CalendarsListAdapter?
+                adapter?.undoDelete()
+            }
+            .addCallback(object : Snackbar.Callback() {
+                override fun onDismissed(snackbar: Snackbar, event: Int) {
+                    if (event != DISMISS_EVENT_ACTION) {
+                        // Undo button was not pressed, delete the calendar
+                        val adapter = calendarsList.adapter as CalendarsListAdapter?
+                        val deletedItem = adapter?.recentlyDeletedItem?.second
 
-                    if(adapter != null && deletedItem != null) {
-                        // Remove the calendar from the Google Calendar service
-                        viewModel.removeCalendar(MyApplication.calendarNameFromId(deletedItem.id))
+                        if (adapter != null && deletedItem != null) {
+                            // Remove the calendar from the Google Calendar service
+                            viewModel.removeCalendar(MyApplication.calendarNameFromId(deletedItem.id))
+                        }
                     }
                 }
-            }
 
-            override fun onShown(snackbar: Snackbar) {
-                val adapter = calendarsList.adapter as CalendarsListAdapter?
-
-                if(adapter != null) {}
-            }
-        })
+                override fun onShown(snackbar: Snackbar) {}
+            })
 
         return@lazy snackbar
     }

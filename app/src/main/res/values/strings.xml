@@ -41,7 +41,8 @@
 	<string name="sidebar_dayView">Day view</string>
 	<string name="sidebar_3DaysView">3 days view</string>
 	<string name="sidebar_WeekView">Week view</string>
-	<string name="sidebar_SavedCalendars">Saved Calendars</string>
+	<string name="sidebar_SavedCalendars">Saved timetables</string>
 	<string name="snackbar_Undo">Undo</string>
-	<string name="snackbar_Text">Calendar deleted</string>
+	<string name="snackbar_CalendarUnavailable">Timetable will no longer be available offline.</string>
+	<string name="snackbar_CalendarAvailable">Timetable will be made available offline.</string>
 </resources>

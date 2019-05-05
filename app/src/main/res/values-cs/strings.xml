@@ -42,8 +42,8 @@
 	<string name="sidebar_dayView">Denní zobrazení</string>
 	<string name="sidebar_3DaysView">3denní zobrazení</string>
 	<string name="sidebar_WeekView">Týdenní zobrazení</string>
-	<string name="sidebar_SavedCalendars">Uložené kalendáře</string>
+	<string name="sidebar_SavedCalendars">Uložené rozvrhy hodin</string>
 	<string name="snackbar_Undo">Vrátit</string>
-	<string name="snackbar_Text">Kalendář smazán</string>
-
+	<string name="snackbar_CalendarUnavailable">Rozvrh hodin již nebude dostupný offline.</string>
+	<string name="snackbar_CalendarAvailable">Rozvrh hodin bude zpřístupněn offline.</string>
 </resources>

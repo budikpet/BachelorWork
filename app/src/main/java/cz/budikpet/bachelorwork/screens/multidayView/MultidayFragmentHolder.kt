@@ -7,20 +7,20 @@ import android.arch.lifecycle.ViewModelProviders
 import android.content.Context
 import android.os.Bundle
 import android.support.constraint.ConstraintLayout
+import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
 import android.support.v4.view.ViewPager
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.SearchView
 import android.util.Log
 import android.view.*
-import android.widget.ProgressBar
+import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
-import kotlinx.android.synthetic.main.fragment_holder_multiday.*
-import kotlinx.android.synthetic.main.fragment_holder_multiday.view.*
 import org.joda.time.DateTime
 import org.joda.time.Interval
 
@@ -32,12 +32,45 @@ class MultidayFragmentHolder : Fragment() {
     private lateinit var viewPager: ViewPager
     private lateinit var supportActionBar: ActionBar
 
+    private var offlineAvailableMenuItem: MenuItem? = null
     private var itemGoToToday: MenuItem? = null
-    private lateinit var searchMenuItem: MenuItem
+    private var searchMenuItem: MenuItem? = null
 
     private var pagerPosition = PREFILLED_WEEKS / 2
 
     private lateinit var viewModel: MainViewModel
+
+    private val snackbar: Snackbar by lazy {
+        val mainActivityLayout = activity?.findViewById<ConstraintLayout>(R.id.main_activity)
+        val snackbar = Snackbar
+            .make(
+                mainActivityLayout!!, getString(R.string.snackbar_CalendarUnavailable),
+                Snackbar.LENGTH_LONG
+            )
+            .setAction(getString(R.string.snackbar_Undo)) {
+                // Change the menuItem back
+                updateOfflineAvailableItem(viewModel.isSelectedCalendarAvailableOffline())
+            }
+            .addCallback(object : Snackbar.Callback() {
+                override fun onDismissed(snackbar: Snackbar, event: Int) {
+                    if (event != DISMISS_EVENT_ACTION) {
+                        // Undo button was not pressed, make timetable available/unavailable offline
+                        val calendarName = MyApplication.calendarNameFromId(viewModel.timetableOwner.value!!.first)
+                        if (viewModel.isSelectedCalendarAvailableOffline()) {
+                            // Available offline, remove
+                            viewModel.removeCalendar(calendarName)
+                        } else {
+                            // Unavailable offline, add
+                            viewModel.addCalendar(calendarName)
+                        }
+                    }
+                }
+
+                override fun onShown(snackbar: Snackbar) {}
+            })
+
+        return@lazy snackbar
+    }
 
     private val datePickerDialog: DatePickerDialog by lazy {
         val listener = DatePickerDialog.OnDateSetListener { datePicker, year, month, dayOfMonth ->
@@ -82,8 +115,10 @@ class MultidayFragmentHolder : Fragment() {
         inflater?.inflate(R.menu.multiday_view_bar, menu)
         super.onCreateOptionsMenu(menu, inflater)
 
+        offlineAvailableMenuItem = menu?.findItem(R.id.itemOfflineAvailable)
+
         searchMenuItem = menu?.findItem(R.id.itemSearch)!!
-        val searchView = searchMenuItem.actionView as SearchView
+        val searchView = searchMenuItem?.actionView as SearchView
         val searchManager = activity?.getSystemService(Context.SEARCH_SERVICE) as SearchManager
         searchView.setSearchableInfo(searchManager.getSearchableInfo(activity?.componentName))
         searchView.isSubmitButtonEnabled = true
@@ -110,10 +145,10 @@ class MultidayFragmentHolder : Fragment() {
         })
 
         // Watch when the user closes the searchView
-        searchMenuItem.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
+        searchMenuItem?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
                 // User entered the searchView
-                if(!viewModel.checkInternetConnection()) {
+                if (!viewModel.checkInternetConnection()) {
                     viewModel.thrownException.postValue(NoInternetConnectionException())
                 }
 
@@ -133,7 +168,7 @@ class MultidayFragmentHolder : Fragment() {
         val query = viewModel.lastSearchQuery
         if (query.count() > 0) {
             // There are searchItems now
-            searchMenuItem.expandActionView()
+            searchMenuItem?.expandActionView()
             searchView.setQuery(query, false)
         }
 
@@ -145,16 +180,35 @@ class MultidayFragmentHolder : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when {
-            item?.itemId == R.id.itemGoToToday -> resetViewPager()
-            item?.itemId == R.id.itemGoToDate -> datePickerDialog.show()
-            item?.itemId == android.R.id.home -> {
+        when (item?.itemId) {
+            R.id.itemGoToToday -> resetViewPager()
+            R.id.itemGoToDate -> datePickerDialog.show()
+            R.id.itemOfflineAvailable -> offlineAvailableMenuItemClicked()
+            android.R.id.home -> {
                 // Go back to the users' timetable
                 viewModel.timetableOwner.postValue(Pair(viewModel.ctuUsername, ItemType.PERSON))
             }
         }
 
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun offlineAvailableMenuItemClicked() {
+        snackbar.apply {
+            when {
+                viewModel.isSelectedCalendarAvailableOffline() -> {
+                    // Available offline, make unavailable
+                    setText(R.string.snackbar_CalendarUnavailable)
+                    updateOfflineAvailableItem(false)
+                }
+                else -> {
+                    setText(R.string.snackbar_CalendarAvailable)
+                    updateOfflineAvailableItem(true)
+                }
+            }
+
+            show()
+        }
     }
 
     private fun subscribeObservers() {
@@ -164,9 +218,9 @@ class MultidayFragmentHolder : Fragment() {
         })
 
         viewModel.searchItems.observe(this, Observer { searchItemsList ->
-            if(searchItemsList != null && searchItemsList.isEmpty() && viewModel.lastSearchQuery == "") {
+            if (searchItemsList != null && searchItemsList.isEmpty() && viewModel.lastSearchQuery == "") {
                 // Deactivate searchView
-                searchMenuItem.collapseActionView()
+                searchMenuItem?.collapseActionView()
             }
         })
     }
@@ -242,6 +296,26 @@ class MultidayFragmentHolder : Fragment() {
         val currUsername = viewModel.timetableOwner.value?.first
         if (currUsername != null) {
             supportActionBar.setDisplayHomeAsUpEnabled(currUsername != viewModel.ctuUsername)
+            updateOfflineAvailableItem(viewModel.isSelectedCalendarAvailableOffline())
         }
+    }
+
+    private fun updateOfflineAvailableItem(available: Boolean) {
+        val currUsername = viewModel.timetableOwner.value?.first
+
+        offlineAvailableMenuItem?.apply {
+            isVisible = currUsername != viewModel.ctuUsername
+
+            if (available) {
+                // Available offline
+                title = getString(R.string.menuItem_CalendarOfflineAvailable)
+                icon = ContextCompat.getDrawable(context!!, R.drawable.ic_offline_available_black_24dp)
+            } else {
+                title = getString(R.string.menuItem_CalendarOfflineUnavailable)
+                icon = ContextCompat.getDrawable(context!!, R.drawable.ic_offline_unavailable_black_24dp)
+            }
+        }
+
+
     }
 }

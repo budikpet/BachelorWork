@@ -22,6 +22,10 @@ class MyApplication : Application() {
         fun calendarNameFromId(id: String): String {
             return "${id}_${CALENDARS_NAME}"
         }
+
+        fun idFromCalendarName(calendarName: String): String {
+            return calendarName.substringBefore("_")
+        }
     }
 
     override fun onCreate() {
