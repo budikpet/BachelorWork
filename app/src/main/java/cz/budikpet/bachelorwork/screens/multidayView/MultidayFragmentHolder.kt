@@ -73,10 +73,9 @@ class MultidayFragmentHolder : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        val layout = inflater.inflate(R.layout.fragment_holder_multiday, container, false) as ConstraintLayout
-        viewPager = layout.viewPager
+        viewPager = inflater.inflate(R.layout.fragment_holder_multiday, container, false) as ViewPager
         setupViewPager()
-        return layout
+        return viewPager
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -233,7 +232,7 @@ class MultidayFragmentHolder : Fragment() {
         itemGoToToday?.isVisible = !interval.contains(DateTime().withTimeAtStartOfDay())
 
         // Update name
-        val lastDate = currDate.plusDays(viewModel.daysPerMultidayViewFragment)
+        val lastDate = currDate.plusDays(viewModel.daysPerMultidayViewFragment - 1)
         supportActionBar.subtitle = "${currDate.toString("dd.MM")} – ${lastDate.toString("dd.MM")}"
 
         // Update back button

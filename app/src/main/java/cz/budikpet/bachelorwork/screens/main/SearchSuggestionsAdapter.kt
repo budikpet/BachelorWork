@@ -31,8 +31,8 @@ class SearchSuggestionsAdapter(
         holder.title.text = searchItem.title
         setImage(searchItem, holder)
 
-        holder.parentView.setOnClickListener(listener)
-        holder.parentView.tag = searchItem
+        holder.itemView.setOnClickListener(listener)
+        holder.itemView.tag = searchItem
 
         if(searchItem.title == null || searchItem.title == "") {
             holder.id.visibility = View.GONE
@@ -71,7 +71,6 @@ class SearchSuggestionsAdapter(
     }
 
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val parentView = itemView
         val id: TextView = itemView.searchItemId
         val title: TextView = itemView.searchItemTitle
         val image: ImageView = itemView.itemImage

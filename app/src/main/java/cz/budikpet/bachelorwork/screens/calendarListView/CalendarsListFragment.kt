@@ -10,11 +10,11 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.MarginItemDecoration
 import cz.budikpet.bachelorwork.util.toDp
-import kotlinx.android.synthetic.main.activity_main.*
+import android.support.v7.widget.helper.ItemTouchHelper
+
 
 class CalendarsListFragment : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
@@ -37,9 +37,17 @@ class CalendarsListFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        calendarsList = inflater.inflate(R.layout.fragment_calendars_list, container, false) as RecyclerView
+        calendarsList = inflater.inflate(cz.budikpet.bachelorwork.R.layout.fragment_calendars_list, container, false) as RecyclerView
         calendarsList.layoutManager = LinearLayoutManager(context)
         calendarsList.addItemDecoration(MarginItemDecoration(4.toDp(context!!)))
+
+        val adapter = CalendarsListAdapter(context!!) { searchItem ->
+            Log.i(TAG, "$searchItem")
+        }
+        calendarsList.adapter = adapter
+
+        val itemTouchHelper = ItemTouchHelper(CalendarsListSwipeDelete(context!!, adapter))
+        itemTouchHelper.attachToRecyclerView(calendarsList)
 
         return calendarsList
     }
@@ -49,8 +57,9 @@ class CalendarsListFragment : Fragment() {
             // Fill the recycler view
 
             if(searchItemsList != null) {
-                calendarsList.adapter = CalendarsItemAdapter(context!!, searchItemsList) { searchItem ->
-                    Log.i(TAG, "$searchItem")
+                if(calendarsList.adapter != null) {
+                    val adapter = calendarsList.adapter as CalendarsListAdapter
+                    adapter.updateValues(searchItemsList)
                 }
             }
         })

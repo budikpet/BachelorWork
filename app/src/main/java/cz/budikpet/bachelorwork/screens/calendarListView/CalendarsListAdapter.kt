@@ -2,6 +2,7 @@ package cz.budikpet.bachelorwork.screens.calendarListView
 
 import android.content.Context
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -12,12 +13,12 @@ import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import kotlinx.android.synthetic.main.search_item_card.view.*
 
-class CalendarsItemAdapter(
+class CalendarsListAdapter(
     val context: Context,
     private val items: ArrayList<SearchItem> = arrayListOf(),
     val onItemClickFunction: (SearchItem) -> (Unit)
-) :
-    RecyclerView.Adapter<CalendarsItemAdapter.ViewHolder>() {
+) : RecyclerView.Adapter<CalendarsListAdapter.ViewHolder>() {
+    private val TAG = "MY_${this.javaClass.simpleName}"
 
     private val listener = View.OnClickListener {
         onItemClickFunction(it.tag as SearchItem)
@@ -31,10 +32,10 @@ class CalendarsItemAdapter(
         holder.title.text = searchItem.title
         setImage(searchItem, holder)
 
-        holder.parentView.setOnClickListener(listener)
-        holder.parentView.tag = searchItem
+        holder.itemView.setOnClickListener(listener)
+        holder.itemView.tag = searchItem
 
-        if(searchItem.title == null || searchItem.title == "") {
+        if (searchItem.title == null || searchItem.title == "") {
             holder.id.visibility = View.GONE
             holder.title.text = searchItem.id
         } else {
@@ -49,7 +50,7 @@ class CalendarsItemAdapter(
     }
 
     private fun setImage(searchItem: SearchItem, holder: ViewHolder) {
-        val itemId = when(searchItem.type) {
+        val itemId = when (searchItem.type) {
             ItemType.ROOM -> R.drawable.ic_place_black_24dp
             ItemType.PERSON -> R.drawable.ic_person_black_24dp
             ItemType.COURSE -> R.drawable.ic_class_black_24dp
@@ -70,8 +71,12 @@ class CalendarsItemAdapter(
         this.notifyDataSetChanged()
     }
 
+    fun removeItem(position: Int) {
+        //TODO: Implement
+        Log.i(TAG, "Deleted item at: $position")
+    }
+
     class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-        val parentView = itemView
         val id: TextView = itemView.searchItemId
         val title: TextView = itemView.searchItemTitle
         val image: ImageView = itemView.itemImage
