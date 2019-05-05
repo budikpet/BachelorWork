@@ -11,9 +11,9 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.util.toDp
 
 
-class CalendarsListSwipeDelete(private val context: Context, private val calendarsListAdapter: CalendarsListAdapter) :
+class CalendarsListSwipeDelete(private val context: Context, private val listener: Callback) :
     ItemTouchHelper.SimpleCallback(0, ItemTouchHelper.LEFT) {
-    private var icon = ContextCompat.getDrawable(calendarsListAdapter.context, R.drawable.ic_delete_black_24dp)!!
+    private var icon = ContextCompat.getDrawable(context, R.drawable.ic_delete_black_24dp)!!
     private var background = ColorDrawable(Color.RED)
 
     override fun onMove(
@@ -26,7 +26,7 @@ class CalendarsListSwipeDelete(private val context: Context, private val calenda
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         val position = viewHolder.adapterPosition
-        calendarsListAdapter.removeItem(position)
+        listener.onSwipeDelete(position)
     }
 
     override fun onChildDraw(
@@ -66,6 +66,10 @@ class CalendarsListSwipeDelete(private val context: Context, private val calenda
 
         background.draw(c)
         icon.draw(c)
+    }
+
+    interface Callback {
+        fun onSwipeDelete(position: Int)
     }
 
 }

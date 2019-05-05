@@ -327,7 +327,7 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Gets a list of calendars used by the application using Google Calendar API.
      */
-    fun getGoogleCalendarList(): Single<MutableList<CalendarListEntry>> {
+    fun getGoogleCalendarList(): Observable<CalendarListEntry> {
         val FIELDS = "id,summary,hidden"
         val FEED_FIELDS = "items($FIELDS)"
 
@@ -345,7 +345,12 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .flatMapObservable { Observable.fromIterable(it.items) }
             .filter { it.summary.contains(MyApplication.CALENDARS_NAME) }
-            .toList()
+    }
+
+    fun getGoogleCalendar(calendarName: String): Single<CalendarListEntry> {
+        return getGoogleCalendarList()
+            .filter { it.summary == calendarName }
+            .singleOrError()
     }
 
     /**
@@ -360,6 +365,23 @@ class Repository @Inject constructor(private val context: Context) {
                 Log.w(TAG, "UpdateGoogleCalendarList retries: $count. Error: $error")
                 return@retry count < 21 && error !is NoInternetConnectionException
             }
+    }
+
+    /**
+     * Removes a calendar from the Google Calendar service using Google Calendar API.
+     */
+    fun removeGoogleCalendar(entry: CalendarListEntry): Completable {
+        val calendarServiceList = calendarService.calendarList().delete(entry.id)
+        return hasInternetConnection()
+            .map {
+                calendarServiceList.execute()
+                return@map it
+            }
+            .retry { count, error ->
+                Log.w(TAG, "RemoveGoogleCalendar retries: $count. Error: $error")
+                return@retry count < 21 && error !is NoInternetConnectionException
+            }
+            .ignoreElement()
     }
 
     /**
@@ -593,7 +615,7 @@ class Repository @Inject constructor(private val context: Context) {
      * Shares calendar of the user with other person using Google Calendar API.
      */
     fun sharePersonalCalendar(email: String): Single<AclRule> {
-        val calendarName = "${ctuUsername}_${MyApplication.CALENDARS_NAME}"
+        val calendarName = MyApplication.calendarNameFromId(ctuUsername)
 
         // Create access rule with associated scope
         val rule = AclRule()
@@ -619,7 +641,7 @@ class Repository @Inject constructor(private val context: Context) {
      * Stops sharing calendar of the user with the selected person.
      */
     fun unsharePersonalCalendar(email: String): Completable {
-        val calendarName = "${ctuUsername}_${MyApplication.CALENDARS_NAME}"
+        val calendarName = MyApplication.calendarNameFromId(ctuUsername)
 
         val ruleId = "user:$email"
 
@@ -630,14 +652,5 @@ class Repository @Inject constructor(private val context: Context) {
                     calendarService.acl().delete(calendar.id, ruleId).execute()
                 }
             }
-    }
-
-    private fun getGoogleCalendar(calendarName: String): Single<CalendarListEntry> {
-        return getGoogleCalendarList()
-            .flatMapObservable { calendarList ->
-                Observable.fromIterable(calendarList)
-            }
-            .filter { it.summary == calendarName }
-            .singleOrError()
     }
 }

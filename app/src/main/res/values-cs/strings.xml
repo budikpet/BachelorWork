@@ -43,5 +43,7 @@
 	<string name="sidebar_3DaysView">3denní zobrazení</string>
 	<string name="sidebar_WeekView">Týdenní zobrazení</string>
 	<string name="sidebar_SavedCalendars">Uložené kalendáře</string>
+	<string name="snackbar_Undo">Vrátit</string>
+	<string name="snackbar_Text">Kalendář smazán</string>
 
 </resources>

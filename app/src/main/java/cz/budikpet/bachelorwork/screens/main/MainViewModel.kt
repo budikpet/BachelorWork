@@ -6,6 +6,7 @@ import android.content.SharedPreferences
 import android.util.Log
 import com.google.api.services.calendar.model.CalendarListEntry
 import cz.budikpet.bachelorwork.MyApplication
+import cz.budikpet.bachelorwork.MyApplication.Companion.calendarNameFromId
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.EventType
@@ -211,7 +212,7 @@ class MainViewModel : ViewModel() {
      */
     fun updateCalendars(username: String? = null) {
         val calendarName = when {
-            username != null -> "${username}_${MyApplication.CALENDARS_NAME}"
+            username != null -> calendarNameFromId(username)
             else -> null
         }
 
@@ -222,6 +223,7 @@ class MainViewModel : ViewModel() {
         compositeDisposable.clear()
 
         val disposable = repository.getGoogleCalendarList()
+            .toList()
             .flatMapCompletable {
                 // Check if personal calendar exists and unhide hidden calendars in Google Calendar service
                 checkGoogleCalendars(it)
@@ -278,7 +280,7 @@ class MainViewModel : ViewModel() {
      * Checks Google Calendar list for calendars that are hidden and for the missing personal calendar.
      */
     private fun checkGoogleCalendars(calendars: MutableList<CalendarListEntry>): Completable {
-        val personalCalendarName = "${ctuUsername}_${MyApplication.CALENDARS_NAME}"
+        val personalCalendarName = calendarNameFromId(ctuUsername)
         var personalCalendarFound = false
         val hiddenCalendars = mutableListOf<CalendarListEntry>()
 
@@ -402,6 +404,28 @@ class MainViewModel : ViewModel() {
         return updatedEventsInterval != null && updatedEventsInterval.isEqual(loadedEventsInterval)
     }
 
+    fun removeCalendar(calendarName: String) {
+        val disposable = repository.getGoogleCalendar(calendarName)
+            .flatMapCompletable {
+                repository.removeGoogleCalendar(it)
+            }
+            .subscribeOn(Schedulers.io())
+//            .observeOn(AndroidSchedulers.mainThread())
+            .onErrorComplete { exception ->
+                Log.e(TAG, "RemoveCalendar error: $exception")
+                thrownException.postValue(exception)
+                return@onErrorComplete true
+            }
+            .subscribe {
+                Log.i(TAG, "Calendar removed")
+
+                // Refresh Google Calendar without waiting
+                repository.startCalendarRefresh()
+            }
+
+        compositeDisposable.add(disposable)
+    }
+
     /**
      * Updates [savedTimetables] using SearchSirius endpoint.
      *
@@ -454,7 +478,7 @@ class MainViewModel : ViewModel() {
 
         operationRunning.postValue(true)
         val disposable = repository.getLocalCalendarListItems()
-            .filter { it.displayName == "${pair.first}_${MyApplication.CALENDARS_NAME}" }
+            .filter { it.displayName == calendarNameFromId(pair.first) }
             .flatMap { repository.getCalendarEvents(it.id, loadedEventsInterval.start, loadedEventsInterval.end) }
             .switchIfEmpty(
                 repository.getSiriusEventsOf(

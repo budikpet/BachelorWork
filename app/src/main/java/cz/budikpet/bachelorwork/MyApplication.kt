@@ -18,6 +18,10 @@ class MyApplication : Application() {
         const val NUM_OF_WEEKS_TO_UPDATE = 4
 
         internal lateinit var appComponent: AppComponent
+
+        fun calendarNameFromId(id: String): String {
+            return "${id}_${CALENDARS_NAME}"
+        }
     }
 
     override fun onCreate() {
