@@ -166,6 +166,7 @@ class MultidayFragmentHolder : Fragment() {
         viewModel.searchItems.observe(this, Observer { searchItemsList ->
             if(searchItemsList != null && searchItemsList.isEmpty() && viewModel.lastSearchQuery == "") {
                 // Deactivate searchView
+                searchMenuItem.collapseActionView()
             }
         })
     }
