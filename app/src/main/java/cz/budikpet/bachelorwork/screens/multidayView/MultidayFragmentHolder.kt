@@ -122,6 +122,8 @@ class MultidayFragmentHolder : Fragment() {
 
             override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
                 // User left the searchView
+                viewModel.searchItems.postValue(listOf())
+                viewModel.lastSearchQuery = ""
                 return true
             }
 

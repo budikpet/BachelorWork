@@ -198,7 +198,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         })
 
         viewModel.searchItems.observe(this, Observer { searchItems ->
-            if (searchItems != null && searchItems.isNotEmpty()) {
+            if (searchItems != null) {
                 val adapter = searchSuggestions.adapter as SearchSuggestionsAdapter?
                 adapter?.updateValues(searchItems)
             }
