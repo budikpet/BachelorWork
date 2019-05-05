@@ -21,8 +21,8 @@
 	<string name="menuItem_goToToday">Go to today</string>
 	<string name="menuItem_goToDate">Go to date</string>
 	<string name="roomDefault">Unknown</string>
-	<string name="itemCalendarSaved">Saved</string>
-	<string name="itemCalendarNotSaved">Not saved</string>
+	<string name="menuItem_CalendarOfflineAvailable">Available offline</string>
+	<string name="menuItem_CalendarOfflineUnavailable">Make available offline</string>
 	<string name="students">Students</string>
 	<string name="capacity">Capacity</string>
 	<string name="teachers">Teachers:</string>

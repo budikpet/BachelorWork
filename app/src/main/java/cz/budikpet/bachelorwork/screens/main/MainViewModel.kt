@@ -45,7 +45,7 @@ class MainViewModel : ViewModel() {
     private var compositeDisposable = CompositeDisposable()
 
     /** Contains ID of the selected sidebar item */
-    var selectedSidebarItem = R.id.sidebarSavedCalendars
+    var selectedSidebarItem = R.id.sidebarWeekView
 
     /** Username of the CTU account that was used to log in. */
     val ctuUsername by lazy { repository.ctuUsername }
