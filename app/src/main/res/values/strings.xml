@@ -45,4 +45,7 @@
 	<string name="snackbar_Undo">Undo</string>
 	<string name="snackbar_CalendarUnavailable">Timetable will no longer be available offline.</string>
 	<string name="snackbar_CalendarAvailable">Timetable will be made available offline.</string>
+	<string name="menuItem_sharePersonalTimetable">Share personal timetable</string>
+	<string name="alertDialog_share">Share</string>
+	<string name="alertDialog_message_share">Please specify the email address of a Google account you want to share your personal timetable with.</string>
 </resources>

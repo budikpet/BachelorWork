@@ -16,6 +16,7 @@
 			android:title="@string/sidebar_WeekView" />
 		<item
 			android:id="@+id/sidebarSavedCalendars"
+			android:icon="@drawable/ic_save_black_24dp"
 			android:title="@string/sidebar_SavedCalendars" />
 	</group>
 	<item

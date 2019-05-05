@@ -15,6 +15,11 @@
 		android:title="@string/menuItem_CalendarOfflineUnavailable"
 		app:showAsAction="always|withText" />
 	<item
+		android:id="@+id/itemSharePersonalTimetable"
+		android:icon="@drawable/ic_share_black_24dp"
+		android:title="@string/menuItem_sharePersonalTimetable"
+		app:showAsAction="ifRoom|withText" />
+	<item
 		android:id="@+id/itemGoToToday"
 		android:title="@string/menuItem_goToToday"
 		app:showAsAction="never" />

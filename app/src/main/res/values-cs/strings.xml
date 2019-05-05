@@ -46,4 +46,7 @@
 	<string name="snackbar_Undo">Vrátit</string>
 	<string name="snackbar_CalendarUnavailable">Rozvrh hodin již nebude dostupný offline.</string>
 	<string name="snackbar_CalendarAvailable">Rozvrh hodin bude zpřístupněn offline.</string>
+	<string name="menuItem_sharePersonalTimetable">Sdílet osobní rozvrh hodin</string>
+	<string name="alertDialog_share">Sdílet</string>
+	<string name="alertDialog_message_share">Prosím specifikujte emailovou adresu účtu Google, se kterým chcete svůj osobní rozvrh hodin sdílet.</string>
 </resources>

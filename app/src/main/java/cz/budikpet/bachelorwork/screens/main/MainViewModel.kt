@@ -600,8 +600,7 @@ class MainViewModel : ViewModel() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
-                    Log.i(TAG, "sharePersonalCalendar")
-                    Log.i(TAG, "ACL: $result")
+                    Log.i(TAG, "CalendarShared, ACL: $result")
                 },
                 { error ->
                     Log.e(TAG, "sharePersonalCalendar: $error")

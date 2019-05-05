@@ -12,6 +12,7 @@ import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v4.view.ViewPager
 import android.support.v7.app.ActionBar
+import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.SearchView
 import android.util.Log
@@ -21,6 +22,7 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
+import kotlinx.android.synthetic.main.dialog_share_timetable.view.*
 import org.joda.time.DateTime
 import org.joda.time.Interval
 
@@ -35,12 +37,13 @@ class MultidayFragmentHolder : Fragment() {
     private var offlineAvailableMenuItem: MenuItem? = null
     private var itemGoToToday: MenuItem? = null
     private var searchMenuItem: MenuItem? = null
+    private var shareMenuItem: MenuItem? = null
 
     private var pagerPosition = PREFILLED_WEEKS / 2
 
     private lateinit var viewModel: MainViewModel
 
-    private val snackbar: Snackbar by lazy {
+    private val addCalendarSnackbar: Snackbar by lazy {
         val mainActivityLayout = activity?.findViewById<ConstraintLayout>(R.id.main_activity)
         val snackbar = Snackbar
             .make(
@@ -87,6 +90,18 @@ class MultidayFragmentHolder : Fragment() {
         )
     }
 
+    private val shareTimetableDialogBuilder: AlertDialog.Builder by lazy {
+        val shareDialogView = layoutInflater.inflate(R.layout.dialog_share_timetable, null)
+        val emailEditText = shareDialogView.emailEditText
+
+        AlertDialog.Builder(context!!)
+            .setView(shareDialogView)
+            .setPositiveButton(getString(R.string.alertDialog_positive_firstNotice)) { dialog, id ->
+                viewModel.sharePersonalCalendar(emailEditText.text.toString())
+            }
+            .setNegativeButton(getString(R.string.alertDialog_quit)) { _, _ -> }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -116,6 +131,7 @@ class MultidayFragmentHolder : Fragment() {
         super.onCreateOptionsMenu(menu, inflater)
 
         offlineAvailableMenuItem = menu?.findItem(R.id.itemOfflineAvailable)
+        shareMenuItem = menu?.findItem(R.id.itemSharePersonalTimetable)
 
         searchMenuItem = menu?.findItem(R.id.itemSearch)!!
         val searchView = searchMenuItem?.actionView as SearchView
@@ -184,6 +200,7 @@ class MultidayFragmentHolder : Fragment() {
             R.id.itemGoToToday -> resetViewPager()
             R.id.itemGoToDate -> datePickerDialog.show()
             R.id.itemOfflineAvailable -> offlineAvailableMenuItemClicked()
+            R.id.itemSharePersonalTimetable -> shareTimetableDialogBuilder.show()
             android.R.id.home -> {
                 // Go back to the users' timetable
                 viewModel.timetableOwner.postValue(Pair(viewModel.ctuUsername, ItemType.PERSON))
@@ -194,7 +211,7 @@ class MultidayFragmentHolder : Fragment() {
     }
 
     private fun offlineAvailableMenuItemClicked() {
-        snackbar.apply {
+        addCalendarSnackbar.apply {
             when {
                 viewModel.isSelectedCalendarAvailableOffline() -> {
                     // Available offline, make unavailable
@@ -296,6 +313,7 @@ class MultidayFragmentHolder : Fragment() {
         val currUsername = viewModel.timetableOwner.value?.first
         if (currUsername != null) {
             supportActionBar.setDisplayHomeAsUpEnabled(currUsername != viewModel.ctuUsername)
+            shareMenuItem?.isVisible = currUsername == viewModel.ctuUsername
             updateOfflineAvailableItem(viewModel.isSelectedCalendarAvailableOffline())
         }
     }
