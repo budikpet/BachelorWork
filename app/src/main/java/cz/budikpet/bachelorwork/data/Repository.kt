@@ -489,7 +489,11 @@ class Repository @Inject constructor(private val context: Context) {
                 // Get and check metadata
                 var metadata = GoogleCalendarMetadata()
                 try {
-                    metadata = Gson().fromJson(desc, GoogleCalendarMetadata::class.java)
+                    if(desc != "") {
+                        metadata = Gson().fromJson(desc, GoogleCalendarMetadata::class.java)
+                    } else {
+                        metadata.id = -1
+                    }
                 } catch (e: JsonSyntaxException) {
                     // When error occurs, default metadata is used which makes the faulty event deleted
                     Log.e(TAG, "Metadata error: $e")
