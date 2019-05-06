@@ -187,10 +187,9 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         viewModel.selectedEvent.observe(this, Observer { selectedEvent ->
             supportFragmentManager.inTransaction {
                 setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                if (selectedEvent != null) {
-                    show(eventViewFragment)
-                } else {
-                    hide(eventViewFragment)
+                when {
+                    selectedEvent != null -> show(eventViewFragment)
+                    else -> hide(eventViewFragment)
                 }
             }
         })

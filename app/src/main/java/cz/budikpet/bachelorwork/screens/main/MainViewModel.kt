@@ -64,6 +64,8 @@ class MainViewModel : ViewModel() {
     /** Contains ID of the selected sidebar item */
     var selectedSidebarItem = MutableLiveData<Int>()
 
+    val selectedEvent = MutableLiveData<TimetableEvent?>()
+
     /** Indicates whether some operation is running. */
     val operationRunning = MutableLiveData<Boolean>()
 
@@ -73,8 +75,6 @@ class MainViewModel : ViewModel() {
     /** Represents items received from Sirius API search endpoint. */
     val searchItems = MutableLiveData<List<SearchItem>>()
     var lastSearchQuery = ""
-
-    val selectedEvent = MutableLiveData<TimetableEvent?>()
 
     /**
      * The date that corresponds to the currently selected MultidayFragment.

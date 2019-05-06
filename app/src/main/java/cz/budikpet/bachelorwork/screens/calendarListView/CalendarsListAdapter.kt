@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
+import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import kotlinx.android.synthetic.main.search_item_card.view.*
@@ -47,17 +48,17 @@ class CalendarsListAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
         val searchItemView =
-            LayoutInflater.from(context).inflate(cz.budikpet.bachelorwork.R.layout.search_item_card, parent, false)
+            LayoutInflater.from(context).inflate(R.layout.search_item_card, parent, false)
         searchItemView.setOnClickListener(listener)
         return ViewHolder(searchItemView)
     }
 
     private fun setImage(searchItem: SearchItem, holder: ViewHolder) {
         val itemId = when (searchItem.type) {
-            ItemType.ROOM -> cz.budikpet.bachelorwork.R.drawable.ic_place_black_24dp
-            ItemType.PERSON -> cz.budikpet.bachelorwork.R.drawable.ic_person_black_24dp
-            ItemType.COURSE -> cz.budikpet.bachelorwork.R.drawable.ic_class_black_24dp
-            ItemType.UNKNOWN -> android.R.drawable.screen_background_light_transparent
+            ItemType.ROOM -> R.drawable.ic_place_black_24dp
+            ItemType.PERSON -> R.drawable.ic_person_black_24dp
+            ItemType.COURSE -> R.drawable.ic_class_black_24dp
+            ItemType.UNKNOWN -> R.drawable.ic_unknown_black_24dp
         }
 
         holder.image.setImageResource(itemId)
