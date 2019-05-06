@@ -188,10 +188,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             supportFragmentManager.inTransaction {
                 setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
                 if (selectedEvent != null) {
-                    supportActionBar?.hide()
                     show(eventViewFragment)
                 } else {
-                    supportActionBar?.show()
                     hide(eventViewFragment)
                 }
             }
