@@ -71,7 +71,7 @@ class MainViewModel : ViewModel() {
     var eventToEdit = MutableLiveData<TimetableEvent?>()
 
     /** Changes when editing are stored here. */
-    var editedEventChanges: TimetableEvent? = null
+    var eventToEditChanges: TimetableEvent? = null
 
     /** Indicates whether some operation is running. */
     val operationRunning = MutableLiveData<Boolean>()
@@ -645,7 +645,7 @@ class MainViewModel : ViewModel() {
     // MARK: Multiday
 
     fun editCreateEvent(event: TimetableEvent) {
-        editedEventChanges = event
+        eventToEditChanges = event
         eventToEdit.postValue(event)
 
     }
