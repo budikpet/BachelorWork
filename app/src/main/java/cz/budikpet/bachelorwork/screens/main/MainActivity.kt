@@ -178,11 +178,12 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             viewModel.loadEvents()
         })
 
-        viewModel.selectedEvent.observe(this, Observer { pair ->
+        viewModel.selectedEvent.observe(this, Observer { selectedEvent ->
             supportFragmentManager.inTransaction {
                 setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
 
-                if (pair == null) {
+                if (selectedEvent == null) {
+                    // Hide the event view/ edit entirely
                     val holder = supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder)
                     if (holder != null) {
                         hide(holder)
@@ -190,22 +191,30 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                     return@inTransaction this
                 }
 
-                if (pair.first) {
-                    // Show edit screen
-                    replace(R.id.eventViewFragmentHolder, EventEditFragment())
-                } else {
-                    // Show view screen
-                    if (pair.second != null) {
+                replace(R.id.eventViewFragmentHolder, EventViewFragment())
+            }
+        })
+
+        viewModel.eventToEdit.observe(this, Observer { eventToEdit ->
+            supportFragmentManager.inTransaction {
+                setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+
+                if (eventToEdit == null) {
+                    if(viewModel.selectedEvent.value != null) {
+                        // Event was selected before editing, go back to it
                         replace(R.id.eventViewFragmentHolder, EventViewFragment())
-                    } else {
-                        val holder = supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder)
-                        if (holder != null) {
-                            hide(holder)
-                        }
+                        return@inTransaction this
                     }
+
+                    // Hide the event view/ edit entirely
+                    val holder = supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder)
+                    if (holder != null) {
+                        hide(holder)
+                    }
+                    return@inTransaction this
                 }
 
-                return@inTransaction this
+                replace(R.id.eventViewFragmentHolder, EventEditFragment())
             }
         })
 
@@ -324,10 +333,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         if (item?.itemId == R.id.itemSync) {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             viewModel.updateCalendars()
-
-            return true
-        } else if (item?.itemId == R.id.itemAddEvent) {
-            viewModel.startEditEvent()
 
             return true
         }

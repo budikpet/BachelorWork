@@ -65,7 +65,10 @@ class MainViewModel : ViewModel() {
     var selectedSidebarItem = MutableLiveData<Int>()
 
     /** Event that was selected to be displayed. */
-    val selectedEvent = MutableLiveData<Pair<Boolean, TimetableEvent?>>()
+    val selectedEvent = MutableLiveData<TimetableEvent>()
+
+    /** Event that is currently being edited. */
+    var eventToEdit = MutableLiveData<TimetableEvent?>()
 
     /** Indicates whether some operation is running. */
     val operationRunning = MutableLiveData<Boolean>()
@@ -137,10 +140,6 @@ class MainViewModel : ViewModel() {
             else -> R.id.sidebarWeekView
         }
         selectedSidebarItem.postValue(id)
-    }
-
-    fun startEditEvent() {
-        selectedEvent.postValue(Pair(true, selectedEvent.value?.second))
     }
 
     /**
@@ -642,11 +641,9 @@ class MainViewModel : ViewModel() {
 
     // MARK: Multiday
 
-    fun onAddEventClicked(startTime: DateTime, endTime: DateTime) {
-        Log.i(
-            TAG,
-            "Add event clicked: ${startTime.toString("dd.MM")}<${startTime.toString("HH:mm")} – ${endTime.toString("HH:mm")}>"
-        )
+    fun editCreateEvent(event: TimetableEvent) {
+        eventToEdit.postValue(event)
+
     }
 
     companion object {

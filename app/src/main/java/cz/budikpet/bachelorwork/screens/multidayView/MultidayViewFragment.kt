@@ -149,8 +149,11 @@ class MultidayViewFragment : Fragment() {
             selectedEmptySpace = emptySpace
 
             if (emptySpace.alpha == 1f) {
+                // The add picture was already visible
                 emptySpace.alpha = 0f
-                viewModel.onAddEventClicked(selectedStartTime, selectedStartTime.plusMinutes(lessonLength))
+
+                val dummyEvent = TimetableEvent(starts_at = selectedStartTime, ends_at = selectedStartTime.plusMinutes(lessonLength))
+                viewModel.editCreateEvent(dummyEvent)
             } else {
                 // Make the picture symbolizing event adding visible
                 emptySpace.alpha = 1f
@@ -159,7 +162,7 @@ class MultidayViewFragment : Fragment() {
         }
 
         onEventClickListener = View.OnClickListener { eventView ->
-            viewModel.selectedEvent.postValue(Pair(false, eventView.tag as TimetableEvent))
+            viewModel.selectedEvent.postValue(eventView.tag as TimetableEvent)
         }
     }
 

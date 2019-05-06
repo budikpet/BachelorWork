@@ -10,6 +10,7 @@ import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -48,23 +49,25 @@ class EventViewFragment : Fragment() {
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
         val layout = inflater.inflate(R.layout.fragment_event_view, container, false)
-        val exit = layout.findViewById<ImageView>(R.id.exit)
 
-        exit.setOnClickListener {
+        val viewExit = layout.findViewById<ImageView>(R.id.viewExit)
+        viewExit.setOnClickListener {
             exit()
+        }
+
+        val viewEdit = layout.findViewById<ImageButton>(R.id.viewEdit)
+        viewEdit.setOnClickListener {
+            viewModel.editCreateEvent(viewModel.selectedEvent.value!!)
         }
 
         return layout
     }
 
     private fun subscribeObservers() {
-        viewModel.selectedEvent.observe(this, Observer { selectedEventPair ->
-            if (selectedEventPair != null) {
-                if(selectedEventPair.second != null) {
-                    selectedEvent = selectedEventPair.second!!
-                    updateView()
-                }
-
+        viewModel.selectedEvent.observe(this, Observer { selectedEvent ->
+            if (selectedEvent != null) {
+                this.selectedEvent = selectedEvent
+                updateView()
             }
         })
     }
@@ -72,26 +75,26 @@ class EventViewFragment : Fragment() {
     private fun updateView() {
         // Room can be empty
         if (selectedEvent.room == null || selectedEvent.room == "") {
-            eventRoom.visibility = View.GONE
+            viewEventRoom.visibility = View.GONE
             placeImage.visibility = View.GONE
         } else {
-            eventRoom.visibility = View.VISIBLE
+            viewEventRoom.visibility = View.VISIBLE
             placeImage.visibility = View.VISIBLE
         }
 
         // Update info
         this.headerView.setBackgroundColor(resources.getColor(selectedEvent.color, null))
-        this.acronym.text = selectedEvent.acronym
-        this.eventType.text = selectedEvent.event_type.getLabel(context!!)
-        this.eventRoom.text = selectedEvent.room
-        this.studentsCount.text = selectedEvent.occupied.toString()
-        this.capacity.text = selectedEvent.capacity.toString()
-        this.eventDate.text =
+        this.viewAcronym.text = selectedEvent.acronym
+        this.viewEventType.text = selectedEvent.event_type.getLabel(context!!)
+        this.viewEventRoom.text = selectedEvent.room
+        this.viewStudentsCount.text = selectedEvent.occupied.toString()
+        this.viewCapacity.text = selectedEvent.capacity.toString()
+        this.viewEventDate.text =
             "${selectedEvent.starts_at.dayOfWeek().asText} ${selectedEvent.starts_at.toString("dd.MM.YYYY")}"
-        this.eventTime.text = "${timeString(selectedEvent.starts_at)} – ${timeString(selectedEvent.ends_at)}"
+        this.viewEventTime.text = "${timeString(selectedEvent.starts_at)} – ${timeString(selectedEvent.ends_at)}"
 
-        clickableTextView(eventName, selectedEvent.fullName, ItemType.COURSE)
-        clickableTextView(eventRoom, selectedEvent.room!!, ItemType.ROOM)
+        clickableTextView(viewEventName, selectedEvent.fullName, ItemType.COURSE)
+        clickableTextView(viewEventRoom, selectedEvent.room!!, ItemType.ROOM)
 
         teachersList.removeAllViews()
         for (teacher in selectedEvent.teachers) {

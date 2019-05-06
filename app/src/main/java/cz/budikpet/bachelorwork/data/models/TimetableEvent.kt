@@ -9,13 +9,12 @@ import java.util.*
 data class TimetableEvent(
     val siriusId: Int? = null,
     val room: String? = null,      // Can be null
-    val acronym: String,
+    val acronym: String = "",
     val fullName: String = acronym,
     val event_type: EventType = EventType.OTHER,
-    val starts_at: DateTime,
-    val ends_at: DateTime,
+    val starts_at: DateTime = DateTime(),
+    val ends_at: DateTime = starts_at,
     var deleted: Boolean = false,
-    val changed: Boolean = false,
     val capacity: Int = 0,
     val occupied: Int = 0,
     val teachers: ArrayList<String> = arrayListOf(),
@@ -23,6 +22,7 @@ data class TimetableEvent(
     var color: Int = defaultColor(event_type)
 ) {
     var googleId: Long? = null
+    var changed: Boolean = false
 
     companion object {
         fun from(event: Event): TimetableEvent {
@@ -31,12 +31,15 @@ data class TimetableEvent(
                 else -> event.links.room
             }
 
-            return TimetableEvent(
+            val timetableEvent = TimetableEvent(
                 event.id, room = room, acronym = event.links.course, event_type = event.event_type,
                 starts_at = DateTime(event.starts_at), ends_at = DateTime(event.ends_at), deleted = event.deleted,
-                changed = hasEventChanged(event), capacity = event.capacity, occupied = event.occupied,
+                capacity = event.capacity, occupied = event.occupied,
                 teachers = event.links.teachers, students = event.links.students
             )
+            timetableEvent.changed = hasEventChanged(event)
+
+            return timetableEvent
         }
 
         private fun hasEventChanged(event: Event): Boolean {

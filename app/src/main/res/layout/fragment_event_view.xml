@@ -25,7 +25,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			app:barrierDirection="end"
-			app:constraint_referenced_ids="calendarImage,exit,placeImage,personImage"
+			app:constraint_referenced_ids="calendarImage,viewExit,placeImage,personImage"
 			tools:layout_editor_absoluteX="411dp" />
 
 		<android.support.constraint.Guideline
@@ -46,8 +46,19 @@
 			app:layout_constraintTop_toTopOf="parent"
 			app:layout_constraintVertical_bias="1.0" />
 
+		<ImageButton
+			android:id="@+id/viewEdit"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginTop="8dp"
+			android:layout_marginEnd="8dp"
+			android:background="@android:color/transparent"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintTop_toTopOf="parent"
+			app:srcCompat="@drawable/ic_edit_black_24dp" />
+
 		<ImageView
-			android:id="@+id/exit"
+			android:id="@+id/viewExit"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginStart="8dp"
@@ -59,7 +70,7 @@
 			app:layout_constraintTop_toTopOf="parent" />
 
 		<TextView
-			android:id="@+id/acronym"
+			android:id="@+id/viewAcronym"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginBottom="8dp"
@@ -71,7 +82,7 @@
 			tools:text="MI-IOS" />
 
 		<TextView
-			android:id="@+id/eventType"
+			android:id="@+id/viewEventType"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="16dp"
@@ -81,7 +92,7 @@
 			tools:text="Lecture" />
 
 		<TextView
-			android:id="@+id/eventName"
+			android:id="@+id/viewEventName"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
@@ -89,7 +100,7 @@
 			android:textColor="@color/clickableText"
 			android:textSize="16sp"
 			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
-			app:layout_constraintTop_toBottomOf="@+id/eventType"
+			app:layout_constraintTop_toBottomOf="@+id/viewEventType"
 			tools:text="MI-IOS" />
 
 		<ImageView
@@ -97,13 +108,15 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginStart="8dp"
+			android:layout_marginEnd="8dp"
 			android:src="@drawable/ic_place_black_24dp"
-			app:layout_constraintBottom_toBottomOf="@+id/eventRoom"
+			app:layout_constraintBottom_toBottomOf="@+id/viewEventRoom"
+			app:layout_constraintEnd_toStartOf="@+id/viewEventRoom"
 			app:layout_constraintStart_toStartOf="parent"
-			app:layout_constraintTop_toTopOf="@+id/eventRoom" />
+			app:layout_constraintTop_toTopOf="@+id/viewEventRoom" />
 
 		<TextView
-			android:id="@+id/eventRoom"
+			android:id="@+id/viewEventRoom"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="16dp"
@@ -123,34 +136,36 @@
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintHorizontal_bias="0.0"
 			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
-			app:layout_constraintTop_toBottomOf="@+id/eventName" />
+			app:layout_constraintTop_toBottomOf="@+id/viewEventName" />
 
 		<ImageView
 			android:id="@+id/calendarImage"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginStart="8dp"
+			android:layout_marginEnd="8dp"
 			android:src="@drawable/ic_today_black_24dp"
-			app:layout_constraintBottom_toBottomOf="@+id/eventDate"
+			app:layout_constraintBottom_toBottomOf="@+id/viewEventDate"
+			app:layout_constraintEnd_toStartOf="@+id/viewEventDate"
 			app:layout_constraintStart_toStartOf="parent"
-			app:layout_constraintTop_toTopOf="@+id/eventDate" />
+			app:layout_constraintTop_toTopOf="@+id/viewEventDate" />
 
 		<TextView
-			android:id="@+id/eventDate"
+			android:id="@+id/viewEventDate"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
 			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
-			app:layout_constraintTop_toBottomOf="@+id/eventRoom"
+			app:layout_constraintTop_toBottomOf="@+id/viewEventRoom"
 			tools:text="12.1.2019" />
 
 		<TextView
-			android:id="@+id/eventTime"
+			android:id="@+id/viewEventTime"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="8dp"
 			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
-			app:layout_constraintTop_toBottomOf="@+id/eventDate"
+			app:layout_constraintTop_toBottomOf="@+id/viewEventDate"
 			tools:text="7:30 - 9:00" />
 
 		<View
@@ -163,10 +178,10 @@
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintHorizontal_bias="0.0"
 			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
-			app:layout_constraintTop_toBottomOf="@+id/eventTime" />
+			app:layout_constraintTop_toBottomOf="@+id/viewEventTime" />
 
 		<TextView
-			android:id="@+id/studentsCount"
+			android:id="@+id/viewStudentsCount"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="16dp"
@@ -183,10 +198,10 @@
 			android:layout_marginTop="8dp"
 			android:text="@string/students"
 			app:layout_constraintStart_toStartOf="@+id/textStartBarrier"
-			app:layout_constraintTop_toBottomOf="@+id/studentsCount" />
+			app:layout_constraintTop_toBottomOf="@+id/viewStudentsCount" />
 
 		<TextView
-			android:id="@+id/capacity"
+			android:id="@+id/viewCapacity"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginTop="16dp"
@@ -204,7 +219,7 @@
 			android:text="@string/capacity"
 			app:layout_constraintEnd_toStartOf="@+id/middleGuideline"
 			app:layout_constraintStart_toStartOf="@+id/middleGuideline"
-			app:layout_constraintTop_toBottomOf="@+id/capacity" />
+			app:layout_constraintTop_toBottomOf="@+id/viewCapacity" />
 
 		<View
 			android:id="@+id/divider2"
@@ -223,8 +238,10 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:layout_marginStart="8dp"
+			android:layout_marginEnd="8dp"
 			android:src="@drawable/ic_person_black_24dp"
 			app:layout_constraintBottom_toBottomOf="@+id/teachersText"
+			app:layout_constraintEnd_toStartOf="@+id/teachersText"
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toTopOf="@+id/teachersText" />
 
