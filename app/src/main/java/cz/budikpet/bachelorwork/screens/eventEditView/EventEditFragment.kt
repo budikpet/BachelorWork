@@ -12,10 +12,7 @@ import android.text.TextWatcher
 import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
-import android.widget.ArrayAdapter
-import android.widget.AutoCompleteTextView
-import android.widget.Button
-import android.widget.Spinner
+import android.widget.*
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.models.SearchItem
@@ -57,11 +54,19 @@ class EventEditFragment : Fragment() {
     ): View? {
         val layout = inflater.inflate(R.layout.fragment_event_edit, container, false)
 
+        layout.findViewById<EditText>(R.id.editEventName)
+            .setText(viewModel.eventToEditChanges!!.fullName, TextView.BufferType.EDITABLE)
+        layout.findViewById<EditText>(R.id.editEventAcronym)
+            .setText(viewModel.eventToEditChanges!!.acronym, TextView.BufferType.EDITABLE)
+
         val spinnerEventType = layout.findViewById<Spinner>(R.id.spinnerEventType)
+        val eventTypes = getEventTypes()
         spinnerEventType.adapter =
-            ArrayAdapter<String>(context!!, android.R.layout.simple_spinner_dropdown_item, getEventTypes())
+            ArrayAdapter<String>(context!!, android.R.layout.simple_spinner_dropdown_item, eventTypes)
+        spinnerEventType.setSelection(eventTypes.indexOf(viewModel.eventToEditChanges!!.event_type.getLabel(context!!)))
 
         val autoRoom = layout.findViewById<AutoCompleteTextView>(R.id.autoEventRoom)
+        autoRoom.setText(viewModel.eventToEditChanges!!.room, TextView.BufferType.EDITABLE)
         initAutoTextView(autoRoom) {
             viewModel.eventToEditChanges?.room = it.id
         }
@@ -102,8 +107,10 @@ class EventEditFragment : Fragment() {
             val listener = DatePickerDialog.OnDateSetListener { datePicker, year, month, day ->
                 date = date.withDate(year, month + 1, day)
                 buttonDate.text = date.toString("dd.MM.YYYY")
-                viewModel.eventToEditChanges!!.starts_at = viewModel.eventToEditChanges!!.starts_at.withDate(year, month, day)
-                viewModel.eventToEditChanges!!.ends_at = viewModel.eventToEditChanges!!.ends_at.withDate(year, month, day)
+                viewModel.eventToEditChanges!!.starts_at =
+                    viewModel.eventToEditChanges!!.starts_at.withDate(year, month, day)
+                viewModel.eventToEditChanges!!.ends_at =
+                    viewModel.eventToEditChanges!!.ends_at.withDate(year, month, day)
             }
             DatePickerDialog(context!!, listener, date.year, date.monthOfYear - 1, date.dayOfMonth).show()
         }
@@ -111,7 +118,8 @@ class EventEditFragment : Fragment() {
         buttonTimeFrom.setOnClickListener {
             val listener = TimePickerDialog.OnTimeSetListener { timePicker, hourOfDay, minute ->
                 val time = date.withTime(hourOfDay, minute, 0, 0)
-                val millisBetween = viewModel.eventToEditChanges!!.ends_at.millisOfDay - viewModel.eventToEditChanges!!.starts_at.millisOfDay
+                val millisBetween =
+                    viewModel.eventToEditChanges!!.ends_at.millisOfDay - viewModel.eventToEditChanges!!.starts_at.millisOfDay
                 buttonTimeFrom.text = time.toString("hh:mm")
                 viewModel.eventToEditChanges?.starts_at = time
 
