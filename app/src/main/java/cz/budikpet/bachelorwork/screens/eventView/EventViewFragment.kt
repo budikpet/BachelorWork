@@ -58,17 +58,18 @@ class EventViewFragment : Fragment() {
     }
 
     private fun subscribeObservers() {
-        viewModel.selectedEvent.observe(this, Observer { selectedEvent ->
-            if (selectedEvent != null) {
-                this.selectedEvent = selectedEvent
-                updateView()
+        viewModel.selectedEvent.observe(this, Observer { selectedEventPair ->
+            if (selectedEventPair != null) {
+                if(selectedEventPair.second != null) {
+                    selectedEvent = selectedEventPair.second!!
+                    updateView()
+                }
+
             }
         })
     }
 
     private fun updateView() {
-        val selectedEvent = viewModel.selectedEvent.value!!
-
         // Room can be empty
         if (selectedEvent.room == null || selectedEvent.room == "") {
             eventRoom.visibility = View.GONE

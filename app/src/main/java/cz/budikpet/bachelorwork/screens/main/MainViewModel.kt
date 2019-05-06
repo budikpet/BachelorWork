@@ -64,7 +64,8 @@ class MainViewModel : ViewModel() {
     /** Contains ID of the selected sidebar item */
     var selectedSidebarItem = MutableLiveData<Int>()
 
-    val selectedEvent = MutableLiveData<TimetableEvent?>()
+    /** Event that was selected to be displayed. */
+    val selectedEvent = MutableLiveData<Pair<Boolean, TimetableEvent?>>()
 
     /** Indicates whether some operation is running. */
     val operationRunning = MutableLiveData<Boolean>()
@@ -136,6 +137,10 @@ class MainViewModel : ViewModel() {
             else -> R.id.sidebarWeekView
         }
         selectedSidebarItem.postValue(id)
+    }
+
+    fun startEditEvent() {
+        selectedEvent.postValue(Pair(true, selectedEvent.value?.second))
     }
 
     /**

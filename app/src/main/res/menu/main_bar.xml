@@ -7,4 +7,8 @@
 		android:icon="@drawable/ic_sync_black_24dp"
 		android:title="@string/menuItem_sync"
 		app:showAsAction="ifRoom" />
+	<item
+		android:id="@+id/itemAddEvent"
+		android:title="Add event"
+		app:showAsAction="never" />
 </menu>

@@ -159,7 +159,7 @@ class MultidayViewFragment : Fragment() {
         }
 
         onEventClickListener = View.OnClickListener { eventView ->
-            viewModel.selectedEvent.postValue(eventView.tag as TimetableEvent)
+            viewModel.selectedEvent.postValue(Pair(false, eventView.tag as TimetableEvent))
         }
     }
 

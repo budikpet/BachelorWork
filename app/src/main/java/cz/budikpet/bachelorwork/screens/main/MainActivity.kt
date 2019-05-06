@@ -26,6 +26,7 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListFragment
+import cz.budikpet.bachelorwork.screens.eventEditView.EventEditFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
 import cz.budikpet.bachelorwork.util.*
@@ -58,7 +59,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     private lateinit var progressBar: ProgressBar
 
     private lateinit var permissionsCheckerFragment: PermissionsCheckerFragment
-    private lateinit var eventViewFragment: EventViewFragment
 
     private val alertDialogBuilder: AlertDialog.Builder by lazy {
         AlertDialog.Builder(this)
@@ -78,7 +78,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         MyApplication.appComponent.inject(this)
         viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
 
-        val toolbar = findViewById<Toolbar>(R.id.customToolbar)
+        val toolbar = findViewById<Toolbar>(R.id.mainToolbar)
         setSupportActionBar(toolbar)
         progressBar = findViewById(R.id.progressBar)
 
@@ -118,20 +118,14 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     private fun initFragments(savedInstanceState: Bundle?) {
         if (savedInstanceState == null) {
             permissionsCheckerFragment = PermissionsCheckerFragment()
-            eventViewFragment = EventViewFragment()
 
             supportFragmentManager.inTransaction {
                 add(permissionsCheckerFragment, PermissionsCheckerFragment.BASE_TAG)
-                add(R.id.eventViewFragmentHolder, eventViewFragment)
-                hide(eventViewFragment)
             }
 
         } else {
             permissionsCheckerFragment =
                 supportFragmentManager.findFragmentByTag(PermissionsCheckerFragment.BASE_TAG) as PermissionsCheckerFragment
-
-            eventViewFragment =
-                supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder) as EventViewFragment
         }
     }
 
@@ -184,13 +178,34 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             viewModel.loadEvents()
         })
 
-        viewModel.selectedEvent.observe(this, Observer { selectedEvent ->
+        viewModel.selectedEvent.observe(this, Observer { pair ->
             supportFragmentManager.inTransaction {
                 setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-                when {
-                    selectedEvent != null -> show(eventViewFragment)
-                    else -> hide(eventViewFragment)
+
+                if (pair == null) {
+                    val holder = supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder)
+                    if (holder != null) {
+                        hide(holder)
+                    }
+                    return@inTransaction this
                 }
+
+                if (pair.first) {
+                    // Show edit screen
+                    replace(R.id.eventViewFragmentHolder, EventEditFragment())
+                } else {
+                    // Show view screen
+                    if (pair.second != null) {
+                        replace(R.id.eventViewFragmentHolder, EventViewFragment())
+                    } else {
+                        val holder = supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder)
+                        if (holder != null) {
+                            hide(holder)
+                        }
+                    }
+                }
+
+                return@inTransaction this
             }
         })
 
@@ -309,6 +324,10 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         if (item?.itemId == R.id.itemSync) {
             Log.i(TAG, "Selected account: ${credential.selectedAccount}")
             viewModel.updateCalendars()
+
+            return true
+        } else if (item?.itemId == R.id.itemAddEvent) {
+            viewModel.startEditEvent()
 
             return true
         }
