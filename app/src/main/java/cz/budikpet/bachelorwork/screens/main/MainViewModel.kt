@@ -45,11 +45,8 @@ class MainViewModel : ViewModel() {
 
     private var compositeDisposable = CompositeDisposable()
 
-    /** Contains ID of the selected sidebar item */
-    var selectedSidebarItem = R.id.sidebarWeekView
-
     /** Username of the CTU account that was used to log in. */
-    val ctuUsername by lazy { repository.ctuUsername }
+    val ctuUsername: String by lazy { repository.ctuUsername }
 
     // MARK: Data
 
@@ -64,9 +61,11 @@ class MainViewModel : ViewModel() {
 
     // MARK: State
 
+    /** Contains ID of the selected sidebar item */
+    var selectedSidebarItem = MutableLiveData<Int>()
+
     /** Indicates whether some operation is running. */
-    val operationRunning =
-        MutableLiveData<Boolean>()   //TODO: Different loading animation or thing for AllCalendarsUpdate?
+    val operationRunning = MutableLiveData<Boolean>()
 
     /** Any exception that was thrown and must be somehow shown to the user. */
     val thrownException = MutableLiveData<Throwable>()
@@ -128,6 +127,15 @@ class MainViewModel : ViewModel() {
      */
     fun checkInternetConnection(): Boolean {
         return repository.checkInternetConnection()
+    }
+
+    fun goToLastMultidayView() {
+        val id = when (daysPerMultidayViewFragment) {
+            1 -> R.id.sidebarDayView
+            3 -> R.id.sidebarThreeDayView
+            else -> R.id.sidebarWeekView
+        }
+        selectedSidebarItem.postValue(id)
     }
 
     /**
@@ -198,6 +206,7 @@ class MainViewModel : ViewModel() {
         val currOwner = timetableOwner.value
 
         if (currOwner == null) {
+            selectedSidebarItem.postValue(R.id.sidebarWeekView)
             timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
             updateSavedTimetables(true)
         }
@@ -412,7 +421,7 @@ class MainViewModel : ViewModel() {
         val savedTimetables = this.savedTimetables.value
         val timetableOwnerUsername = this.timetableOwner.value?.first
 
-        if(savedTimetables != null && timetableOwnerUsername != null) {
+        if (savedTimetables != null && timetableOwnerUsername != null) {
             return savedTimetables.any { it.id == timetableOwnerUsername }
         }
 
@@ -461,7 +470,7 @@ class MainViewModel : ViewModel() {
      */
     private fun updateSavedTimetables(refreshCalendars: Boolean = false) {
         // Update calendars if needed
-        val obs = when(refreshCalendars) {
+        val obs = when (refreshCalendars) {
             true -> repository.refreshCalendars().andThen(repository.getLocalCalendarListItems())
             false -> repository.getLocalCalendarListItems()
         }
@@ -471,7 +480,7 @@ class MainViewModel : ViewModel() {
             .flatMapMaybe {
                 val username = idFromCalendarName(it.displayName)
 
-                if(repository.checkInternetConnection()) {
+                if (repository.checkInternetConnection()) {
                     // We have internet connection so we can call search endpoint
                     return@flatMapMaybe repository.searchSirius(username).firstElement()
                 }
@@ -594,7 +603,7 @@ class MainViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    fun sharePersonalCalendar(email: String) {
+    fun sharePersonalTimetable(email: String) {
         val disposable = repository.sharePersonalCalendar(email)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -603,14 +612,14 @@ class MainViewModel : ViewModel() {
                     Log.i(TAG, "CalendarShared, ACL: $result")
                 },
                 { error ->
-                    Log.e(TAG, "sharePersonalCalendar: $error")
+                    Log.e(TAG, "sharePersonalTimetable: $error")
                     thrownException.postValue(error)
                 })
 
         compositeDisposable.add(disposable)
     }
 
-    fun unsharePersonalCalendar(email: String) {
+    fun unsharePersonalTimetable(email: String) {
         val disposable = repository.unsharePersonalCalendar(email)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())

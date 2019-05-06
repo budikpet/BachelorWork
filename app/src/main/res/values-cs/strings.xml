@@ -29,7 +29,7 @@
 	<string name="teachers">Vyučující:</string>
 	<string name="alertDialog_negative_no">Ne</string>
 	<string name="alertDialog_positive_yes">Ano</string>
-	<string name="alertDialog_message_eventViewTextClicked">Chcete zobrazit rozvrh hodin pro %1$s?</string>
+	<string name="alertDialog_message_eventClicked">Chcete zobrazit rozvrh hodin pro %1$s?</string>
 	<string name="eventType_Assessment">Zápočtový test</string>
 	<string name="eventType_Course_event">Jednorázová událost</string>
 	<string name="eventType_Exam">Zkouška</string>

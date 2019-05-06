@@ -638,7 +638,7 @@ class Repository @Inject constructor(private val context: Context) {
     }
 
     /**
-     * Stops sharing calendar of the user with the selected person.
+     * Stops sharing calendar of the user with the selected person using Google Calendar API.
      */
     fun unsharePersonalCalendar(email: String): Completable {
         val calendarName = MyApplication.calendarNameFromId(ctuUsername)

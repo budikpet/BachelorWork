@@ -28,7 +28,7 @@
 	<string name="teachers">Teachers:</string>
 	<string name="alertDialog_negative_no">No</string>
 	<string name="alertDialog_positive_yes">Yes</string>
-	<string name="alertDialog_message_eventViewTextClicked">Do you wish to display timetable of %1$s?</string>
+	<string name="alertDialog_message_eventClicked">Do you wish to display timetable of %1$s?</string>
 	<string name="eventType_Assessment">Assessment</string>
 	<string name="eventType_Course_event">One-off event</string>
 	<string name="eventType_Exam">Exam</string>

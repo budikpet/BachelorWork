@@ -96,8 +96,8 @@ class MultidayFragmentHolder : Fragment() {
 
         AlertDialog.Builder(context!!)
             .setView(shareDialogView)
-            .setPositiveButton(getString(R.string.alertDialog_positive_firstNotice)) { dialog, id ->
-                viewModel.sharePersonalCalendar(emailEditText.text.toString())
+            .setPositiveButton(getString(R.string.alertDialog_share)) { dialog, id ->
+                viewModel.sharePersonalTimetable(emailEditText.text.toString())
             }
             .setNegativeButton(getString(R.string.alertDialog_quit)) { _, _ -> }
     }

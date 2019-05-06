@@ -117,7 +117,7 @@ class EventViewFragment : Fragment() {
         textView.setOnClickListener {
             alertDialogBuilder.setMessage(
                 String.format(
-                    getString(R.string.alertDialog_message_eventViewTextClicked),
+                    getString(R.string.alertDialog_message_eventClicked),
                     text
                 )
             )

@@ -1,10 +1,8 @@
 package cz.budikpet.bachelorwork.screens.main
 
 import android.accounts.AccountManager
-import android.app.SearchManager
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
-import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
@@ -14,7 +12,6 @@ import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
-import android.support.v7.widget.SearchView
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Gravity
@@ -32,7 +29,6 @@ import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
 import cz.budikpet.bachelorwork.util.*
-import kotlinx.android.synthetic.main.fragment_holder_multiday.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import pub.devrel.easypermissions.EasyPermissions
@@ -112,8 +108,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
         val sidebarNavView = findViewById<NavigationView>(R.id.sidebarNavView)
 
-        sidebarNavView.setNavigationItemSelectedListener {sidebarItem ->
-            displaySelectedFragment(sidebarItem.itemId)
+        sidebarNavView.setNavigationItemSelectedListener { sidebarItem ->
+            displaySelectedMainFragment(sidebarItem.itemId)
             drawerLayout.closeDrawer(Gravity.START)
             true
         }
@@ -137,33 +133,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             eventViewFragment =
                 supportFragmentManager.findFragmentById(R.id.eventViewFragmentHolder) as EventViewFragment
         }
-
-        displaySelectedFragment(viewModel.selectedSidebarItem)
-    }
-
-    private fun displaySelectedFragment(itemId: Int) {
-        supportFragmentManager.inTransaction {
-            when(itemId) {
-                R.id.sidebarDayView -> {
-                    viewModel.daysPerMultidayViewFragment = 1
-                    replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
-                }
-                R.id.sidebarThreeDayView -> {
-                    viewModel.daysPerMultidayViewFragment = 3
-                    replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
-                }
-                R.id.sidebarWeekView -> {
-                    viewModel.daysPerMultidayViewFragment = 7
-                    replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
-                }
-                R.id.sidebarSavedCalendars -> {
-                    replace(R.id.mainFragmentHolder, CalendarsListFragment())
-                }
-                R.id.sidebarSettings -> Log.i(TAG, "settings")
-            }
-            setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
-        }
-        viewModel.selectedSidebarItem = itemId
     }
 
     private fun initSearchSuggestionRecyclerView() {
@@ -233,6 +202,36 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 handleException(it)
             }
         })
+
+        viewModel.selectedSidebarItem.observe(this, Observer {
+            if (it != null) {
+                displaySelectedMainFragment(it)
+            }
+        })
+    }
+
+    private fun displaySelectedMainFragment(itemId: Int) {
+        supportFragmentManager.inTransaction {
+            when (itemId) {
+                R.id.sidebarDayView -> {
+                    viewModel.daysPerMultidayViewFragment = 1
+                    replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
+                }
+                R.id.sidebarThreeDayView -> {
+                    viewModel.daysPerMultidayViewFragment = 3
+                    replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
+                }
+                R.id.sidebarWeekView -> {
+                    viewModel.daysPerMultidayViewFragment = 7
+                    replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
+                }
+                R.id.sidebarSavedCalendars -> {
+                    replace(R.id.mainFragmentHolder, CalendarsListFragment())
+                }
+                R.id.sidebarSettings -> Log.i(TAG, "settings")
+            }
+            setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
+        }
     }
 
     /*

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
+import android.support.v7.app.AlertDialog
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
@@ -59,6 +60,12 @@ class CalendarsListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
         return@lazy snackbar
     }
 
+    private val goToTimetableDialogBuilder: AlertDialog.Builder by lazy {
+        AlertDialog.Builder(context!!)
+            .setTitle(R.string.alertDialog_title_notice)
+            .setNegativeButton(getString(R.string.alertDialog_negative_no)) { dialog, id -> }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -83,6 +90,14 @@ class CalendarsListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
 
         val adapter = CalendarsListAdapter(context!!) { searchItem ->
             Log.i(TAG, "$searchItem")
+            val message = String.format(getString(R.string.alertDialog_message_eventClicked), searchItem.id)
+            goToTimetableDialogBuilder
+                .setMessage(message)
+                .setPositiveButton(getString(R.string.alertDialog_positive_yes)) { dialog, id ->
+                    viewModel.goToLastMultidayView()
+                    viewModel.timetableOwner.postValue(Pair(searchItem.id, searchItem.type))
+                }
+                .show()
         }
         calendarsList.adapter = adapter
 
