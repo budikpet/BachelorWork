@@ -8,15 +8,15 @@ import java.util.*
 
 data class TimetableEvent(
     val siriusId: Int? = null,
-    val room: String? = null,      // Can be null
-    val acronym: String = "",
-    val fullName: String = acronym,
-    val event_type: EventType = EventType.OTHER,
-    val starts_at: DateTime = DateTime(),
-    val ends_at: DateTime = starts_at,
+    var room: String? = null,      // Can be null
+    var acronym: String = "",
+    var fullName: String = acronym,
+    var event_type: EventType = EventType.OTHER,
+    var starts_at: DateTime = DateTime(),
+    var ends_at: DateTime = starts_at,
     var deleted: Boolean = false,
-    val capacity: Int = 0,
-    val occupied: Int = 0,
+    var capacity: Int = 0,
+    var occupied: Int = 0,
     val teachers: ArrayList<String> = arrayListOf(),
     val students: ArrayList<String>? = null,
     var color: Int = defaultColor(event_type)

@@ -8,6 +8,14 @@
 	android:background="@color/itemWhite"
 	tools:context=".screens.eventEditView.EventEditFragment">
 
+	<android.support.constraint.Barrier
+		android:id="@+id/textStartBarrier"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		app:barrierDirection="end"
+		app:constraint_referenced_ids="imageRoom"
+		tools:layout_editor_absoluteX="411dp" />
+
 	<android.support.v7.widget.Toolbar
 		android:id="@+id/eventEditToolbar"
 		android:layout_width="0dp"
@@ -30,7 +38,7 @@
 		android:hint="Event name"
 		android:inputType="textPersonName"
 		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintStart_toEndOf="@+id/textStartBarrier"
 		app:layout_constraintTop_toBottomOf="@id/eventEditToolbar" />
 
 	<EditText
@@ -43,7 +51,7 @@
 		android:hint="Acronym"
 		android:inputType="textPersonName"
 		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintStart_toEndOf="@+id/textStartBarrier"
 		app:layout_constraintTop_toBottomOf="@+id/editEventName" />
 
 	<Spinner
@@ -54,7 +62,7 @@
 		android:layout_marginTop="8dp"
 		android:layout_marginEnd="8dp"
 		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintStart_toEndOf="@+id/textStartBarrier"
 		app:layout_constraintTop_toBottomOf="@+id/editEventAcronym" />
 
 	<View
@@ -67,8 +75,20 @@
 		android:background="@color/divider_grey"
 		app:layout_constraintEnd_toEndOf="parent"
 		app:layout_constraintHorizontal_bias="0.0"
-		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintStart_toEndOf="@+id/textStartBarrier"
 		app:layout_constraintTop_toBottomOf="@+id/spinnerEventType" />
+
+	<ImageView
+		android:id="@+id/imageRoom"
+		android:layout_width="wrap_content"
+		android:layout_height="0dp"
+		android:layout_marginStart="8dp"
+		android:layout_marginEnd="8dp"
+		android:src="@drawable/ic_place_black_24dp"
+		app:layout_constraintBottom_toBottomOf="@+id/autoEventRoom"
+		app:layout_constraintEnd_toStartOf="@+id/textStartBarrier"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="@+id/autoEventRoom" />
 
 	<AutoCompleteTextView
 		android:id="@+id/autoEventRoom"
@@ -79,7 +99,7 @@
 		android:layout_marginEnd="8dp"
 		android:hint="Room"
 		app:layout_constraintEnd_toEndOf="parent"
-		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintStart_toEndOf="@+id/textStartBarrier"
 		app:layout_constraintTop_toBottomOf="@+id/divider" />
 
 </android.support.constraint.ConstraintLayout>

@@ -25,7 +25,7 @@
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			app:barrierDirection="end"
-			app:constraint_referenced_ids="calendarImage,viewExit,placeImage,personImage"
+			app:constraint_referenced_ids="imageCalendar,viewExit,imagePlace,imagePerson"
 			tools:layout_editor_absoluteX="411dp" />
 
 		<android.support.constraint.Guideline
@@ -104,14 +104,14 @@
 			tools:text="MI-IOS" />
 
 		<ImageView
-			android:id="@+id/placeImage"
+			android:id="@+id/imagePlace"
 			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_height="0dp"
 			android:layout_marginStart="8dp"
 			android:layout_marginEnd="8dp"
 			android:src="@drawable/ic_place_black_24dp"
 			app:layout_constraintBottom_toBottomOf="@+id/viewEventRoom"
-			app:layout_constraintEnd_toStartOf="@+id/viewEventRoom"
+			app:layout_constraintEnd_toStartOf="@id/textStartBarrier"
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toTopOf="@+id/viewEventRoom" />
 
@@ -139,14 +139,14 @@
 			app:layout_constraintTop_toBottomOf="@+id/viewEventName" />
 
 		<ImageView
-			android:id="@+id/calendarImage"
+			android:id="@+id/imageCalendar"
 			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_height="0dp"
 			android:layout_marginStart="8dp"
 			android:layout_marginEnd="8dp"
 			android:src="@drawable/ic_today_black_24dp"
 			app:layout_constraintBottom_toBottomOf="@+id/viewEventDate"
-			app:layout_constraintEnd_toStartOf="@+id/viewEventDate"
+			app:layout_constraintEnd_toStartOf="@id/textStartBarrier"
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toTopOf="@+id/viewEventDate" />
 
@@ -234,14 +234,14 @@
 			app:layout_constraintTop_toBottomOf="@+id/capacityText" />
 
 		<ImageView
-			android:id="@+id/personImage"
+			android:id="@+id/imagePerson"
 			android:layout_width="wrap_content"
-			android:layout_height="wrap_content"
+			android:layout_height="0dp"
 			android:layout_marginStart="8dp"
 			android:layout_marginEnd="8dp"
 			android:src="@drawable/ic_person_black_24dp"
 			app:layout_constraintBottom_toBottomOf="@+id/teachersText"
-			app:layout_constraintEnd_toStartOf="@+id/teachersText"
+			app:layout_constraintEnd_toStartOf="@id/textStartBarrier"
 			app:layout_constraintStart_toStartOf="parent"
 			app:layout_constraintTop_toTopOf="@+id/teachersText" />
 
@@ -263,7 +263,7 @@
 			app:layout_constraintBottom_toBottomOf="parent"
 			app:layout_constraintEnd_toEndOf="parent"
 			app:layout_constraintStart_toStartOf="@id/textStartBarrier"
-			app:layout_constraintTop_toBottomOf="@id/teachersText"></LinearLayout>
+			app:layout_constraintTop_toBottomOf="@id/teachersText"/>
 
 	</android.support.constraint.ConstraintLayout>
 </android.support.v4.widget.NestedScrollView>

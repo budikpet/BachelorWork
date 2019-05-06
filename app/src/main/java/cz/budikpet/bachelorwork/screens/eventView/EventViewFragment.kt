@@ -76,10 +76,10 @@ class EventViewFragment : Fragment() {
         // Room can be empty
         if (selectedEvent.room == null || selectedEvent.room == "") {
             viewEventRoom.visibility = View.GONE
-            placeImage.visibility = View.GONE
+            imagePlace.visibility = View.GONE
         } else {
             viewEventRoom.visibility = View.VISIBLE
-            placeImage.visibility = View.VISIBLE
+            imagePlace.visibility = View.VISIBLE
         }
 
         // Update info
