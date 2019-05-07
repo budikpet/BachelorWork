@@ -49,4 +49,5 @@
 	<string name="menuItem_sharePersonalTimetable">Sdílet osobní rozvrh hodin</string>
 	<string name="alertDialog_share">Sdílet</string>
 	<string name="alertDialog_message_share">Prosím specifikujte emailovou adresu účtu Google, se kterým chcete svůj osobní rozvrh hodin sdílet.</string>
+	<string name="menuItem_SaveEvent">Uložit</string>
 </resources>

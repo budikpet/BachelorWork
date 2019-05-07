@@ -87,14 +87,20 @@ class EventViewFragment : Fragment() {
         this.viewAcronym.text = selectedEvent.acronym
         this.viewEventType.text = selectedEvent.event_type.getLabel(context!!)
         this.viewEventRoom.text = selectedEvent.room
-        this.viewStudentsCount.text = selectedEvent.occupied.toString()
-        this.viewCapacity.text = selectedEvent.capacity.toString()
         this.viewEventDate.text =
             "${selectedEvent.starts_at.dayOfWeek().asText} ${selectedEvent.starts_at.toString("dd.MM.YYYY")}"
         this.viewEventTime.text = "${timeString(selectedEvent.starts_at)} – ${timeString(selectedEvent.ends_at)}"
 
         clickableTextView(viewEventName, selectedEvent.fullName, ItemType.COURSE)
         clickableTextView(viewEventRoom, selectedEvent.room!!, ItemType.ROOM)
+
+        if(selectedEvent.capacity == 0 && selectedEvent.occupied == 0) {
+            this.capacityGroup.visibility = View.GONE
+        } else {
+            this.capacityGroup.visibility = View.VISIBLE
+            this.viewStudentsCount.text = selectedEvent.occupied.toString()
+            this.viewCapacity.text = selectedEvent.capacity.toString()
+        }
 
         teachersList.removeAllViews()
         for (teacher in selectedEvent.teachers) {

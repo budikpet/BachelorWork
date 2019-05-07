@@ -64,7 +64,6 @@
 			android:id="@+id/spinnerEventType"
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
-			android:layout_marginTop="8dp"
 			android:entries="@android:array/phoneTypes"
 			android:padding="0dp"
 			app:layout_constraintEnd_toEndOf="@+id/editEventAcronym"
@@ -127,6 +126,8 @@
 			android:layout_marginStart="8dp"
 			android:layout_marginTop="8dp"
 			android:background="@drawable/test"
+			android:padding="5dp"
+			android:paddingStart="5dp"
 			app:layout_constraintStart_toEndOf="@+id/textStartBarrier"
 			app:layout_constraintTop_toBottomOf="@+id/autoEventRoom"
 			tools:text="10.1.2018" />
@@ -139,6 +140,8 @@
 			android:layout_marginStart="32dp"
 			android:layout_marginTop="8dp"
 			android:background="@drawable/test"
+			android:padding="5dp"
+			android:paddingStart="5dp"
 			app:layout_constraintStart_toEndOf="@+id/buttonDate"
 			app:layout_constraintTop_toBottomOf="@+id/autoEventRoom"
 			tools:text="7:30" />
@@ -159,9 +162,62 @@
 			android:layout_height="wrap_content"
 			android:layout_marginStart="8dp"
 			android:background="@drawable/test"
+			android:padding="5dp"
 			app:layout_constraintBaseline_toBaselineOf="@+id/buttonTimeFrom"
 			app:layout_constraintStart_toEndOf="@+id/hyphen"
 			tools:text="9:00" />
+
+		<View
+			android:id="@+id/divider3"
+			android:layout_width="0dp"
+			android:layout_height="2dp"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
+			android:layout_marginEnd="8dp"
+			android:background="@color/divider_grey"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toEndOf="@id/textStartBarrier"
+			app:layout_constraintTop_toBottomOf="@+id/buttonTimeTo" />
+
+		<EditText
+			android:id="@+id/editText4"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
+			android:layout_marginEnd="8dp"
+			android:ems="10"
+			android:gravity="start|top"
+			android:hint="Note"
+			android:inputType="textMultiLine"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintHorizontal_bias="0.0"
+			app:layout_constraintStart_toEndOf="@+id/textStartBarrier"
+			app:layout_constraintTop_toBottomOf="@+id/divider3" />
+
+		<ImageView
+			android:id="@+id/imageView4"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="8dp"
+			android:layout_marginEnd="8dp"
+			android:src="@drawable/ic_sort_note_black_24dp"
+			app:layout_constraintBottom_toBottomOf="@+id/editText4"
+			app:layout_constraintEnd_toEndOf="@+id/textStartBarrier"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="@+id/editText4" />
+
+		<MultiAutoCompleteTextView
+			android:id="@+id/teachersAutoComplete"
+			android:layout_width="0dp"
+			android:layout_height="wrap_content"
+			android:layout_marginStart="8dp"
+			android:layout_marginTop="8dp"
+			android:layout_marginEnd="8dp"
+			android:hint="Teachers"
+			app:layout_constraintEnd_toEndOf="parent"
+			app:layout_constraintStart_toEndOf="@+id/textStartBarrier"
+			app:layout_constraintTop_toBottomOf="@+id/editText4" />
 
 	</android.support.constraint.ConstraintLayout>
 
