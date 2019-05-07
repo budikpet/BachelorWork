@@ -13,11 +13,14 @@ import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
+import com.tokenautocomplete.TokenCompleteTextView
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
+import cz.budikpet.bachelorwork.util.ContactsCompletionView
 import kotlinx.android.synthetic.main.fragment_event_edit.*
 import org.joda.time.DateTime
+import cz.budikpet.bachelorwork.R
 
 
 class EventEditFragment : Fragment() {
@@ -25,7 +28,6 @@ class EventEditFragment : Fragment() {
 
     private lateinit var viewModel: MainViewModel
     private var selectedAutoTextView: AutoCompleteTextView? = null
-    private var selectedTimeView: Button? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,19 +44,21 @@ class EventEditFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val layout = inflater.inflate(cz.budikpet.bachelorwork.R.layout.fragment_event_edit, container, false)
+        val layout = inflater.inflate(R.layout.fragment_event_edit, container, false)
 
         if (viewModel.eventToEditChanges == null) {
             Log.e(TAG, "viewModel.eventToEditChanges should not be null")
             return layout
         }
 
-        layout.findViewById<EditText>(cz.budikpet.bachelorwork.R.id.editEventName)
-            .setText(viewModel.eventToEditChanges!!.fullName, TextView.BufferType.EDITABLE)
-        layout.findViewById<EditText>(cz.budikpet.bachelorwork.R.id.editEventAcronym)
-            .setText(viewModel.eventToEditChanges!!.acronym, TextView.BufferType.EDITABLE)
+        val editEventAcronym = layout.findViewById<EditText>(R.id.editEventAcronym)
+        editEventAcronym.setText(viewModel.eventToEditChanges!!.acronym, TextView.BufferType.EDITABLE)
 
-        val spinnerEventType = layout.findViewById<Spinner>(cz.budikpet.bachelorwork.R.id.spinnerEventType)
+        // TODO: persist item & acronym from eventname
+        val editEventName = layout.findViewById<EditText>(R.id.editEventName)
+        editEventName.setText(viewModel.eventToEditChanges!!.fullName, TextView.BufferType.EDITABLE)
+
+        val spinnerEventType = layout.findViewById<Spinner>(R.id.spinnerEventType)
         val eventTypes = getEventTypes()
         spinnerEventType.adapter =
             ArrayAdapter<String>(context!!, android.R.layout.simple_dropdown_item_1line, eventTypes)
@@ -68,7 +72,7 @@ class EventEditFragment : Fragment() {
 
         }
 
-        val autoRoom = layout.findViewById<AutoCompleteTextView>(cz.budikpet.bachelorwork.R.id.autoEventRoom)
+        val autoRoom = layout.findViewById<AutoCompleteTextView>(R.id.autoEventRoom)
         autoRoom.setText(viewModel.eventToEditChanges!!.room, TextView.BufferType.EDITABLE)
         initAutoTextView(autoRoom) {
             viewModel.eventToEditChanges?.room = it.id
@@ -77,11 +81,44 @@ class EventEditFragment : Fragment() {
         initTimeButtons(layout)
 
         val multiAutoTextView =
-            layout.findViewById<MultiAutoCompleteTextView>(cz.budikpet.bachelorwork.R.id.teachersAutoComplete)
+            layout.findViewById<MultiAutoCompleteTextView>(R.id.teachersAutoComplete)
         multiAutoTextView.setTokenizer(MultiAutoCompleteTextView.CommaTokenizer());
         initTeachersAutoTextView(multiAutoTextView) { clickedItem ->
             viewModel.eventToEditChanges?.teachers?.add(clickedItem.id)
         }
+
+        val teachersTokenAuto = layout.findViewById<ContactsCompletionView>(R.id.teachersTokenAuto)
+        teachersTokenAuto.setAdapter(AutoSuggestAdapter(context!!, android.R.layout.simple_list_item_1))
+        teachersTokenAuto.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                selectedAutoTextView = teachersTokenAuto
+            }
+
+            override fun onTextChanged(query: CharSequence?, start: Int, before: Int, count: Int) {
+                val newText = query.toString()
+                val parts = newText.split(",".toRegex())
+                if (parts.isNotEmpty()) {
+                    viewModel.searchSirius(parts.last())
+                }
+            }
+
+        })
+
+        teachersTokenAuto.setTokenListener(object: TokenCompleteTextView.TokenListener<SearchItem> {
+            override fun onTokenIgnored(token: SearchItem?) {}
+
+            override fun onTokenAdded(token: SearchItem?) {
+                val token = token ?: return
+                viewModel.eventToEditChanges?.teachers?.add(token.id)
+            }
+
+            override fun onTokenRemoved(token: SearchItem?) {
+                val token = token ?: return
+                viewModel.eventToEditChanges?.teachers?.remove(token.id)
+            }
+        })
 
         return layout
     }
@@ -90,12 +127,14 @@ class EventEditFragment : Fragment() {
         super.onCreateOptionsMenu(menu, inflater)
 
         val toolbar = eventEditToolbar
-        inflater?.inflate(cz.budikpet.bachelorwork.R.menu.event_edit_bar, toolbar.menu)
+        inflater?.inflate(R.menu.event_edit_bar, toolbar.menu)
 
-        toolbar.setNavigationIcon(cz.budikpet.bachelorwork.R.drawable.ic_close_black_24dp)
+        toolbar.setNavigationIcon(R.drawable.ic_close_black_24dp)
 
         toolbar.setNavigationOnClickListener {
             // Edit cancelled
+            hideSoftKeyboard(it)
+            viewModel.searchItems.postValue(listOf())
             viewModel.eventToEditChanges = null
             viewModel.eventToEdit.postValue(null)
         }
@@ -133,9 +172,9 @@ class EventEditFragment : Fragment() {
     private fun initTimeButtons(layout: View) {
         var date = DateTime()
 
-        val buttonDate = layout.findViewById<Button>(cz.budikpet.bachelorwork.R.id.buttonDate)
-        val buttonTimeFrom = layout.findViewById<Button>(cz.budikpet.bachelorwork.R.id.buttonTimeFrom)
-        val buttonTimeTo = layout.findViewById<Button>(cz.budikpet.bachelorwork.R.id.buttonTimeTo)
+        val buttonDate = layout.findViewById<Button>(R.id.buttonDate)
+        val buttonTimeFrom = layout.findViewById<Button>(R.id.buttonTimeFrom)
+        val buttonTimeTo = layout.findViewById<Button>(R.id.buttonTimeTo)
 
         buttonDate.text = viewModel.eventToEditChanges!!.starts_at.toString("dd.MM.YYYY")
         buttonTimeFrom.text = viewModel.eventToEditChanges!!.starts_at.toString("hh:mm")
@@ -204,13 +243,13 @@ class EventEditFragment : Fragment() {
 
     private fun subscribeObservers() {
         viewModel.searchItems.observe(this, Observer { searchItemsList ->
-            val adapter = selectedAutoTextView?.adapter as AutoSuggestAdapter?
-            if (adapter != null && searchItemsList != null) {
+            val adapter = (selectedAutoTextView?.adapter as AutoSuggestAdapter?) ?: return@Observer
+            if (searchItemsList != null) {
                 val list = searchItemsList.map {
                     // Return title if it exists, else id
                     it.title ?: it.id
                 }
-                adapter.setData(list)
+                adapter.setData(searchItemsList)
             }
         })
     }
