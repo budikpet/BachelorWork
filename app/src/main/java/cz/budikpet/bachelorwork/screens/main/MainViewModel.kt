@@ -189,8 +189,14 @@ class MainViewModel : ViewModel() {
         repository.signOut()
     }
 
-    fun searchSirius(query: String) {
+    fun searchSirius(query: String, itemType: ItemType? = null) {
         val disposable = repository.searchSirius(query)
+            .filter {
+                when {
+                    itemType != null -> it.type == itemType
+                    else -> true
+                }
+            }
             .toList()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -388,6 +394,8 @@ class MainViewModel : ViewModel() {
         // Create action observables
         val createObs = Observable.fromIterable(new)
             .flatMapCompletable { currEvent ->
+                Observable.fromIterable(currEvent.teachers)
+                    .flatMap { repository.searchSirius() }
                 repository.addGoogleCalendarEvent(calendarId, currEvent).ignoreElement()
             }
 

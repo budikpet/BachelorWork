@@ -18,11 +18,11 @@ data class TimetableEvent(
     var capacity: Int = 0,
     var occupied: Int = 0,
     val teachers: ArrayList<String> = arrayListOf(),
-    val students: ArrayList<String>? = null,
     var color: Int = defaultColor(event_type)
 ) {
     var googleId: Long? = null
     var changed: Boolean = false
+    val teachersNames: ArrayList<String> = arrayListOf()
 
     companion object {
         fun from(event: Event): TimetableEvent {
@@ -35,7 +35,7 @@ data class TimetableEvent(
                 event.id, room = room, acronym = event.links.course, event_type = event.event_type,
                 starts_at = DateTime(event.starts_at), ends_at = DateTime(event.ends_at), deleted = event.deleted,
                 capacity = event.capacity, occupied = event.occupied,
-                teachers = event.links.teachers, students = event.links.students
+                teachers = event.links.teachers
             )
             timetableEvent.changed = hasEventChanged(event)
 

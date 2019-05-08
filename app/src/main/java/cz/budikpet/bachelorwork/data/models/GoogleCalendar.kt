@@ -5,7 +5,6 @@ import cz.budikpet.bachelorwork.data.enums.EventType
 data class GoogleCalendarMetadata(
     var id: Int? = null,
     val teachers: ArrayList<String> = arrayListOf(),
-    val students: ArrayList<String>? = null,
     val capacity: Int = 0,
     val occupied: Int = 0,
     val eventType: EventType = EventType.OTHER,

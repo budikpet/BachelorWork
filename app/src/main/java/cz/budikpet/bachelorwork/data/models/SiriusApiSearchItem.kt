@@ -9,4 +9,11 @@ data class SearchItem(
     /** Name - null, Miroslav Balík, Algoritmy a grafy 2 */
     val title: String? = null,
     val type: ItemType
-)
+) {
+    override fun toString(): String {
+        return when {
+            title != null && title.count() > 0 -> title
+            else -> id
+        }
+    }
+}

@@ -17,10 +17,11 @@ import com.tokenautocomplete.TokenCompleteTextView
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
-import cz.budikpet.bachelorwork.util.ContactsCompletionView
+import cz.budikpet.bachelorwork.screens.ContactsCompletionView
 import kotlinx.android.synthetic.main.fragment_event_edit.*
 import org.joda.time.DateTime
 import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.data.enums.ItemType
 
 
 class EventEditFragment : Fragment() {
@@ -74,51 +75,15 @@ class EventEditFragment : Fragment() {
 
         val autoRoom = layout.findViewById<AutoCompleteTextView>(R.id.autoEventRoom)
         autoRoom.setText(viewModel.eventToEditChanges!!.room, TextView.BufferType.EDITABLE)
-        initAutoTextView(autoRoom) {
+        initAutoTextView(autoRoom, ItemType.ROOM) {
             viewModel.eventToEditChanges?.room = it.id
         }
 
         initTimeButtons(layout)
 
-        val multiAutoTextView =
-            layout.findViewById<MultiAutoCompleteTextView>(R.id.teachersAutoComplete)
-        multiAutoTextView.setTokenizer(MultiAutoCompleteTextView.CommaTokenizer());
-        initTeachersAutoTextView(multiAutoTextView) { clickedItem ->
-            viewModel.eventToEditChanges?.teachers?.add(clickedItem.id)
-        }
-
         val teachersTokenAuto = layout.findViewById<ContactsCompletionView>(R.id.teachersTokenAuto)
-        teachersTokenAuto.setAdapter(AutoSuggestAdapter(context!!, android.R.layout.simple_list_item_1))
-        teachersTokenAuto.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                selectedAutoTextView = teachersTokenAuto
-            }
-
-            override fun onTextChanged(query: CharSequence?, start: Int, before: Int, count: Int) {
-                val newText = query.toString()
-                val parts = newText.split(",".toRegex())
-                if (parts.isNotEmpty()) {
-                    viewModel.searchSirius(parts.last())
-                }
-            }
-
-        })
-
-        teachersTokenAuto.setTokenListener(object: TokenCompleteTextView.TokenListener<SearchItem> {
-            override fun onTokenIgnored(token: SearchItem?) {}
-
-            override fun onTokenAdded(token: SearchItem?) {
-                val token = token ?: return
-                viewModel.eventToEditChanges?.teachers?.add(token.id)
-            }
-
-            override fun onTokenRemoved(token: SearchItem?) {
-                val token = token ?: return
-                viewModel.eventToEditChanges?.teachers?.remove(token.id)
-            }
-        })
+        teachersTokenAuto.allowCollapse(false)
+        initTeachersAutoTextView(teachersTokenAuto, ItemType.PERSON)
 
         return layout
     }
@@ -141,7 +106,47 @@ class EventEditFragment : Fragment() {
 
     }
 
-    private fun initTeachersAutoTextView(autoTextView: AutoCompleteTextView, onItemClicked: (SearchItem) -> Unit) {
+    private fun initTeachersAutoTextView(teachersTokenAuto: ContactsCompletionView, itemType: ItemType) {
+        teachersTokenAuto.setAdapter(AutoSuggestAdapter(context!!, android.R.layout.simple_list_item_1) {
+            viewModel.eventToEditChanges!!.teachers.contains(it.id)
+        })
+        teachersTokenAuto.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
+                selectedAutoTextView = teachersTokenAuto
+            }
+
+            override fun onTextChanged(query: CharSequence?, start: Int, before: Int, count: Int) {
+                val newText = query.toString()
+                val parts = newText.split(",".toRegex())
+                if (parts.isNotEmpty()) {
+                    viewModel.searchSirius(parts.last(), itemType)
+                }
+            }
+
+        })
+
+        teachersTokenAuto.setTokenListener(object: TokenCompleteTextView.TokenListener<SearchItem> {
+            override fun onTokenIgnored(token: SearchItem?) {}
+
+            override fun onTokenAdded(token: SearchItem?) {
+                val token = token ?: return
+                viewModel.eventToEditChanges?.teachers?.add(token.id)
+            }
+
+            override fun onTokenRemoved(token: SearchItem?) {
+                val token = token ?: return
+                viewModel.eventToEditChanges?.teachers?.remove(token.id)
+            }
+        })
+
+        for(teacherId in viewModel.eventToEditChanges!!.teachers) {
+            teachersTokenAuto.addObjectAsync(SearchItem(teacherId, type = ItemType.PERSON))
+        }
+    }
+
+    private fun initAutoTextView(autoTextView: AutoCompleteTextView, itemType: ItemType, onItemClicked: (SearchItem) -> Unit) {
         autoTextView.setAdapter(AutoSuggestAdapter(context!!, android.R.layout.simple_list_item_1))
 
         autoTextView.setOnItemClickListener { parent, view, position, id ->
@@ -159,11 +164,8 @@ class EventEditFragment : Fragment() {
             }
 
             override fun onTextChanged(query: CharSequence?, start: Int, before: Int, count: Int) {
-                val newText = query.toString()
-                val parts = newText.split(",".toRegex())
-                if (parts.isNotEmpty()) {
-                    viewModel.searchSirius(parts.last())
-                }
+                val query = query.toString()
+                viewModel.searchSirius(query, itemType)
             }
 
         })
@@ -216,39 +218,10 @@ class EventEditFragment : Fragment() {
         }
     }
 
-    private fun initAutoTextView(autoTextView: AutoCompleteTextView, onItemClicked: (SearchItem) -> Unit) {
-        autoTextView.setAdapter(AutoSuggestAdapter(context!!, android.R.layout.simple_list_item_1))
-
-        autoTextView.setOnItemClickListener { parent, view, position, id ->
-            hideSoftKeyboard(view)
-
-            val selectedItem = viewModel.searchItems.value?.elementAt(position) ?: return@setOnItemClickListener
-            onItemClicked(selectedItem)
-        }
-
-        autoTextView.addTextChangedListener(object : TextWatcher {
-            override fun afterTextChanged(s: Editable?) {}
-
-            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {
-                selectedAutoTextView = autoTextView
-            }
-
-            override fun onTextChanged(query: CharSequence?, start: Int, before: Int, count: Int) {
-                val query = query.toString()
-                viewModel.searchSirius(query)
-            }
-
-        })
-    }
-
     private fun subscribeObservers() {
         viewModel.searchItems.observe(this, Observer { searchItemsList ->
             val adapter = (selectedAutoTextView?.adapter as AutoSuggestAdapter?) ?: return@Observer
             if (searchItemsList != null) {
-                val list = searchItemsList.map {
-                    // Return title if it exists, else id
-                    it.title ?: it.id
-                }
                 adapter.setData(searchItemsList)
             }
         })

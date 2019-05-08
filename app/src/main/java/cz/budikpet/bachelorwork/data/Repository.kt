@@ -19,6 +19,7 @@ import com.google.gson.JsonSyntaxException
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
 import cz.budikpet.bachelorwork.api.SiriusAuthApiService
+import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.*
@@ -504,7 +505,7 @@ class Repository @Inject constructor(private val context: Context) {
                     metadata.id, starts_at = dateStart, ends_at = dateEnd,
                     event_type = metadata.eventType, capacity = metadata.capacity,
                     occupied = metadata.occupied, acronym = title, room = location, teachers = metadata.teachers,
-                    students = metadata.students, deleted = metadata.deleted
+                    deleted = metadata.deleted
                 )
                 event.googleId = id
                 emitter.onNext(event)
@@ -521,7 +522,7 @@ class Repository @Inject constructor(private val context: Context) {
      */
     fun updateGoogleCalendarEvent(eventId: Long, event: TimetableEvent): Single<Int> {
         val calendarMetadata = GoogleCalendarMetadata(
-            event.siriusId, event.teachers, event.students, event.capacity,
+            event.siriusId, event.teachers, event.capacity,
             event.occupied, event.event_type, deleted = event.deleted
         )
         val values = ContentValues().apply {
@@ -557,7 +558,7 @@ class Repository @Inject constructor(private val context: Context) {
      */
     fun addGoogleCalendarEvent(calId: Long, event: TimetableEvent): Single<Long> {
         val calendarMetadata = GoogleCalendarMetadata(
-            event.siriusId, event.teachers, event.students, event.capacity,
+            event.siriusId, event.teachers, event.capacity,
             event.occupied, event.event_type
         )
         val timezone = TimeZone.getDefault().toString()
