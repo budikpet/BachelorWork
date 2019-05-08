@@ -352,19 +352,22 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
     private fun handleException(exception: Throwable) {
         // TODO: Implement
-        var text = "Unknown exception occurred."
+        var text = getString(R.string.exceptionUnknown)
 
         if (exception is GoogleAccountNotFoundException) {
             // Prompt the user to select a new google account
             Log.e(TAG, "Used google account not found.")
+            text = getString(R.string.exceptionGoogleAccountNotFound)
         } else if (exception is HttpException) {
             Log.e(TAG, "Retrofit 2 HTTP ${exception.code()} exception: ${exception.response()}")
             if (exception.code() == 500) {
-                text = "CTU internal server error occured. Please try again."
+                text = getString(R.string.exceptionCTUInternal)
+            } else if(exception.code() == 404) {
+                text = getString(R.string.exceptionTimetableNotFound)
             }
         } else if (exception is NoInternetConnectionException) {
             Log.e(TAG, "Could not connect to the internet.")
-            text = exception.message!!
+            text = getString(R.string.exceptionInternetUnavailable)
         } else {
             Log.e(TAG, "Unknown exception occurred: $exception")
         }

@@ -29,6 +29,7 @@ import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
 import org.joda.time.Interval
+import retrofit2.HttpException
 import javax.inject.Inject
 
 // TODO: Parts of AllCalendarUpdate code can be reused
@@ -565,12 +566,23 @@ class MainViewModel : ViewModel() {
                 },
                 { error ->
                     Log.e(TAG, "LoadEvents error: $error")
+                    !checkNotFound(error)
                     thrownException.postValue(error)
                     operationRunning.postValue(false)
                 }
             )
 
         compositeDisposable.add(disposable)
+    }
+
+    private fun checkNotFound(error: Throwable): Boolean {
+        if (error is HttpException && error.code() == 404) {
+            // Calendar not found, go back
+            timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
+            return true
+        }
+
+        return false
     }
 
     // MARK: Mostly methods used for testing

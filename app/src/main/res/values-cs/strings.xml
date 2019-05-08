@@ -50,4 +50,14 @@
 	<string name="alertDialog_share">Sdílet</string>
 	<string name="alertDialog_message_share">Prosím specifikujte emailovou adresu účtu Google, se kterým chcete svůj osobní rozvrh hodin sdílet.</string>
 	<string name="menuItem_SaveEvent">Uložit</string>
+	<string name="exceptionUnknown">Nastala neznámá chyba.</string>
+	<string name="exceptionGoogleAccountNotFound">Vybraný účet Google nebyl nalezen.</string>
+	<string name="exceptionCTUInternal">Interní chyba serveru ČVUT. Prosím opakujte akci.</string>
+	<string name="exceptionTimetableNotFound">Rozvrh hodin nebyl nalezen.</string>
+	<string name="exceptionInternetUnavailable">Nelze se připojit k internetu.</string>
+	<string name="hint_EventName">Název události</string>
+	<string name="hint_Acronym">Zkratka</string>
+	<string name="hint_Room">Místnost</string>
+	<string name="hint_Note">Poznámky</string>
+	<string name="hint_Teachers">Učitelé</string>
 </resources>
