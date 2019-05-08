@@ -19,7 +19,6 @@ import com.google.gson.JsonSyntaxException
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.api.SiriusApiService
 import cz.budikpet.bachelorwork.api.SiriusAuthApiService
-import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.*
@@ -490,7 +489,7 @@ class Repository @Inject constructor(private val context: Context) {
                 // Get and check metadata
                 var metadata = GoogleCalendarMetadata()
                 try {
-                    if(desc != "") {
+                    if(desc.count() > 0) {
                         metadata = Gson().fromJson(desc, GoogleCalendarMetadata::class.java)
                     } else {
                         metadata.id = -1
@@ -504,10 +503,11 @@ class Repository @Inject constructor(private val context: Context) {
                 val event = TimetableEvent(
                     metadata.id, starts_at = dateStart, ends_at = dateEnd,
                     event_type = metadata.eventType, capacity = metadata.capacity,
-                    occupied = metadata.occupied, acronym = title, room = location, teachers = metadata.teachers,
+                    occupied = metadata.occupied, acronym = title, room = location, teacherIds = metadata.teacherIds,
                     deleted = metadata.deleted
                 )
                 event.googleId = id
+                event.teachersNames.addAll(metadata.teacherNames)
                 emitter.onNext(event)
             }
             cursor.close()
@@ -522,7 +522,7 @@ class Repository @Inject constructor(private val context: Context) {
      */
     fun updateGoogleCalendarEvent(eventId: Long, event: TimetableEvent): Single<Int> {
         val calendarMetadata = GoogleCalendarMetadata(
-            event.siriusId, event.teachers, event.capacity,
+            event.siriusId, event.teacherIds, event.teachersNames, event.capacity,
             event.occupied, event.event_type, deleted = event.deleted
         )
         val values = ContentValues().apply {
@@ -558,7 +558,7 @@ class Repository @Inject constructor(private val context: Context) {
      */
     fun addGoogleCalendarEvent(calId: Long, event: TimetableEvent): Single<Long> {
         val calendarMetadata = GoogleCalendarMetadata(
-            event.siriusId, event.teachers, event.capacity,
+            event.siriusId, event.teacherIds, event.teachersNames, event.capacity,
             event.occupied, event.event_type
         )
         val timezone = TimeZone.getDefault().toString()

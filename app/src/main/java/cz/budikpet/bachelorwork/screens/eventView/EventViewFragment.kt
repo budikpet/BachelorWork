@@ -57,7 +57,7 @@ class EventViewFragment : Fragment() {
 
         val viewEdit = layout.findViewById<ImageButton>(R.id.viewEdit)
         viewEdit.setOnClickListener {
-            viewModel.editCreateEvent(viewModel.selectedEvent.value!!)
+            viewModel.editOrCreateEvent(viewModel.selectedEvent.value!!)
         }
 
         return layout
@@ -103,7 +103,7 @@ class EventViewFragment : Fragment() {
         }
 
         teachersList.removeAllViews()
-        for (teacher in selectedEvent.teachers) {
+        for (teacher in selectedEvent.teacherIds) {
             addTeacher(teacher)
         }
     }

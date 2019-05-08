@@ -391,12 +391,20 @@ class MainViewModel : ViewModel() {
             event.googleId = eventFromGoogleCalendar?.googleId
         }
 
-        // Create action observables
+        // Create action completables
         val createObs = Observable.fromIterable(new)
             .flatMapCompletable { currEvent ->
-                Observable.fromIterable(currEvent.teachers)
-                    .flatMap { repository.searchSirius() }
-                repository.addGoogleCalendarEvent(calendarId, currEvent).ignoreElement()
+                Observable.fromIterable(currEvent.teacherIds)
+                    .flatMapMaybe { repository.searchSirius(it).firstElement() }
+                    .toList()
+                    .flatMapCompletable { teacherSearchItems ->
+                        // Fill teacher names
+                        val teacherNames = ArrayList(teacherSearchItems.map {it.toString()})
+                        currEvent.teachersNames.addAll(teacherNames)
+
+                        repository.addGoogleCalendarEvent(calendarId, currEvent).ignoreElement()
+                    }
+
             }
 
         val deleteObs = Observable.fromIterable(deleted)
@@ -596,7 +604,7 @@ class MainViewModel : ViewModel() {
 
         val timetableEvent = TimetableEvent(
             5, "T9:105", acronym = "BI-BIJ", capacity = 180,
-            event_type = EventType.LECTURE, fullName = "Bijec", teachers = arrayListOf("kalvotom"),
+            event_type = EventType.LECTURE, fullName = "Bijec", teacherIds = arrayListOf("kalvotom"),
             starts_at = dateStart, ends_at = dateEnd
         )
 
@@ -652,9 +660,9 @@ class MainViewModel : ViewModel() {
 
     // MARK: Multiday
 
-    fun editCreateEvent(event: TimetableEvent) {
-        eventToEditChanges = event
-        eventToEdit.postValue(event)
+    fun editOrCreateEvent(event: TimetableEvent) {
+        eventToEditChanges = event.deepCopy()
+        eventToEdit.postValue(event.deepCopy())
 
     }
 

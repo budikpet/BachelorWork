@@ -11,6 +11,8 @@ import cz.budikpet.bachelorwork.data.models.SearchItem
 
 class AutoSuggestAdapter(context: Context, val resource: Int, val funFilter: ((SearchItem) -> Boolean)? = null) :
     ArrayAdapter<SearchItem>(context, resource) {
+    private val TAG = "MY_${this.javaClass.simpleName}"
+
     private val items = arrayListOf<SearchItem>()
 
     private val inflater: LayoutInflater by lazy {

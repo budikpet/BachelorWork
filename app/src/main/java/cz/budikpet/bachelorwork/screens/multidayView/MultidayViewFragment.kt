@@ -153,7 +153,7 @@ class MultidayViewFragment : Fragment() {
                 emptySpace.alpha = 0f
 
                 val dummyEvent = TimetableEvent(starts_at = selectedStartTime, ends_at = selectedStartTime.plusMinutes(lessonLength))
-                viewModel.editCreateEvent(dummyEvent)
+                viewModel.editOrCreateEvent(dummyEvent)
             } else {
                 // Make the picture symbolizing event adding visible
                 emptySpace.alpha = 1f

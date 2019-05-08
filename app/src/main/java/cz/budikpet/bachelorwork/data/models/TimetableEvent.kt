@@ -8,21 +8,63 @@ import java.util.*
 
 data class TimetableEvent(
     val siriusId: Int? = null,
-    var room: String? = null,      // Can be null
-    var acronym: String = "",
-    var fullName: String = acronym,
-    var event_type: EventType = EventType.OTHER,
-    var starts_at: DateTime = DateTime(),
-    var ends_at: DateTime = starts_at,
+    val room: String? = null,      // Can be null
+    val acronym: String = "",
+    val fullName: String = acronym,
+    val event_type: EventType = EventType.OTHER,
+    val starts_at: DateTime = DateTime(),
+    val ends_at: DateTime = starts_at,
     var deleted: Boolean = false,
     var capacity: Int = 0,
     var occupied: Int = 0,
-    val teachers: ArrayList<String> = arrayListOf(),
+    val teacherIds: ArrayList<String> = arrayListOf(),
     var color: Int = defaultColor(event_type)
 ) {
     var googleId: Long? = null
     var changed: Boolean = false
     val teachersNames: ArrayList<String> = arrayListOf()
+
+    fun addTeacher(teacher: SearchItem) {
+        teacherIds.add(teacher.id)
+        if (teacher.title != null) {
+            teachersNames.add(teacher.title)
+        }
+    }
+
+    fun removeTeacher(teacher: SearchItem) {
+        teacherIds.remove(teacher.id)
+        if (teacher.title != null) {
+            teachersNames.remove(teacher.title)
+        }
+    }
+
+    fun overlapsWith(timetableEvent: TimetableEvent): Boolean {
+        val interval1 = Interval(this.starts_at.millis, this.ends_at.millis)
+        val interval2 = Interval(timetableEvent.starts_at.millis, timetableEvent.ends_at.millis)
+
+        return interval1.overlaps(interval2)
+    }
+
+    fun deepCopy(
+        event_type: EventType = this.event_type,
+        room: String? = this.room,
+        starts_at: DateTime = this.starts_at,
+        ends_at: DateTime = this.ends_at
+    ): TimetableEvent {
+        val deepEvent = this.copy(
+            event_type = event_type,
+            room = room,
+            starts_at = starts_at,
+            ends_at = ends_at,
+            teacherIds = arrayListOf()
+        )
+        deepEvent.googleId = this.googleId
+        deepEvent.changed = this.changed
+        deepEvent.teacherIds.addAll(this.teacherIds)
+        deepEvent.teachersNames.addAll(this.teachersNames)
+
+        return deepEvent
+    }
 
     companion object {
         fun from(event: Event): TimetableEvent {
@@ -35,7 +77,7 @@ data class TimetableEvent(
                 event.id, room = room, acronym = event.links.course, event_type = event.event_type,
                 starts_at = DateTime(event.starts_at), ends_at = DateTime(event.ends_at), deleted = event.deleted,
                 capacity = event.capacity, occupied = event.occupied,
-                teachers = event.links.teachers
+                teacherIds = event.links.teachers
             )
             timetableEvent.changed = hasEventChanged(event)
 
@@ -59,21 +101,6 @@ data class TimetableEvent(
                     R.color.eventDefault
                 }
             }
-        }
-    }
-
-    fun overlapsWith(timetableEvent: TimetableEvent): Boolean {
-        val interval1 = Interval(this.starts_at.millis, this.ends_at.millis)
-        val interval2 = Interval(timetableEvent.starts_at.millis, timetableEvent.ends_at.millis)
-
-        return interval1.overlaps(interval2)
-    }
-
-    fun compare(timetableEvent: TimetableEvent): Int {
-        return when {
-            starts_at.isBefore(timetableEvent.starts_at) -> -1
-            starts_at.isAfter(timetableEvent.starts_at) -> 1
-            else -> 0
         }
     }
 }

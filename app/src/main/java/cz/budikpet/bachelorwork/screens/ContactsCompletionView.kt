@@ -15,6 +15,10 @@ import cz.budikpet.bachelorwork.data.models.SearchItem
 class ContactsCompletionView(context: Context, attrs: AttributeSet) :
     TokenCompleteTextView<SearchItem>(context, attrs) {
 
+    init {
+        threshold = 2
+    }
+
     override fun getViewForObject(searchItem: SearchItem): View {
 
         val inflater = context.getSystemService(Activity.LAYOUT_INFLATER_SERVICE) as LayoutInflater
