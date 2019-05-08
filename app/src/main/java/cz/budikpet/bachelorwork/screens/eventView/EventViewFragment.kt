@@ -123,10 +123,15 @@ class EventViewFragment : Fragment() {
             notesViewGroup.visibility = View.GONE
         }
 
-        teachersList.removeAllViews()
-        selectedEvent.teacherIds.forEachIndexed { i, id ->
-            val name = selectedEvent.teachersNames.elementAtOrNull(i)
-            addTeacher(SearchItem(id, name, ItemType.PERSON))
+        if(selectedEvent.teacherIds.count() > 0) {
+            teachersViewGroup.visibility = View.VISIBLE
+            teachersList.removeAllViews()
+            selectedEvent.teacherIds.forEachIndexed { i, id ->
+                val name = selectedEvent.teachersNames.elementAtOrNull(i)
+                addTeacher(SearchItem(id, name, ItemType.PERSON))
+            }
+        } else {
+            teachersViewGroup.visibility = View.GONE
         }
     }
 

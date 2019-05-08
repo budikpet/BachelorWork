@@ -30,6 +30,7 @@ import cz.budikpet.bachelorwork.screens.eventEditView.EventEditFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
 import cz.budikpet.bachelorwork.util.*
+import kotlinx.android.synthetic.main.activity_main.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import pub.devrel.easypermissions.EasyPermissions
@@ -188,9 +189,13 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                     if (holder != null) {
                         hide(holder)
                     }
+
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+
                     return@inTransaction this
                 }
 
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
                 replace(R.id.eventViewFragmentHolder, EventViewFragment())
             }
         })
@@ -200,6 +205,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
 
                 if (eventToEdit == null) {
+                    drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
+
                     if(viewModel.selectedEvent.value != null) {
                         // Event was selected before editing, go back to it
                         replace(R.id.eventViewFragmentHolder, EventViewFragment())
@@ -214,6 +221,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                     return@inTransaction this
                 }
 
+                drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
                 replace(R.id.eventViewFragmentHolder, EventEditFragment())
             }
         })

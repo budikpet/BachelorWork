@@ -611,7 +611,7 @@ class MainViewModel : ViewModel() {
                     Log.i(TAG, "addCalendarEvent")
 
                     if (selectedEvent.value != null) {
-                        selectedEvent.postValue(eventToEditChanges)
+                        selectedEvent.postValue(timetableEvent)
                     }
 
                     eventToEditChanges = null

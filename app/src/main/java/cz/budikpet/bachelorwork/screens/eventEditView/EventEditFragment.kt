@@ -22,7 +22,6 @@ import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.ContactsCompletionView
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import kotlinx.android.synthetic.main.fragment_event_edit.*
-import org.joda.time.DateTime
 import org.joda.time.LocalDate
 
 // TODO: Disable edit if the timetable is not saved
@@ -61,21 +60,32 @@ class EventEditFragment : Fragment() {
         toolbar.setNavigationIcon(R.drawable.ic_close_black_24dp)
 
         toolbar.setOnMenuItemClickListener { menuItem ->
-            if (menuItem.itemId == R.id.saveEvent) {
-                prepareExit()
-                viewModel.addCalendarEvent(selectedEvent!!)
-                return@setOnMenuItemClickListener true
-            }
-
-            return@setOnMenuItemClickListener false
+            menuItemClicked(menuItem)
         }
 
         toolbar.setNavigationOnClickListener {
             // Edit cancelled
             prepareExit()
+            viewModel.eventToEditChanges = null
             viewModel.eventToEdit.postValue(null)
         }
 
+    }
+
+    private fun menuItemClicked(menuItem: MenuItem): Boolean {
+        if (menuItem.itemId == R.id.saveEvent) {
+            prepareExit()
+
+            when {
+                selectedEvent!!.fullName.count() <= 0 -> editEventName.error = "This field cannot be blank."
+                selectedEvent!!.acronym.count() <= 0 -> editEventAcronym.error = "This filed cannot be blank."
+                else -> viewModel.addCalendarEvent(selectedEvent!!)
+
+            }
+            return true
+        }
+
+        return false
     }
 
     override fun onCreateView(
@@ -124,7 +134,7 @@ class EventEditFragment : Fragment() {
         val editEventAcronym = layout.findViewById<EditText>(R.id.editEventAcronym)
         editEventAcronym.setText(selectedEvent!!.acronym, TextView.BufferType.EDITABLE)
         editEventAcronym.setOnFocusChangeListener { editText, hasFocus ->
-            if(!hasFocus) {
+            if (!hasFocus) {
                 val text = (editText as EditText).text.toString()
                 selectedEvent!!.acronym = text
             }
@@ -133,11 +143,11 @@ class EventEditFragment : Fragment() {
         val editEventName = layout.findViewById<EditText>(R.id.editEventName)
         editEventName.setText(selectedEvent!!.fullName, TextView.BufferType.EDITABLE)
         editEventName.setOnFocusChangeListener { editText, hasFocus ->
-            if(!hasFocus) {
+            if (!hasFocus) {
                 val text = (editText as EditText).text.toString()
                 selectedEvent!!.fullName = text
 
-                if(editEventAcronym.text.count() <= 0) {
+                if (editEventAcronym.text.count() <= 0) {
                     editEventAcronym.setText(text)
                     selectedEvent!!.acronym = text
                 }
@@ -147,7 +157,7 @@ class EventEditFragment : Fragment() {
         val editEventNote = layout.findViewById<EditText>(R.id.editEventNote)
         editEventNote.setText(selectedEvent!!.note, TextView.BufferType.EDITABLE)
         editEventNote.setOnFocusChangeListener { editText, hasFocus ->
-            if(!hasFocus) {
+            if (!hasFocus) {
                 val text = (editText as EditText).text.toString()
                 selectedEvent!!.note = text
             }
@@ -301,6 +311,5 @@ class EventEditFragment : Fragment() {
         hideSoftKeyboard(eventEditLayout)
 
         viewModel.searchItems.postValue(listOf())
-        viewModel.eventToEditChanges = null
     }
 }
