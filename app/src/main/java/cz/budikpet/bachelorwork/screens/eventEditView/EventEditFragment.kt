@@ -23,7 +23,9 @@ import cz.budikpet.bachelorwork.screens.ContactsCompletionView
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import kotlinx.android.synthetic.main.fragment_event_edit.*
 import org.joda.time.DateTime
+import org.joda.time.LocalDate
 
+// TODO: Disable edit if the timetable is not saved
 
 class EventEditFragment : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
@@ -48,6 +50,32 @@ class EventEditFragment : Fragment() {
         selectedEvent = viewModel.eventToEditChanges
 
         subscribeObservers()
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+        super.onCreateOptionsMenu(menu, inflater)
+
+        val toolbar = eventEditToolbar
+        inflater?.inflate(R.menu.event_edit_bar, toolbar.menu)
+
+        toolbar.setNavigationIcon(R.drawable.ic_close_black_24dp)
+
+        toolbar.setOnMenuItemClickListener { menuItem ->
+            if (menuItem.itemId == R.id.saveEvent) {
+                prepareExit()
+                viewModel.addCalendarEvent(selectedEvent!!)
+                return@setOnMenuItemClickListener true
+            }
+
+            return@setOnMenuItemClickListener false
+        }
+
+        toolbar.setNavigationOnClickListener {
+            // Edit cancelled
+            prepareExit()
+            viewModel.eventToEdit.postValue(null)
+        }
+
     }
 
     override fun onCreateView(
@@ -95,31 +123,35 @@ class EventEditFragment : Fragment() {
     private fun initEditTexts(layout: View) {
         val editEventAcronym = layout.findViewById<EditText>(R.id.editEventAcronym)
         editEventAcronym.setText(selectedEvent!!.acronym, TextView.BufferType.EDITABLE)
+        editEventAcronym.setOnFocusChangeListener { editText, hasFocus ->
+            if(!hasFocus) {
+                val text = (editText as EditText).text.toString()
+                selectedEvent!!.acronym = text
+            }
+        }
 
-        // TODO: persist item & acronym from eventname
         val editEventName = layout.findViewById<EditText>(R.id.editEventName)
         editEventName.setText(selectedEvent!!.fullName, TextView.BufferType.EDITABLE)
+        editEventName.setOnFocusChangeListener { editText, hasFocus ->
+            if(!hasFocus) {
+                val text = (editText as EditText).text.toString()
+                selectedEvent!!.fullName = text
+
+                if(editEventAcronym.text.count() <= 0) {
+                    editEventAcronym.setText(text)
+                    selectedEvent!!.acronym = text
+                }
+            }
+        }
 
         val editEventNote = layout.findViewById<EditText>(R.id.editEventNote)
         editEventNote.setText(selectedEvent!!.note, TextView.BufferType.EDITABLE)
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
-        super.onCreateOptionsMenu(menu, inflater)
-
-        val toolbar = eventEditToolbar
-        inflater?.inflate(R.menu.event_edit_bar, toolbar.menu)
-
-        toolbar.setNavigationIcon(R.drawable.ic_close_black_24dp)
-
-        toolbar.setNavigationOnClickListener {
-            // Edit cancelled
-            hideSoftKeyboard(it)
-            viewModel.searchItems.postValue(listOf())
-            viewModel.eventToEditChanges = null
-            viewModel.eventToEdit.postValue(null)
+        editEventNote.setOnFocusChangeListener { editText, hasFocus ->
+            if(!hasFocus) {
+                val text = (editText as EditText).text.toString()
+                selectedEvent!!.note = text
+            }
         }
-
     }
 
     private fun initTeachersAutoTextView(teachersTokenAuto: ContactsCompletionView, itemType: ItemType) {
@@ -148,7 +180,7 @@ class EventEditFragment : Fragment() {
 
             override fun onTokenAdded(token: SearchItem?) {
                 val token = token ?: return
-                if(!selectedEvent!!.teacherIds.contains(token.id)) {
+                if (!selectedEvent!!.teacherIds.contains(token.id)) {
                     selectedEvent?.addTeacher(token)
                 }
             }
@@ -196,39 +228,38 @@ class EventEditFragment : Fragment() {
     }
 
     private fun initTimeButtons(layout: View) {
-        var date = DateTime()
-
         val buttonDate = layout.findViewById<Button>(R.id.buttonDate)
         val buttonTimeFrom = layout.findViewById<Button>(R.id.buttonTimeFrom)
         val buttonTimeTo = layout.findViewById<Button>(R.id.buttonTimeTo)
 
         buttonDate.text = selectedEvent!!.starts_at.toString("dd.MM.YYYY")
-        buttonTimeFrom.text = selectedEvent!!.starts_at.toString("hh:mm")
-        buttonTimeTo.text = selectedEvent!!.ends_at.toString("hh:mm")
+        buttonTimeFrom.text = selectedEvent!!.starts_at.toString("HH:mm")
+        buttonTimeTo.text = selectedEvent!!.ends_at.toString("HH:mm")
 
         buttonDate.setOnClickListener {
             val listener = DatePickerDialog.OnDateSetListener { datePicker, year, month, day ->
-                date = date.withDate(year, month + 1, day)
+                val date = LocalDate(year, month + 1, day)
                 buttonDate.text = date.toString("dd.MM.YYYY")
-                val startsAt = selectedEvent!!.starts_at.withDate(year, month, day)
+                val startsAt = selectedEvent!!.starts_at.withDate(date)
                 selectedEvent = selectedEvent?.deepCopy(starts_at = startsAt)
 
                 val endsAt = selectedEvent!!.ends_at.withDate(year, month, day)
                 selectedEvent = selectedEvent?.deepCopy(ends_at = endsAt)
             }
+            val date = LocalDate()
             DatePickerDialog(context!!, listener, date.year, date.monthOfYear - 1, date.dayOfMonth).show()
         }
 
         buttonTimeFrom.setOnClickListener {
             val listener = TimePickerDialog.OnTimeSetListener { timePicker, hourOfDay, minute ->
-                val time = date.withTime(hourOfDay, minute, 0, 0)
+                val time = selectedEvent!!.starts_at.withTime(hourOfDay, minute, 0, 0)
                 val millisBetween =
                     selectedEvent!!.ends_at.millisOfDay - selectedEvent!!.starts_at.millisOfDay
-                buttonTimeFrom.text = time.toString("hh:mm")
+                buttonTimeFrom.text = time.toString("HH:mm")
 
                 selectedEvent = selectedEvent?.deepCopy(starts_at = time)
 
-                buttonTimeTo.text = time.plusMillis(millisBetween).toString("hh:mm")
+                buttonTimeTo.text = time.plusMillis(millisBetween).toString("HH:mm")
                 selectedEvent = selectedEvent?.deepCopy(ends_at = time.plusMillis(millisBetween))
             }
             TimePickerDialog(context!!, listener, 0, 0, true).show()
@@ -236,8 +267,8 @@ class EventEditFragment : Fragment() {
 
         buttonTimeTo.setOnClickListener {
             val listener = TimePickerDialog.OnTimeSetListener { timePicker, hourOfDay, minute ->
-                val time = date.withTime(hourOfDay, minute, 0, 0)
-                buttonTimeTo.text = time.toString("hh:mm")
+                val time = selectedEvent!!.ends_at.withTime(hourOfDay, minute, 0, 0)
+                buttonTimeTo.text = time.toString("HH:mm")
                 selectedEvent = selectedEvent?.deepCopy(ends_at = time)
             }
             TimePickerDialog(context!!, listener, 0, 0, true).show()
@@ -263,4 +294,13 @@ class EventEditFragment : Fragment() {
         imm.hideSoftInputFromWindow(view.applicationWindowToken, 0)
     }
 
+    private fun prepareExit() {
+        editEventAcronym.clearFocus()
+        editEventName.clearFocus()
+        editEventNote.clearFocus()
+        hideSoftKeyboard(eventEditLayout)
+
+        viewModel.searchItems.postValue(listOf())
+        viewModel.eventToEditChanges = null
+    }
 }

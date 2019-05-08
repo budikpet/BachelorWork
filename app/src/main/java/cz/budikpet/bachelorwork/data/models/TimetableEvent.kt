@@ -9,8 +9,8 @@ import java.util.*
 data class TimetableEvent(
     val siriusId: Int? = null,
     val room: String? = null,      // Can be null
-    val acronym: String = "",
-    val fullName: String = acronym,
+    var acronym: String = "",
+    var fullName: String = acronym,
     val event_type: EventType = EventType.OTHER,
     val starts_at: DateTime = DateTime(),
     val ends_at: DateTime = starts_at,

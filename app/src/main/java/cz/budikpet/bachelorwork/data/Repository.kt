@@ -347,6 +347,9 @@ class Repository @Inject constructor(private val context: Context) {
             .filter { it.summary.contains(MyApplication.CALENDARS_NAME) }
     }
 
+    /**
+     * Gets only a calendar matching the calendarName using Google Calendar API.
+     */
     fun getGoogleCalendar(calendarName: String): Single<CalendarListEntry> {
         return getGoogleCalendarList()
             .filter { it.summary == calendarName }
@@ -484,7 +487,7 @@ class Repository @Inject constructor(private val context: Context) {
                 val location = cursor.getString(projectionLocationIndex)
                 val dateStart = DateTime(cursor.getLong(projectionDTStartIndex))
                 val dateEnd = DateTime(cursor.getLong(projectionDTEndIndex))
-                val id = cursor.getLong(projectionIdIndex)
+                val googleId = cursor.getLong(projectionIdIndex)
 
                 // Get and check metadata
                 var metadata = GoogleCalendarMetadata()
@@ -504,9 +507,9 @@ class Repository @Inject constructor(private val context: Context) {
                     metadata.id, starts_at = dateStart, ends_at = dateEnd,
                     event_type = metadata.eventType, capacity = metadata.capacity,
                     occupied = metadata.occupied, acronym = title, room = location, teacherIds = metadata.teacherIds,
-                    deleted = metadata.deleted
+                    deleted = metadata.deleted, fullName = metadata.fullName
                 )
-                event.googleId = id
+                event.googleId = googleId
                 event.teachersNames.addAll(metadata.teacherNames)
                 event.note = metadata.note
                 emitter.onNext(event)
@@ -521,10 +524,11 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Updates an event in a calendar using Android calendar provider.
      */
-    fun updateGoogleCalendarEvent(eventId: Long, event: TimetableEvent): Single<Int> {
+    fun updateCalendarEvent(event: TimetableEvent): Single<Int> {
         val calendarMetadata = GoogleCalendarMetadata(
             event.siriusId, event.teacherIds, event.teachersNames, event.capacity,
-            event.occupied, event.event_type, deleted = event.deleted, note = event.note
+            event.occupied, event.event_type, deleted = event.deleted, note = event.note,
+            fullName = event.fullName
         )
         val values = ContentValues().apply {
             put(CalendarContract.Events.TITLE, event.acronym)
@@ -533,7 +537,7 @@ class Repository @Inject constructor(private val context: Context) {
             put(CalendarContract.Events.DTEND, event.ends_at.millis)
             put(CalendarContract.Events.DESCRIPTION, Gson().toJson(calendarMetadata))
         }
-        val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
+        val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, event.googleId!!)
         return Single.fromCallable {
             val rows: Int = context.contentResolver.update(updateUri, values, null, null)
             return@fromCallable rows
@@ -543,7 +547,7 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Removes an event from the calendar using Android calendar provider.
      */
-    fun deleteGoogleCalendarEvent(eventId: Long): Single<Int> {
+    fun deleteCalendarEvent(eventId: Long): Single<Int> {
         val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
         return Single.fromCallable {
             val rows: Int = context.contentResolver.delete(updateUri, null, null)
@@ -557,10 +561,10 @@ class Repository @Inject constructor(private val context: Context) {
      * @param calId id of the calendar we add event to. Received from a list of calendars using Android Calendar provider.
      * @param event event to be added into the calendar.
      */
-    fun addGoogleCalendarEvent(calId: Long, event: TimetableEvent): Single<Long> {
+    fun addCalendarEvent(calId: Long, event: TimetableEvent): Single<Long> {
         val calendarMetadata = GoogleCalendarMetadata(
             event.siriusId, event.teacherIds, event.teachersNames, event.capacity,
-            event.occupied, event.event_type, note = event.note
+            event.occupied, event.event_type, note = event.note, fullName = event.fullName
         )
         val timezone = TimeZone.getDefault().toString()
 
@@ -574,7 +578,6 @@ class Repository @Inject constructor(private val context: Context) {
             put(CalendarContract.Events.EVENT_TIMEZONE, timezone)
         }
         return Single.fromCallable {
-            // TODO: Make safe
             val uri: Uri = context.contentResolver.insert(CalendarContract.Events.CONTENT_URI, values)
             uri.lastPathSegment.toLong()
         }

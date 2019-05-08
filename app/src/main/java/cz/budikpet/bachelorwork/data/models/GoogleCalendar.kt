@@ -10,7 +10,8 @@ data class GoogleCalendarMetadata(
     val occupied: Int = 0,
     val eventType: EventType = EventType.OTHER,
     val deleted: Boolean = false,
-    val note: String = ""
+    val note: String = "",
+    val fullName: String = ""
 )
 
 data class CalendarListItem(val id: Long, val displayName: String, var syncEvents: Boolean) {

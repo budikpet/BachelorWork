@@ -10,7 +10,6 @@ import cz.budikpet.bachelorwork.MyApplication.Companion.calendarNameFromId
 import cz.budikpet.bachelorwork.MyApplication.Companion.idFromCalendarName
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.Repository
-import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.CalendarListItem
 import cz.budikpet.bachelorwork.data.models.SearchItem
@@ -407,7 +406,7 @@ class MainViewModel : ViewModel() {
                         val teacherNames = ArrayList(teacherSearchItems.map {it.toString()})
                         currEvent.teachersNames.addAll(teacherNames)
 
-                        repository.addGoogleCalendarEvent(calendarId, currEvent).ignoreElement()
+                        repository.addCalendarEvent(calendarId, currEvent).ignoreElement()
                     }
 
             }
@@ -420,14 +419,14 @@ class MainViewModel : ViewModel() {
             .flatMapCompletable { currEvent ->
                 // TODO: Update deleted status of events with SiriusID, delete the rest
                 Log.i(TAG, "Deleting event: $currEvent")
-                repository.deleteGoogleCalendarEvent(currEvent.googleId!!).ignoreElement()
+                repository.deleteCalendarEvent(currEvent.googleId!!).ignoreElement()
             }
 
 
         val changedObs = Observable.fromIterable(changed)
             .flatMapCompletable { currEvent ->
                 Log.i(TAG, "Updating event: $currEvent")
-                repository.updateGoogleCalendarEvent(currEvent.googleId!!, currEvent).ignoreElement()
+                repository.updateCalendarEvent(currEvent).ignoreElement()
             }
 
         // Create a completable which starts all actions
@@ -603,28 +602,31 @@ class MainViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    fun addGoogleCalendarEvent() {
-        val dateStart = DateTime().withDate(2019, 3, 20).withTime(10, 0, 0, 0)
-        val dateEnd = DateTime().withDate(2019, 3, 20).withTime(11, 30, 0, 0)
-
-        val timetableEvent = TimetableEvent(
-            5, "T9:105", acronym = "BI-BIJ", capacity = 180,
-            event_type = EventType.LECTURE, fullName = "Bijec", teacherIds = arrayListOf("kalvotom"),
-            starts_at = dateStart, ends_at = dateEnd
-        )
-
-        timetableEvent.googleId = null
-
-        val disposable = repository.addGoogleCalendarEvent(3, timetableEvent)
+    fun addCalendarEvent(timetableEvent: TimetableEvent) {
+        val disposable = repository.getLocalCalendarListItems()
+            .filter { it.displayName == calendarNameFromId(timetableOwner.value!!.first) }
+            .flatMapSingle {
+                when {
+                    timetableEvent.googleId != null -> repository.updateCalendarEvent(timetableEvent)
+                    else -> repository.addCalendarEvent(it.id, timetableEvent)
+                }
+            }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
-                    Log.i(TAG, "addGoogleCalendarEvent")
-                    Log.i(TAG, "Event id: $result")
+                    Log.i(TAG, "addCalendarEvent")
+
+                    if(selectedEvent.value != null) {
+                        selectedEvent.postValue(eventToEditChanges)
+                    }
+
+                    eventToEditChanges = null
+                    eventToEdit.postValue(null)
+                    loadEvents()
                 },
                 { error ->
-                    Log.e(TAG, "addGoogleCalendarEvent: $error")
+                    Log.e(TAG, "addCalendarEvent: $error")
                     thrownException.postValue(error)
                 })
 

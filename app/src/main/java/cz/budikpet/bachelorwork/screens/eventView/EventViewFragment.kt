@@ -161,7 +161,7 @@ class EventViewFragment : Fragment() {
     }
 
     private fun timeString(date: DateTime): String? {
-        return date.toString("hh:mm")
+        return date.toString("HH:mm")
     }
 
     private fun exit() {
