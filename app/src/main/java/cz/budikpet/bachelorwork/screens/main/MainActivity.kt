@@ -351,7 +351,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     // MARK: Exceptions
 
     private fun handleException(exception: Throwable) {
-        // TODO: Implement
         var text = getString(R.string.exceptionUnknown)
 
         if (exception is GoogleAccountNotFoundException) {

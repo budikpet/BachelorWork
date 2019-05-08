@@ -77,8 +77,8 @@ class EventEditFragment : Fragment() {
             prepareExit()
 
             when {
-                selectedEvent!!.fullName.count() <= 0 -> editEventName.error = "This field cannot be blank."
-                selectedEvent!!.acronym.count() <= 0 -> editEventAcronym.error = "This filed cannot be blank."
+                selectedEvent!!.fullName.count() <= 0 -> editEventName.error = getString(R.string.error_FieldBlank)
+                selectedEvent!!.acronym.count() <= 0 -> editEventAcronym.error = getString(R.string.error_FieldBlank)
                 else -> viewModel.addCalendarEvent(selectedEvent!!)
 
             }

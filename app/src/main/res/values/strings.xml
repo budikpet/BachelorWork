@@ -59,4 +59,5 @@
 	<string name="hint_Room">Room</string>
 	<string name="hint_Note">Note</string>
 	<string name="hint_Teachers">Teachers</string>
+	<string name="error_FieldBlank">This field cannot be blank.</string>
 </resources>

@@ -60,4 +60,5 @@
 	<string name="hint_Room">Místnost</string>
 	<string name="hint_Note">Poznámky</string>
 	<string name="hint_Teachers">Učitelé</string>
+	<string name="error_FieldBlank">Toto pole nesmí být prázdné.</string>
 </resources>
