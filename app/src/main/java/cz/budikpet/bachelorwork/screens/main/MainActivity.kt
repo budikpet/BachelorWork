@@ -207,7 +207,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 if (eventToEdit == null) {
                     drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
 
-                    if(viewModel.selectedEvent.value != null) {
+                    if (viewModel.selectedEvent.value != null) {
                         // Event was selected before editing, go back to it
                         replace(R.id.eventViewFragmentHolder, EventViewFragment())
                         return@inTransaction this
@@ -338,11 +338,13 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        if (item?.itemId == R.id.itemSync) {
-            Log.i(TAG, "Selected account: ${credential.selectedAccount}")
-            viewModel.updateCalendars()
+        when (item?.itemId) {
+            R.id.itemSync -> {
+                Log.i(TAG, "Selected account: ${credential.selectedAccount}")
+                viewModel.updateCalendars()
 
-            return true
+                return true
+            }
         }
 
         return super.onOptionsItemSelected(item)
@@ -361,7 +363,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             Log.e(TAG, "Retrofit 2 HTTP ${exception.code()} exception: ${exception.response()}")
             if (exception.code() == 500) {
                 text = getString(R.string.exceptionCTUInternal)
-            } else if(exception.code() == 404) {
+            } else if (exception.code() == 404) {
                 text = getString(R.string.exceptionTimetableNotFound)
             }
         } else if (exception is NoInternetConnectionException) {

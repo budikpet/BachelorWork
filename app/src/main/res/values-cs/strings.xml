@@ -61,4 +61,5 @@
 	<string name="hint_Note">Poznámky</string>
 	<string name="hint_Teachers">Učitelé</string>
 	<string name="error_FieldBlank">Toto pole nesmí být prázdné.</string>
+	<string name="sidebar_FindFreeTime">Vyhledat volný čas</string>
 </resources>

@@ -5,10 +5,11 @@ import android.arch.lifecycle.ViewModel
 import android.content.SharedPreferences
 import android.util.Log
 import com.google.api.services.calendar.model.CalendarListEntry
+import com.google.common.collect.Range
+import com.google.common.collect.TreeRangeSet
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.MyApplication.Companion.calendarNameFromId
 import cz.budikpet.bachelorwork.MyApplication.Companion.idFromCalendarName
-import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.CalendarListItem
@@ -31,6 +32,7 @@ import org.joda.time.DateTimeConstants
 import org.joda.time.Interval
 import retrofit2.HttpException
 import javax.inject.Inject
+
 
 // TODO: Parts of AllCalendarUpdate code can be reused
 
@@ -138,9 +140,9 @@ class MainViewModel : ViewModel() {
 
     fun goToLastMultidayView() {
         val id = when (daysPerMultidayViewFragment) {
-            1 -> R.id.sidebarDayView
-            3 -> R.id.sidebarThreeDayView
-            else -> R.id.sidebarWeekView
+            1 -> cz.budikpet.bachelorwork.R.id.sidebarDayView
+            3 -> cz.budikpet.bachelorwork.R.id.sidebarThreeDayView
+            else -> cz.budikpet.bachelorwork.R.id.sidebarWeekView
         }
         selectedSidebarItem.postValue(id)
     }
@@ -224,7 +226,7 @@ class MainViewModel : ViewModel() {
         val currOwner = timetableOwner.value
 
         if (currOwner == null) {
-            selectedSidebarItem.postValue(R.id.sidebarWeekView)
+            selectedSidebarItem.postValue(cz.budikpet.bachelorwork.R.id.sidebarWeekView)
             timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
             updateCalendars(ctuUsername)
         }
@@ -585,28 +587,6 @@ class MainViewModel : ViewModel() {
         return false
     }
 
-    // MARK: Mostly methods used for testing
-
-    /**
-     * Gets a list of calendar display names and ids using the android calendar provider.
-     */
-    fun getLocalCalendarList() {
-        val disposable = repository.getLocalCalendarListItems()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
-            .subscribe(
-                { result ->
-                    Log.i(TAG, "$result")
-                },
-                { error ->
-                    Log.e(TAG, "GetCalendarEvents: $error")
-                    thrownException.postValue(error)
-                }
-            )
-
-        compositeDisposable.add(disposable)
-    }
-
     fun addCalendarEvent(timetableEvent: TimetableEvent) {
         val disposable = repository.getLocalCalendarListItems()
             .filter { it.displayName == calendarNameFromId(timetableOwner.value!!.first) }
@@ -688,12 +668,39 @@ class MainViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    // MARK: Multiday
-
     fun editOrCreateEvent(event: TimetableEvent) {
         eventToEditChanges = event.deepCopy()
         eventToEdit.postValue(event.deepCopy())
 
+    }
+
+    fun test() {
+        val date = DateTime()
+
+        val a = Range.closed(
+            date.withTime(7, 30, 0, 0),
+            date.withTime(19, 30, 0, 0)
+        )
+        val b = Range.closed(
+            date.withTime(7, 30, 0, 0),
+            date.withTime(9, 0, 0, 0)
+        )
+        val c = Range.closed(
+            date.withTime(9, 15, 0, 0),
+            date.withTime(10, 45, 0, 0)
+        )
+        val d = Range.closed(
+            date.withTime(12, 45, 0, 0),
+            date.withTime(14, 15, 0, 0)
+        )
+
+        val result = TreeRangeSet.create<DateTime>()
+        result.add(a)
+        result.remove(b)
+        result.remove(c)
+        result.remove(d)
+
+        Log.i(TAG, "Result: $result")
     }
 
     companion object {

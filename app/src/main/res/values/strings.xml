@@ -60,4 +60,5 @@
 	<string name="hint_Note">Note</string>
 	<string name="hint_Teachers">Teachers</string>
 	<string name="error_FieldBlank">This field cannot be blank.</string>
+	<string name="sidebar_FindFreeTime">Find free time</string>
 </resources>

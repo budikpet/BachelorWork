@@ -18,6 +18,10 @@
 			android:id="@+id/sidebarSavedCalendars"
 			android:icon="@drawable/ic_save_black_24dp"
 			android:title="@string/sidebar_SavedCalendars" />
+		<item
+			android:id="@+id/sidebarFreeTime"
+			android:icon="@drawable/ic_time_black_24dp"
+			android:title="@string/sidebar_FindFreeTime" />
 	</group>
 	<item
 		android:id="@+id/sidebarSettings"
