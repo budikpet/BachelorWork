@@ -18,6 +18,7 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.SearchItem
+import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.ContactsCompletionView
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import kotlinx.android.synthetic.main.fragment_event_edit.*
@@ -30,6 +31,12 @@ class EventEditFragment : Fragment() {
     private lateinit var viewModel: MainViewModel
     private var selectedAutoTextView: AutoCompleteTextView? = null
 
+    private var selectedEvent: TimetableEvent? = null
+        set(value) {
+            field = value
+            viewModel.eventToEditChanges = value
+        }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -37,6 +44,8 @@ class EventEditFragment : Fragment() {
         viewModel = activity?.run {
             ViewModelProviders.of(this).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
+
+        selectedEvent = viewModel.eventToEditChanges
 
         subscribeObservers()
     }
@@ -47,37 +56,36 @@ class EventEditFragment : Fragment() {
     ): View? {
         val layout = inflater.inflate(R.layout.fragment_event_edit, container, false)
 
-        if (viewModel.eventToEditChanges == null) {
-            Log.e(TAG, "viewModel.eventToEditChanges should not be null")
+        if (selectedEvent == null) {
+            Log.e(TAG, "selectedEvent should not be null")
             return layout
         }
 
         val editEventAcronym = layout.findViewById<EditText>(R.id.editEventAcronym)
-        editEventAcronym.setText(viewModel.eventToEditChanges!!.acronym, TextView.BufferType.EDITABLE)
+        editEventAcronym.setText(selectedEvent!!.acronym, TextView.BufferType.EDITABLE)
 
         // TODO: persist item & acronym from eventname
         val editEventName = layout.findViewById<EditText>(R.id.editEventName)
-        editEventName.setText(viewModel.eventToEditChanges!!.fullName, TextView.BufferType.EDITABLE)
+        editEventName.setText(selectedEvent!!.fullName, TextView.BufferType.EDITABLE)
 
         val spinnerEventType = layout.findViewById<Spinner>(R.id.spinnerEventType)
         val eventTypes = getEventTypes()
         spinnerEventType.adapter =
             ArrayAdapter<String>(context!!, android.R.layout.simple_dropdown_item_1line, eventTypes)
-        spinnerEventType.setSelection(eventTypes.indexOf(viewModel.eventToEditChanges!!.event_type.getLabel(context!!)))
+        spinnerEventType.setSelection(eventTypes.indexOf(selectedEvent!!.event_type.getLabel(context!!)))
         spinnerEventType.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {}
 
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
-                viewModel.eventToEditChanges =
-                    viewModel.eventToEditChanges!!.deepCopy(event_type = EventType.values()[position])
+                selectedEvent = selectedEvent?.deepCopy(event_type = EventType.values()[position])
             }
 
         }
 
         val autoRoom = layout.findViewById<AutoCompleteTextView>(R.id.autoEventRoom)
-        autoRoom.setText(viewModel.eventToEditChanges!!.room, TextView.BufferType.EDITABLE)
+        autoRoom.setText(selectedEvent!!.room, TextView.BufferType.EDITABLE)
         initAutoTextView(autoRoom, ItemType.ROOM) {
-            viewModel.eventToEditChanges = viewModel.eventToEditChanges?.deepCopy(room = it.id)
+            selectedEvent = selectedEvent?.deepCopy(room = it.id)
         }
 
         initTimeButtons(layout)
@@ -109,7 +117,7 @@ class EventEditFragment : Fragment() {
 
     private fun initTeachersAutoTextView(teachersTokenAuto: ContactsCompletionView, itemType: ItemType) {
         teachersTokenAuto.setAdapter(AutoSuggestAdapter(context!!, android.R.layout.simple_list_item_1) {
-            !viewModel.eventToEditChanges!!.teacherIds.contains(it.id)
+            !selectedEvent!!.teacherIds.contains(it.id)
         })
         teachersTokenAuto.addTextChangedListener(object : TextWatcher {
             override fun afterTextChanged(s: Editable?) {}
@@ -133,20 +141,20 @@ class EventEditFragment : Fragment() {
 
             override fun onTokenAdded(token: SearchItem?) {
                 val token = token ?: return
-                if(!viewModel.eventToEditChanges!!.teacherIds.contains(token.id)) {
-                    viewModel.eventToEditChanges?.addTeacher(token)
+                if(!selectedEvent!!.teacherIds.contains(token.id)) {
+                    selectedEvent?.addTeacher(token)
                 }
             }
 
             override fun onTokenRemoved(token: SearchItem?) {
                 val token = token ?: return
-                viewModel.eventToEditChanges?.removeTeacher(token)
+                selectedEvent?.removeTeacher(token)
             }
         })
 
         // Add teacher names user already picked
-        viewModel.eventToEditChanges!!.teacherIds.forEachIndexed { i, id ->
-            val name = viewModel.eventToEditChanges!!.teachersNames.elementAtOrNull(i)
+        selectedEvent!!.teacherIds.forEachIndexed { i, id ->
+            val name = selectedEvent!!.teachersNames.elementAtOrNull(i)
             teachersTokenAuto.addObjectAsync(SearchItem(id, name, ItemType.PERSON))
         }
     }
@@ -187,19 +195,19 @@ class EventEditFragment : Fragment() {
         val buttonTimeFrom = layout.findViewById<Button>(R.id.buttonTimeFrom)
         val buttonTimeTo = layout.findViewById<Button>(R.id.buttonTimeTo)
 
-        buttonDate.text = viewModel.eventToEditChanges!!.starts_at.toString("dd.MM.YYYY")
-        buttonTimeFrom.text = viewModel.eventToEditChanges!!.starts_at.toString("hh:mm")
-        buttonTimeTo.text = viewModel.eventToEditChanges!!.ends_at.toString("hh:mm")
+        buttonDate.text = selectedEvent!!.starts_at.toString("dd.MM.YYYY")
+        buttonTimeFrom.text = selectedEvent!!.starts_at.toString("hh:mm")
+        buttonTimeTo.text = selectedEvent!!.ends_at.toString("hh:mm")
 
         buttonDate.setOnClickListener {
             val listener = DatePickerDialog.OnDateSetListener { datePicker, year, month, day ->
                 date = date.withDate(year, month + 1, day)
                 buttonDate.text = date.toString("dd.MM.YYYY")
-                val startsAt = viewModel.eventToEditChanges!!.starts_at.withDate(year, month, day)
-                viewModel.eventToEditChanges = viewModel.eventToEditChanges?.deepCopy(starts_at = startsAt)
+                val startsAt = selectedEvent!!.starts_at.withDate(year, month, day)
+                selectedEvent = selectedEvent?.deepCopy(starts_at = startsAt)
 
-                val endsAt = viewModel.eventToEditChanges!!.ends_at.withDate(year, month, day)
-                viewModel.eventToEditChanges = viewModel.eventToEditChanges?.deepCopy(ends_at = endsAt)
+                val endsAt = selectedEvent!!.ends_at.withDate(year, month, day)
+                selectedEvent = selectedEvent?.deepCopy(ends_at = endsAt)
             }
             DatePickerDialog(context!!, listener, date.year, date.monthOfYear - 1, date.dayOfMonth).show()
         }
@@ -208,13 +216,13 @@ class EventEditFragment : Fragment() {
             val listener = TimePickerDialog.OnTimeSetListener { timePicker, hourOfDay, minute ->
                 val time = date.withTime(hourOfDay, minute, 0, 0)
                 val millisBetween =
-                    viewModel.eventToEditChanges!!.ends_at.millisOfDay - viewModel.eventToEditChanges!!.starts_at.millisOfDay
+                    selectedEvent!!.ends_at.millisOfDay - selectedEvent!!.starts_at.millisOfDay
                 buttonTimeFrom.text = time.toString("hh:mm")
 
-                viewModel.eventToEditChanges = viewModel.eventToEditChanges?.deepCopy(starts_at = time)
+                selectedEvent = selectedEvent?.deepCopy(starts_at = time)
 
                 buttonTimeTo.text = time.plusMillis(millisBetween).toString("hh:mm")
-                viewModel.eventToEditChanges = viewModel.eventToEditChanges?.deepCopy(ends_at = time.plusMillis(millisBetween))
+                selectedEvent = selectedEvent?.deepCopy(ends_at = time.plusMillis(millisBetween))
             }
             TimePickerDialog(context!!, listener, 0, 0, true).show()
         }
@@ -223,7 +231,7 @@ class EventEditFragment : Fragment() {
             val listener = TimePickerDialog.OnTimeSetListener { timePicker, hourOfDay, minute ->
                 val time = date.withTime(hourOfDay, minute, 0, 0)
                 buttonTimeTo.text = time.toString("hh:mm")
-                viewModel.eventToEditChanges = viewModel.eventToEditChanges?.deepCopy(ends_at = time)
+                selectedEvent = selectedEvent?.deepCopy(ends_at = time)
             }
             TimePickerDialog(context!!, listener, 0, 0, true).show()
         }
