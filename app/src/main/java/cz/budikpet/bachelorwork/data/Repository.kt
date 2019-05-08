@@ -508,6 +508,7 @@ class Repository @Inject constructor(private val context: Context) {
                 )
                 event.googleId = id
                 event.teachersNames.addAll(metadata.teacherNames)
+                event.note = metadata.note
                 emitter.onNext(event)
             }
             cursor.close()
@@ -523,7 +524,7 @@ class Repository @Inject constructor(private val context: Context) {
     fun updateGoogleCalendarEvent(eventId: Long, event: TimetableEvent): Single<Int> {
         val calendarMetadata = GoogleCalendarMetadata(
             event.siriusId, event.teacherIds, event.teachersNames, event.capacity,
-            event.occupied, event.event_type, deleted = event.deleted
+            event.occupied, event.event_type, deleted = event.deleted, note = event.note
         )
         val values = ContentValues().apply {
             put(CalendarContract.Events.TITLE, event.acronym)
@@ -559,7 +560,7 @@ class Repository @Inject constructor(private val context: Context) {
     fun addGoogleCalendarEvent(calId: Long, event: TimetableEvent): Single<Long> {
         val calendarMetadata = GoogleCalendarMetadata(
             event.siriusId, event.teacherIds, event.teachersNames, event.capacity,
-            event.occupied, event.event_type
+            event.occupied, event.event_type, note = event.note
         )
         val timezone = TimeZone.getDefault().toString()
 

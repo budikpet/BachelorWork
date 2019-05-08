@@ -61,12 +61,7 @@ class EventEditFragment : Fragment() {
             return layout
         }
 
-        val editEventAcronym = layout.findViewById<EditText>(R.id.editEventAcronym)
-        editEventAcronym.setText(selectedEvent!!.acronym, TextView.BufferType.EDITABLE)
-
-        // TODO: persist item & acronym from eventname
-        val editEventName = layout.findViewById<EditText>(R.id.editEventName)
-        editEventName.setText(selectedEvent!!.fullName, TextView.BufferType.EDITABLE)
+        initEditTexts(layout)
 
         val spinnerEventType = layout.findViewById<Spinner>(R.id.spinnerEventType)
         val eventTypes = getEventTypes()
@@ -95,6 +90,18 @@ class EventEditFragment : Fragment() {
         initTeachersAutoTextView(teachersTokenAuto, ItemType.PERSON)
 
         return layout
+    }
+
+    private fun initEditTexts(layout: View) {
+        val editEventAcronym = layout.findViewById<EditText>(R.id.editEventAcronym)
+        editEventAcronym.setText(selectedEvent!!.acronym, TextView.BufferType.EDITABLE)
+
+        // TODO: persist item & acronym from eventname
+        val editEventName = layout.findViewById<EditText>(R.id.editEventName)
+        editEventName.setText(selectedEvent!!.fullName, TextView.BufferType.EDITABLE)
+
+        val editEventNote = layout.findViewById<EditText>(R.id.editEventNote)
+        editEventNote.setText(selectedEvent!!.note, TextView.BufferType.EDITABLE)
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {

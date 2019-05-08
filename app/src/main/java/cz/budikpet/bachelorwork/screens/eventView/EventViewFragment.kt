@@ -25,7 +25,6 @@ import kotlinx.android.synthetic.main.fragment_event_view.*
 import org.joda.time.DateTime
 
 // TODO: If clickable things do not exist, app freezes (user defined or edited events). Check if it exists.
-// TODO: Teacher list should show full names
 
 class EventViewFragment : Fragment() {
 
@@ -99,11 +98,18 @@ class EventViewFragment : Fragment() {
         }
 
         if(selectedEvent.capacity == 0 && selectedEvent.occupied == 0) {
-            this.capacityGroup.visibility = View.GONE
+            this.capacityViewGroup.visibility = View.GONE
         } else {
-            this.capacityGroup.visibility = View.VISIBLE
+            this.capacityViewGroup.visibility = View.VISIBLE
             this.viewStudentsCount.text = selectedEvent.occupied.toString()
             this.viewCapacity.text = selectedEvent.capacity.toString()
+        }
+
+        if(selectedEvent.note.count() > 0) {
+            notesViewGroup.visibility = View.VISIBLE
+            viewEventNote.text = selectedEvent.note
+        } else {
+            notesViewGroup.visibility = View.GONE
         }
 
         teachersList.removeAllViews()

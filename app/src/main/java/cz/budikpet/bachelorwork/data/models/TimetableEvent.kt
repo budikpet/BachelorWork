@@ -23,6 +23,7 @@ data class TimetableEvent(
     var googleId: Long? = null
     var changed: Boolean = false
     val teachersNames: ArrayList<String> = arrayListOf()
+    var note: String = ""
 
     fun addTeacher(teacher: SearchItem) {
         teacherIds.add(teacher.id)
@@ -62,6 +63,7 @@ data class TimetableEvent(
         deepEvent.changed = this.changed
         deepEvent.teacherIds.addAll(this.teacherIds)
         deepEvent.teachersNames.addAll(this.teachersNames)
+        deepEvent.note = this.note
 
         return deepEvent
     }

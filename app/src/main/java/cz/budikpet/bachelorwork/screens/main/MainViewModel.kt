@@ -226,7 +226,7 @@ class MainViewModel : ViewModel() {
         if (currOwner == null) {
             selectedSidebarItem.postValue(R.id.sidebarWeekView)
             timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
-            updateSavedTimetables(true)
+            updateCalendars(ctuUsername)
         }
     }
 
