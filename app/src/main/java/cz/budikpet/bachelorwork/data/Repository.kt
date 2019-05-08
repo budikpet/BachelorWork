@@ -96,7 +96,7 @@ class Repository @Inject constructor(private val context: Context) {
      * @throws NoInternetConnectionException when the device could not connect to the internet.
      */
     private fun hasInternetConnection(): Single<Boolean> {
-        return Single.just(checkInternetConnection())
+        return Single.just(isInternetAvailable())
             .map {
                 if (!it) {
                     throw NoInternetConnectionException()
@@ -111,7 +111,7 @@ class Repository @Inject constructor(private val context: Context) {
      * Checks whether the device has internet connection. WiFi and/or Cellular if enabled.
      * @return true if the device is connected to the internet.
      */
-    fun checkInternetConnection(): Boolean {
+    fun isInternetAvailable(): Boolean {
         val useMobileDate = sharedPreferences.getBoolean(SharedPreferencesKeys.USE_MOBILE_DATA.toString(), false)
 
         if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M) {
@@ -314,7 +314,7 @@ class Repository @Inject constructor(private val context: Context) {
                 loopCnt = 0
                 restarted = true
                 startCalendarRefresh()
-            } else if (!checkInternetConnection()) {
+            } else if (!isInternetAvailable()) {
                 emitter.onError(NoInternetConnectionException())
                 break
             }

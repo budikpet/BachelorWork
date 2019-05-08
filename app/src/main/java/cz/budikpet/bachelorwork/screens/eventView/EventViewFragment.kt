@@ -16,8 +16,10 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
+import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
+import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import cz.budikpet.bachelorwork.util.toDp
 import kotlinx.android.synthetic.main.fragment_event_view.*
 import org.joda.time.DateTime
@@ -91,8 +93,10 @@ class EventViewFragment : Fragment() {
             "${selectedEvent.starts_at.dayOfWeek().asText} ${selectedEvent.starts_at.toString("dd.MM.YYYY")}"
         this.viewEventTime.text = "${timeString(selectedEvent.starts_at)} – ${timeString(selectedEvent.ends_at)}"
 
-        clickableTextView(viewEventName, selectedEvent.fullName, ItemType.COURSE)
-        clickableTextView(viewEventRoom, selectedEvent.room!!, ItemType.ROOM)
+        clickableTextView(viewEventName, SearchItem(selectedEvent.acronym, selectedEvent.fullName, ItemType.COURSE))
+        if(selectedEvent.room != null) {
+            clickableTextView(viewEventRoom, SearchItem(selectedEvent.room!!, type = ItemType.ROOM))
+        }
 
         if(selectedEvent.capacity == 0 && selectedEvent.occupied == 0) {
             this.capacityGroup.visibility = View.GONE
@@ -103,14 +107,15 @@ class EventViewFragment : Fragment() {
         }
 
         teachersList.removeAllViews()
-        for (teacher in selectedEvent.teacherIds) {
-            addTeacher(teacher)
+        selectedEvent.teacherIds.forEachIndexed { i, id ->
+            val name = selectedEvent.teachersNames.elementAtOrNull(i)
+            addTeacher(SearchItem(id, name, ItemType.PERSON))
         }
     }
 
-    private fun addTeacher(teacher: String) {
+    private fun addTeacher(searchItem: SearchItem) {
         val textView = TextView(context)
-        clickableTextView(textView, teacher, ItemType.PERSON)
+        clickableTextView(textView, searchItem)
 
         val layoutParams =
             LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT)
@@ -120,20 +125,30 @@ class EventViewFragment : Fragment() {
         teachersList.addView(textView)
     }
 
-    private fun clickableTextView(textView: TextView, text: String, itemType: ItemType) {
-        textView.text = text
+    private fun clickableTextView(textView: TextView, searchItem: SearchItem) {
+        textView.text = searchItem.toString()
+
+        if(!viewModel.canBeClicked(searchItem)) {
+            return
+        }
+
+        // Make textview clickable
         textView.paintFlags = textView.paintFlags or UNDERLINE_TEXT_FLAG
         textView.setTextColor(resources.getColor(R.color.clickableText, null))
         textView.setOnClickListener {
             alertDialogBuilder.setMessage(
                 String.format(
                     getString(R.string.alertDialog_message_eventClicked),
-                    text
+                    searchItem.toString()
                 )
             )
                 .setPositiveButton(getString(R.string.alertDialog_positive_yes)) { dialog, id ->
-                    viewModel.timetableOwner.postValue(Pair(text, itemType))
-                    exit()
+                    if(viewModel.canBeClicked(searchItem)) {
+                        viewModel.timetableOwner.postValue(Pair(searchItem.id, searchItem.type))
+                        exit()
+                    } else {
+                        viewModel.thrownException.postValue(NoInternetConnectionException())
+                    }
                 }
                 .show()
         }

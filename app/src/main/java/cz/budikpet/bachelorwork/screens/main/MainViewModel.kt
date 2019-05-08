@@ -132,8 +132,8 @@ class MainViewModel : ViewModel() {
      * Checks whether the device has internet connection. WiFi and/or Cellular if enabled.
      * @return true if the device is connected to the internet.
      */
-    fun checkInternetConnection(): Boolean {
-        return repository.checkInternetConnection()
+    fun isInternetAvailable(): Boolean {
+        return repository.isInternetAvailable()
     }
 
     fun goToLastMultidayView() {
@@ -143,6 +143,11 @@ class MainViewModel : ViewModel() {
             else -> R.id.sidebarWeekView
         }
         selectedSidebarItem.postValue(id)
+    }
+
+    fun canBeClicked(searchItem: SearchItem): Boolean {
+        val savedTimetables = savedTimetables.value
+        return isInternetAvailable() || (savedTimetables != null && savedTimetables.contains(searchItem))
     }
 
     /**
@@ -503,7 +508,7 @@ class MainViewModel : ViewModel() {
             .flatMapMaybe {
                 val username = idFromCalendarName(it.displayName)
 
-                if (repository.checkInternetConnection()) {
+                if (repository.isInternetAvailable()) {
                     // We have internet connection so we can call search endpoint
                     return@flatMapMaybe repository.searchSirius(username).firstElement()
                 }

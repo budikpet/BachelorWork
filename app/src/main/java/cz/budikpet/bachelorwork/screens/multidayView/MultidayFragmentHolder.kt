@@ -164,7 +164,7 @@ class MultidayFragmentHolder : Fragment() {
         searchMenuItem?.setOnActionExpandListener(object : MenuItem.OnActionExpandListener {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
                 // User entered the searchView
-                if (!viewModel.checkInternetConnection()) {
+                if (!viewModel.isInternetAvailable()) {
                     viewModel.thrownException.postValue(NoInternetConnectionException())
                 }
 
