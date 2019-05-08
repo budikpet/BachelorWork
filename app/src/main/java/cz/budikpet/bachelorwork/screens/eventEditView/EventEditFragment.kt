@@ -133,7 +133,9 @@ class EventEditFragment : Fragment() {
 
             override fun onTokenAdded(token: SearchItem?) {
                 val token = token ?: return
-                viewModel.eventToEditChanges?.addTeacher(token)
+                if(!viewModel.eventToEditChanges!!.teacherIds.contains(token.id)) {
+                    viewModel.eventToEditChanges?.addTeacher(token)
+                }
             }
 
             override fun onTokenRemoved(token: SearchItem?) {
