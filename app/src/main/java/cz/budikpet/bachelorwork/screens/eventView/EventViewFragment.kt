@@ -61,6 +61,17 @@ class EventViewFragment : Fragment() {
             viewModel.editOrCreateEvent(viewModel.selectedEvent.value!!)
         }
 
+        val viewDelete = layout.findViewById<ImageButton>(R.id.viewDelete)
+        viewDelete.setOnClickListener {
+            alertDialogBuilder
+                .setMessage("Do you wish to delete this event?")
+                .setPositiveButton(R.string.alertDialog_positive_yes) { dialog, which ->
+                    viewModel.removeCalendarEvent(selectedEvent)
+                }
+                .setNegativeButton(R.string.alertDialog_negative_no) {_, _ ->  }
+                .show()
+        }
+
         return layout
     }
 

@@ -21,9 +21,15 @@ data class TimetableEvent(
     var color: Int = defaultColor(event_type)
 ) {
     var googleId: Long? = null
-    var changed: Boolean = false
     val teachersNames: ArrayList<String> = arrayListOf()
     var note: String = ""
+
+    /**
+     * Indication that this event has been changed by the user.
+     * If it is an event from Sirius, all further updates from Sirius API will be ignored.
+     *
+     */
+    var changed: Boolean = false
 
     fun addTeacher(teacher: SearchItem) {
         teacherIds.add(teacher.id)
@@ -81,7 +87,6 @@ data class TimetableEvent(
                 capacity = event.capacity, occupied = event.occupied,
                 teacherIds = event.links.teachers
             )
-            timetableEvent.changed = hasEventChanged(event)
 
             return timetableEvent
         }

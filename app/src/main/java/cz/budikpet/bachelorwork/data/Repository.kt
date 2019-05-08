@@ -512,6 +512,7 @@ class Repository @Inject constructor(private val context: Context) {
                 event.googleId = googleId
                 event.teachersNames.addAll(metadata.teacherNames)
                 event.note = metadata.note
+                event.changed = metadata.changed
                 emitter.onNext(event)
             }
             cursor.close()
@@ -527,7 +528,7 @@ class Repository @Inject constructor(private val context: Context) {
     fun updateCalendarEvent(event: TimetableEvent): Single<Int> {
         val calendarMetadata = GoogleCalendarMetadata(
             event.siriusId, event.teacherIds, event.teachersNames, event.capacity,
-            event.occupied, event.event_type, deleted = event.deleted, note = event.note,
+            event.occupied, event.event_type, changed = true, deleted = event.deleted, note = event.note,
             fullName = event.fullName
         )
         val values = ContentValues().apply {
@@ -547,12 +548,20 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Removes an event from the calendar using Android calendar provider.
      */
-    fun deleteCalendarEvent(eventId: Long): Single<Int> {
-        val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, eventId)
-        return Single.fromCallable {
-            val rows: Int = context.contentResolver.delete(updateUri, null, null)
-            return@fromCallable rows
+    fun deleteCalendarEvent(event: TimetableEvent, deleteCompletely: Boolean = false): Single<Int> {
+        val updateUri: Uri = ContentUris.withAppendedId(CalendarContract.Events.CONTENT_URI, event.googleId!!)
+
+        return if (deleteCompletely || event.siriusId == null) {
+            Single.fromCallable {
+                val rows: Int = context.contentResolver.delete(updateUri, null, null)
+                return@fromCallable rows
+            }
         }
+        else {
+            event.deleted = true
+            updateCalendarEvent(event)
+        }
+
     }
 
     /**

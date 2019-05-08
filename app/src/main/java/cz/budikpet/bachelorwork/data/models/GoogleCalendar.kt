@@ -9,6 +9,7 @@ data class GoogleCalendarMetadata(
     val capacity: Int = 0,
     val occupied: Int = 0,
     val eventType: EventType = EventType.OTHER,
+    val changed: Boolean = false,
     val deleted: Boolean = false,
     val note: String = "",
     val fullName: String = ""

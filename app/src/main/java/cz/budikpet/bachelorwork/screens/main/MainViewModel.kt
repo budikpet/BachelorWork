@@ -355,7 +355,6 @@ class MainViewModel : ViewModel() {
                 )
             }
             .flatMap { Observable.fromIterable(it.events) }
-            .filter { !it.deleted }
             .map { event -> TimetableEvent.from(event) }
             .toList()
             .toObservable()
@@ -367,7 +366,7 @@ class MainViewModel : ViewModel() {
      */
     private fun getGoogleCalendarEventsList(calendarListItem: CalendarListItem): Observable<MutableList<TimetableEvent>>? {
         return repository.getCalendarEvents(calendarListItem.id, loadedEventsInterval.start, loadedEventsInterval.end)
-            .filter { event -> event.siriusId != null && !event.deleted }   // TODO: Move to methods that use the list?
+            .filter { event -> event.siriusId != null }   // TODO: Move to methods that use the list?
             .toList()
             .toObservable()
     }
@@ -383,17 +382,17 @@ class MainViewModel : ViewModel() {
         pair: Pair<MutableList<TimetableEvent>, MutableList<TimetableEvent>>
     ): Completable {
         // Sort events out into lists by what action they should be used for
-        val new = pair.first.minus(pair.second)
-        val deleted = pair.second.minus(pair.first)
-            .filter { !it.deleted }
-        val changed = pair.first.intersect(pair.second)
-            .filter { it.changed }
+        var new = pair.first.minus(pair.second)
+        var deleted = pair.second.minus(pair.first)
 
-        // Get google event IDs of changed events
-        for (event in changed) {
-            val eventFromGoogleCalendar = pair.second.find { it.siriusId == event.siriusId }
-            event.googleId = eventFromGoogleCalendar?.googleId
-        }
+        // These events were changed by a user and should not be changed by update
+        val changedByUser = new.map { Pair(it.siriusId!!, true) }
+            .intersect(deleted.map { Pair(it.siriusId!!, it.changed) })
+            .map { it.first }
+
+        // Remove events that were changed by user
+        new = new.filter { !changedByUser.contains(it.siriusId) }
+        deleted = deleted.filter { !changedByUser.contains(it.siriusId) }
 
         // Create action completables
         val createObs = Observable.fromIterable(new)
@@ -403,7 +402,7 @@ class MainViewModel : ViewModel() {
                     .toList()
                     .flatMapCompletable { teacherSearchItems ->
                         // Fill teacher names
-                        val teacherNames = ArrayList(teacherSearchItems.map {it.toString()})
+                        val teacherNames = ArrayList(teacherSearchItems.map { it.toString() })
                         currEvent.teachersNames.addAll(teacherNames)
 
                         repository.addCalendarEvent(calendarId, currEvent).ignoreElement()
@@ -419,18 +418,12 @@ class MainViewModel : ViewModel() {
             .flatMapCompletable { currEvent ->
                 // TODO: Update deleted status of events with SiriusID, delete the rest
                 Log.i(TAG, "Deleting event: $currEvent")
-                repository.deleteCalendarEvent(currEvent.googleId!!).ignoreElement()
+                repository.deleteCalendarEvent(currEvent, deleteCompletely = true).ignoreElement()
             }
 
-
-        val changedObs = Observable.fromIterable(changed)
-            .flatMapCompletable { currEvent ->
-                Log.i(TAG, "Updating event: $currEvent")
-                repository.updateCalendarEvent(currEvent).ignoreElement()
-            }
 
         // Create a completable which starts all actions
-        return Completable.mergeArray(deleteObs, createObs, changedObs)
+        return Completable.mergeArray(deleteObs, createObs)
     }
 
     /**
@@ -617,7 +610,7 @@ class MainViewModel : ViewModel() {
                 { result ->
                     Log.i(TAG, "addCalendarEvent")
 
-                    if(selectedEvent.value != null) {
+                    if (selectedEvent.value != null) {
                         selectedEvent.postValue(eventToEditChanges)
                     }
 
@@ -627,6 +620,24 @@ class MainViewModel : ViewModel() {
                 },
                 { error ->
                     Log.e(TAG, "addCalendarEvent: $error")
+                    thrownException.postValue(error)
+                })
+
+        compositeDisposable.add(disposable)
+    }
+
+    fun removeCalendarEvent(timetableEvent: TimetableEvent) {
+        val disposable = repository.deleteCalendarEvent(timetableEvent)
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result ->
+                    Log.i(TAG, "removeCalendarEvent")
+                    selectedEvent.postValue(null)
+                    loadEvents()
+                },
+                { error ->
+                    Log.e(TAG, "removeCalendarEvent: $error")
                     thrownException.postValue(error)
                 })
 
