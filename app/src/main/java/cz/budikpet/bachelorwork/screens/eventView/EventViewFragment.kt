@@ -5,6 +5,7 @@ import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.graphics.Paint.UNDERLINE_TEXT_FLAG
 import android.os.Bundle
+import android.support.constraint.Group
 import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
 import android.view.LayoutInflater
@@ -56,20 +57,28 @@ class EventViewFragment : Fragment() {
             exit()
         }
 
-        val viewEdit = layout.findViewById<ImageButton>(R.id.viewEdit)
-        viewEdit.setOnClickListener {
-            viewModel.editOrCreateEvent(viewModel.selectedEvent.value!!)
-        }
+        val editButtonsGroup = layout.findViewById<Group>(R.id.editButtonsGroup)
 
-        val viewDelete = layout.findViewById<ImageButton>(R.id.viewDelete)
-        viewDelete.setOnClickListener {
-            alertDialogBuilder
-                .setMessage("Do you wish to delete this event?")
-                .setPositiveButton(R.string.alertDialog_positive_yes) { dialog, which ->
-                    viewModel.removeCalendarEvent(selectedEvent)
-                }
-                .setNegativeButton(R.string.alertDialog_negative_no) {_, _ ->  }
-                .show()
+        if (!viewModel.canEditTimetable()) {
+            editButtonsGroup.visibility = View.GONE
+        } else {
+            editButtonsGroup.visibility = View.VISIBLE
+
+            val viewEdit = layout.findViewById<ImageButton>(R.id.viewEdit)
+            viewEdit.setOnClickListener {
+                viewModel.editOrCreateEvent(viewModel.selectedEvent.value!!)
+            }
+
+            val viewDelete = layout.findViewById<ImageButton>(R.id.viewDelete)
+            viewDelete.setOnClickListener {
+                alertDialogBuilder
+                    .setMessage("Do you wish to delete this event?")
+                    .setPositiveButton(R.string.alertDialog_positive_yes) { dialog, which ->
+                        viewModel.removeCalendarEvent(selectedEvent)
+                    }
+                    .setNegativeButton(R.string.alertDialog_negative_no) { _, _ -> }
+                    .show()
+            }
         }
 
         return layout
@@ -104,11 +113,11 @@ class EventViewFragment : Fragment() {
         this.viewEventTime.text = "${timeString(selectedEvent.starts_at)} – ${timeString(selectedEvent.ends_at)}"
 
         clickableTextView(viewEventName, SearchItem(selectedEvent.acronym, selectedEvent.fullName, ItemType.COURSE))
-        if(selectedEvent.room != null) {
+        if (selectedEvent.room != null) {
             clickableTextView(viewEventRoom, SearchItem(selectedEvent.room!!, type = ItemType.ROOM))
         }
 
-        if(selectedEvent.capacity == 0 && selectedEvent.occupied == 0) {
+        if (selectedEvent.capacity == 0 && selectedEvent.occupied == 0) {
             this.capacityViewGroup.visibility = View.GONE
         } else {
             this.capacityViewGroup.visibility = View.VISIBLE
@@ -116,14 +125,14 @@ class EventViewFragment : Fragment() {
             this.viewCapacity.text = selectedEvent.capacity.toString()
         }
 
-        if(selectedEvent.note.count() > 0) {
+        if (selectedEvent.note.count() > 0) {
             notesViewGroup.visibility = View.VISIBLE
             viewEventNote.text = selectedEvent.note
         } else {
             notesViewGroup.visibility = View.GONE
         }
 
-        if(selectedEvent.teacherIds.count() > 0) {
+        if (selectedEvent.teacherIds.count() > 0) {
             teachersViewGroup.visibility = View.VISIBLE
             teachersList.removeAllViews()
             selectedEvent.teacherIds.forEachIndexed { i, id ->
@@ -150,7 +159,7 @@ class EventViewFragment : Fragment() {
     private fun clickableTextView(textView: TextView, searchItem: SearchItem) {
         textView.text = searchItem.toString()
 
-        if(!viewModel.canBeClicked(searchItem)) {
+        if (!viewModel.canBeClicked(searchItem)) {
             return
         }
 
@@ -165,7 +174,7 @@ class EventViewFragment : Fragment() {
                 )
             )
                 .setPositiveButton(getString(R.string.alertDialog_positive_yes)) { dialog, id ->
-                    if(viewModel.canBeClicked(searchItem)) {
+                    if (viewModel.canBeClicked(searchItem)) {
                         viewModel.timetableOwner.postValue(Pair(searchItem.id, searchItem.type))
                         exit()
                     } else {

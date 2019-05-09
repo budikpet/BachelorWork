@@ -153,6 +153,10 @@ class MainViewModel : ViewModel() {
         return isInternetAvailable() || (savedTimetables != null && savedTimetables.contains(searchItem))
     }
 
+    fun canEditTimetable(): Boolean {
+        return timetableOwner.value!!.first == ctuUsername
+    }
+
     /**
      * Checks whether a user is fully authorized in Sirius API.
      *

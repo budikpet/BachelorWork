@@ -492,7 +492,7 @@ class Repository @Inject constructor(private val context: Context) {
                 // Get and check metadata
                 var metadata = GoogleCalendarMetadata()
                 try {
-                    if(desc.count() > 0) {
+                    if (desc.count() > 0) {
                         metadata = Gson().fromJson(desc, GoogleCalendarMetadata::class.java)
                     } else {
                         metadata.id = -1
@@ -556,8 +556,7 @@ class Repository @Inject constructor(private val context: Context) {
                 val rows: Int = context.contentResolver.delete(updateUri, null, null)
                 return@fromCallable rows
             }
-        }
-        else {
+        } else {
             event.deleted = true
             updateCalendarEvent(event)
         }

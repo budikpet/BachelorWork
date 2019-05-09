@@ -140,6 +140,11 @@ class MultidayViewFragment : Fragment() {
         onEmptySpaceClickListener = View.OnClickListener { emptySpace ->
             val selectedStartTime = emptySpace.tag as DateTime
 
+            if(!viewModel.canEditTimetable()) {
+                // This timetable cannot be edited
+                return@OnClickListener
+            }
+
             if (selectedEmptySpace != null) {
                 if (selectedEmptySpace!!.tag != selectedStartTime || selectedEmptySpace!!.id != emptySpace.id) {
                     // A different empty space was selected previously so it needs to be hidden

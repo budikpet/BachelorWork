@@ -16,10 +16,7 @@ class ViewPagerAdapter(
     override fun getCount() = numOfFragments
 
     override fun getItem(position: Int): Fragment {
-        return MultidayViewFragment.newInstance(
-            daysPerFragment,
-            dateFromPosition(position)
-        )
+        return MultidayViewFragment.newInstance(daysPerFragment, dateFromPosition(position))
     }
 
     fun dateFromPosition(position: Int): DateTime {

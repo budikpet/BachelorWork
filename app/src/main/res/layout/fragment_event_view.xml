@@ -46,6 +46,12 @@
 			app:layout_constraintTop_toTopOf="parent"
 			app:layout_constraintVertical_bias="1.0" />
 
+		<android.support.constraint.Group
+			android:id="@+id/editButtonsGroup"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			app:constraint_referenced_ids="viewEdit,viewDelete" />
+
 		<ImageButton
 			android:id="@+id/viewDelete"
 			android:layout_width="wrap_content"
