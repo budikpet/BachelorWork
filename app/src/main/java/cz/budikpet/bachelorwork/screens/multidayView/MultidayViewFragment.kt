@@ -37,8 +37,12 @@ class MultidayViewFragment : Fragment() {
      */
     private var selectedEmptySpace: View? = null
 
-    private var eventsColumnsCount =
-        MAX_COLUMNS
+    /**
+     * Set to true if the MultidayView should not use events from [viewModel].
+     */
+    private var usesCustomEvents = false
+
+    private var eventsColumnsCount = MAX_COLUMNS
     private val eventPadding by lazy { 2f.toDp(context!!) }
     private lateinit var firstDate: DateTime
     private val dpPerMinRatio = 1
@@ -65,16 +69,17 @@ class MultidayViewFragment : Fragment() {
             ViewModelProviders.of(this).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
-        subscribeObservers()
-
         arguments?.let {
             eventsColumnsCount = it.getInt(ARG_COLUMN_COUNT)
             firstDate = DateTime().withMillis(it.getLong(ARG_START_DATE)).withTimeAtStartOfDay()
+            usesCustomEvents = it.getBoolean(ARG_CUSTOM_EVENTS)
 
             if (eventsColumnsCount == MAX_COLUMNS) {
                 firstDate = firstDate.withDayOfWeek(DateTimeConstants.MONDAY)
             }
         }
+
+        subscribeObservers()
 
         createListeners()
     }
@@ -126,6 +131,10 @@ class MultidayViewFragment : Fragment() {
 
     private fun subscribeObservers() {
 
+        if (usesCustomEvents) {
+            return
+        }
+
         // One observer per created fragment
         viewModel.events.observe(this, Observer { events ->
             if (events != null) {
@@ -140,7 +149,7 @@ class MultidayViewFragment : Fragment() {
         onEmptySpaceClickListener = View.OnClickListener { emptySpace ->
             val selectedStartTime = emptySpace.tag as DateTime
 
-            if(!viewModel.canEditTimetable()) {
+            if (!viewModel.canEditTimetable()) {
                 // This timetable cannot be edited
                 return@OnClickListener
             }
@@ -158,7 +167,8 @@ class MultidayViewFragment : Fragment() {
                 // The add picture was already visible
                 emptySpace.alpha = 0f
 
-                val dummyEvent = TimetableEvent(starts_at = selectedStartTime, ends_at = selectedStartTime.plusMinutes(lessonLength))
+                val dummyEvent =
+                    TimetableEvent(starts_at = selectedStartTime, ends_at = selectedStartTime.plusMinutes(lessonLength))
                 viewModel.editOrCreateEvent(dummyEvent)
             } else {
                 // Make the picture symbolizing event adding visible
@@ -226,6 +236,15 @@ class MultidayViewFragment : Fragment() {
     }
 
     /**
+     * These events are going to be shown by the MultidayViewFragment.
+     */
+    fun showCustomEvents(events: List<TimetableEvent>) {
+        clearColumns()
+
+        updateEventsView(events)
+    }
+
+    /**
      * Add events from the collection into the view.
      */
     private fun updateEventsView(events: List<TimetableEvent>) {
@@ -241,10 +260,11 @@ class MultidayViewFragment : Fragment() {
                     else -> true
                 }
             }
-            .map { return@map IndexedTimetableEvent(
-                -1,
-                it
-            )
+            .map {
+                return@map IndexedTimetableEvent(
+                    -1,
+                    it
+                )
             }
 
         if (preparedCollection.isEmpty()) {
@@ -400,15 +420,21 @@ class MultidayViewFragment : Fragment() {
 
         const val ARG_COLUMN_COUNT = "column-count"
         const val ARG_START_DATE = "start-date"
+        const val ARG_CUSTOM_EVENTS = "custom-events"
 
         const val MAX_COLUMNS = 7
 
         @JvmStatic
-        fun newInstance(columnCount: Int, firstDate: DateTime): MultidayViewFragment =
+        fun newInstance(
+            columnCount: Int,
+            firstDate: DateTime,
+            usesCustomEvents: Boolean = false
+        ): MultidayViewFragment =
             MultidayViewFragment().apply {
                 arguments = Bundle().apply {
                     putInt(ARG_COLUMN_COUNT, columnCount)
                     putLong(ARG_START_DATE, firstDate.millis)
+                    putBoolean(ARG_CUSTOM_EVENTS, usesCustomEvents)
                 }
             }
     }

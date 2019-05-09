@@ -2,6 +2,7 @@ package cz.budikpet.bachelorwork.di
 
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
+import cz.budikpet.bachelorwork.screens.freeTimeView.FreeTimeFragment
 import cz.budikpet.bachelorwork.screens.main.MainActivity
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
@@ -19,4 +20,5 @@ internal interface AppComponent {
     fun inject(ctuLoginActivity: CTULoginActivity)
     fun inject(mainActivity: MainActivity)
     fun inject(multidayViewFragment: MultidayViewFragment)
+    fun inject(freeTimeFragment: FreeTimeFragment)
 }
