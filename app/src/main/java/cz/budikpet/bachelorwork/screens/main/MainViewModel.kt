@@ -31,6 +31,7 @@ import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
 import org.joda.time.Interval
+import org.joda.time.LocalTime
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -85,6 +86,12 @@ class MainViewModel : ViewModel() {
     /** Represents items received from Sirius API search endpoint. */
     val searchItems = MutableLiveData<List<SearchItem>>()
     var lastSearchQuery = ""
+
+    /** Timetables that were selected for free time calculations. */
+    val freeTimeTimetables: ArrayList<SearchItem> = arrayListOf()
+    var selectedWeekStart: DateTime? = null
+    var selectedStartTime: LocalTime? = null
+    var selectedEndTime: LocalTime? = null
 
     /**
      * The date that corresponds to the currently selected MultidayFragment.

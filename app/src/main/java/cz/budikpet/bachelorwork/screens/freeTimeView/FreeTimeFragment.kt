@@ -3,17 +3,25 @@ package cz.budikpet.bachelorwork.screens.freeTimeView
 
 import android.app.DatePickerDialog
 import android.app.TimePickerDialog
+import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.*
 import android.widget.Button
+import android.widget.ImageView
+import com.tokenautocomplete.TokenCompleteTextView
 import cz.budikpet.bachelorwork.MyApplication
 
 import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.data.models.SearchItem
+import cz.budikpet.bachelorwork.screens.TokenCompletionView
+import cz.budikpet.bachelorwork.screens.eventEditView.AutoSuggestAdapter
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
@@ -23,37 +31,56 @@ import org.joda.time.LocalDate
 import org.joda.time.LocalTime
 import javax.inject.Inject
 
+// TODO: Zobrazení fragmentu
+
 class FreeTimeFragment : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     private val dateStringFormat = "< %s - %s >"
 
-    private var selectedWeekStart: DateTime = DateTime().withDayOfWeek(DateTimeConstants.MONDAY)
-    private lateinit var selectedStartTime: LocalTime
-    private lateinit var selectedEndTime: LocalTime
+    private var selectedWeekStart: DateTime = DateTime().withDayOfWeek(DateTimeConstants.MONDAY).withTimeAtStartOfDay()
+    set(value) {
+        field = value
+        viewModel.selectedWeekStart = value
+    }
+    private var selectedStartTime: LocalTime = LocalTime()
+        set(value) {
+            field = value
+            viewModel.selectedStartTime = value
+        }
+    private var selectedEndTime: LocalTime = LocalTime()
+        set(value) {
+            field = value
+            viewModel.selectedEndTime = value
+        }
 
     @Inject
     internal lateinit var sharedPreferences: SharedPreferences
     private lateinit var viewModel: MainViewModel
 
     private var supportActionBar: ActionBar? = null
+    private lateinit var imageError: ImageView
     private lateinit var buttonWeek: Button
     private lateinit var buttonTimeFrom: Button
     private lateinit var buttonTimeTo: Button
+    private lateinit var timetablesCompletionView: TokenCompleteTextView<SearchItem>
 
     private val multidayFreeTimeViewFragment: MultidayViewFragment by lazy {
-        val selectedDate = this.selectedWeekStart ?: DateTime()
-
-        MultidayViewFragment.newInstance(MultidayViewFragment.MAX_COLUMNS, selectedDate, usesCustomEvents = true)
+        MultidayViewFragment.newInstance(MultidayViewFragment.MAX_COLUMNS, selectedWeekStart, usesCustomEvents = true)
     }
 
     private val weekPickerDialog: DatePickerDialog by lazy {
         val listener = DatePickerDialog.OnDateSetListener { datePicker, year, month, day ->
             val date = LocalDate(year, month + 1, day)
-            setSelectedDate(date)
+            setSelectedDate(DateTime().withDate(date))
         }
-        val date = LocalDate()
-        DatePickerDialog(context!!, listener, date.year, date.monthOfYear - 1, date.dayOfMonth)
+        DatePickerDialog(
+            context!!,
+            listener,
+            selectedWeekStart.year,
+            selectedWeekStart.monthOfYear - 1,
+            selectedWeekStart.dayOfMonth
+        )
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -64,7 +91,15 @@ class FreeTimeFragment : Fragment() {
             ViewModelProviders.of(this).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
-        initSelectedTimes()
+        if(viewModel.selectedWeekStart != null) {
+            selectedWeekStart = viewModel.selectedWeekStart!!
+            selectedStartTime = viewModel.selectedStartTime!!
+            selectedEndTime = viewModel.selectedEndTime!!
+        } else {
+            initSelectedTimes()
+        }
+
+        subscribeObservers()
     }
 
     override fun onCreateView(
@@ -75,7 +110,11 @@ class FreeTimeFragment : Fragment() {
         val layout = inflater.inflate(R.layout.fragment_free_time, container, false)
         setHasOptionsMenu(true)
 
+        imageError = layout.findViewById(R.id.imageError)
+
         initButtons(layout)
+
+        initCompletionView(layout)
 
         return layout
     }
@@ -91,12 +130,76 @@ class FreeTimeFragment : Fragment() {
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
-        when(item?.itemId) {
+        when (item?.itemId) {
             android.R.id.home -> hideFreeTime()
             R.id.itemRun -> showFreeTime()
         }
 
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun subscribeObservers() {
+        viewModel.searchItems.observe(this, Observer { searchItemsList ->
+            val adapter = (timetablesCompletionView.adapter as AutoSuggestAdapter?) ?: return@Observer
+            if (searchItemsList != null) {
+                adapter.setData(searchItemsList)
+            }
+        })
+    }
+
+    private fun showFreeTime() {
+        if (areSelectedTimesCorrect()) {
+            supportActionBar?.setDisplayHomeAsUpEnabled(true)
+        }
+    }
+
+    private fun hideFreeTime() {
+        supportActionBar?.setDisplayHomeAsUpEnabled(false)
+    }
+
+    private fun initCompletionView(layout: View) {
+        timetablesCompletionView = layout.findViewById<TokenCompletionView>(R.id.timetablesTokenAuto)
+        timetablesCompletionView.allowCollapse(false)
+
+        timetablesCompletionView.setAdapter(AutoSuggestAdapter(context!!, android.R.layout.simple_list_item_1) {
+            // Filter items that are already selected
+            !viewModel.freeTimeTimetables.contains(it)
+        })
+        timetablesCompletionView.addTextChangedListener(object : TextWatcher {
+            override fun afterTextChanged(s: Editable?) {}
+
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+
+            override fun onTextChanged(query: CharSequence?, start: Int, before: Int, count: Int) {
+                val newText = query.toString()
+                val parts = newText.split(",".toRegex())
+                if (parts.isNotEmpty()) {
+                    viewModel.searchSirius(parts.last())
+                }
+            }
+
+        })
+
+        timetablesCompletionView.setTokenListener(object : TokenCompleteTextView.TokenListener<SearchItem> {
+            override fun onTokenIgnored(token: SearchItem?) {}
+
+            override fun onTokenAdded(token: SearchItem?) {
+                val token = token ?: return
+                if (!viewModel.freeTimeTimetables.contains(token)) {
+                    viewModel.freeTimeTimetables.add(token)
+                }
+            }
+
+            override fun onTokenRemoved(token: SearchItem?) {
+                val token = token ?: return
+                viewModel.freeTimeTimetables.remove(token)
+            }
+        })
+
+        // Add timetables user has already picked (change of settings)
+        viewModel.freeTimeTimetables.forEach { searchItem ->
+            timetablesCompletionView.addObjectAsync(searchItem)
+        }
     }
 
     private fun initSelectedTimes() {
@@ -111,9 +214,9 @@ class FreeTimeFragment : Fragment() {
     }
 
     private fun initButtons(layout: View) {
-        this.buttonWeek = layout.findViewById<Button>(R.id.buttonWeek)
-        this.buttonTimeFrom = layout.findViewById<Button>(R.id.buttonTimeFrom)
-        this.buttonTimeTo = layout.findViewById<Button>(R.id.buttonTimeTo)
+        this.buttonWeek = layout.findViewById(R.id.buttonWeek)
+        this.buttonTimeFrom = layout.findViewById(R.id.buttonTimeFrom)
+        this.buttonTimeTo = layout.findViewById(R.id.buttonTimeTo)
 
 
         buttonWeek.setOnClickListener {
@@ -124,7 +227,13 @@ class FreeTimeFragment : Fragment() {
             val listener = TimePickerDialog.OnTimeSetListener { timePicker, hourOfDay, minute ->
                 setStartTime(LocalTime(hourOfDay, minute))
             }
-            TimePickerDialog(context!!, listener, selectedStartTime.hourOfDay, selectedStartTime.minuteOfHour, true).show()
+            TimePickerDialog(
+                context!!,
+                listener,
+                selectedStartTime.hourOfDay,
+                selectedStartTime.minuteOfHour,
+                true
+            ).show()
         }
 
         buttonTimeTo.setOnClickListener {
@@ -134,7 +243,7 @@ class FreeTimeFragment : Fragment() {
             TimePickerDialog(context!!, listener, selectedEndTime.hourOfDay, selectedEndTime.minuteOfHour, true).show()
         }
 
-        setSelectedDate(LocalDate())
+        setSelectedDate(selectedWeekStart)
         setStartTime(selectedStartTime)
         setEndTime(selectedEndTime)
     }
@@ -142,26 +251,37 @@ class FreeTimeFragment : Fragment() {
     private fun setStartTime(time: LocalTime) {
         selectedStartTime = time
         buttonTimeFrom.text = selectedStartTime.toString("HH:mm")
+        areSelectedTimesCorrect()
     }
 
     private fun setEndTime(time: LocalTime) {
         selectedEndTime = time
         buttonTimeTo.text = selectedEndTime.toString("HH:mm")
+        areSelectedTimesCorrect()
     }
 
-    private fun setSelectedDate(date: LocalDate) {
+    private fun setSelectedDate(date: DateTime) {
         val dateStart = date.withDayOfWeek(DateTimeConstants.MONDAY)
         val dateEnd = dateStart.plusDays(MultidayViewFragment.MAX_COLUMNS - 1)
         buttonWeek.text = dateStringFormat.format(dateStart.toString("dd.MM.YYYY"), dateEnd.toString("dd.MM.YYYY"))
 
-        this.selectedWeekStart = DateTime().withDate(dateStart).withTimeAtStartOfDay()
+        this.selectedWeekStart = dateStart.withTimeAtStartOfDay()
     }
 
-    private fun showFreeTime() {
-        supportActionBar?.setDisplayHomeAsUpEnabled(true)
+    private fun areSelectedTimesCorrect(): Boolean {
+        return if (selectedStartTime.isBefore(selectedEndTime)) {
+            // Error occurred
+            imageError.visibility = View.GONE
+            true
+        } else {
+            imageError.visibility = View.VISIBLE
+            false
+        }
     }
 
-    private fun hideFreeTime() {
-        supportActionBar?.setDisplayHomeAsUpEnabled(false)
+    companion object {
+        private const val ARG_WEEK_MILLIS = "week-millis"
+        private const val ARG_START_MILLIS = "start-millis"
+        private const val ARG_END_MILLIS = "end-millis"
     }
 }

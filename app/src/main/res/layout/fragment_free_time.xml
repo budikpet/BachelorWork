@@ -73,7 +73,7 @@
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
 		android:layout_marginStart="16dp"
-		android:layout_marginTop="8dp"
+		android:layout_marginEnd="4dp"
 		android:background="@drawable/pickable_item"
 		android:padding="5dp"
 		android:paddingStart="5dp"
@@ -81,7 +81,7 @@
 		app:layout_constraintEnd_toStartOf="@+id/hyphen"
 		app:layout_constraintHorizontal_bias="0.0"
 		app:layout_constraintHorizontal_chainStyle="packed"
-		app:layout_constraintStart_toEndOf="@id/textBarrier"
+		app:layout_constraintStart_toEndOf="@+id/textBarrier"
 		app:layout_constraintTop_toBottomOf="@+id/buttonWeek"
 		tools:text="7:30" />
 
@@ -89,12 +89,10 @@
 		android:id="@+id/hyphen"
 		android:layout_width="wrap_content"
 		android:layout_height="wrap_content"
-		android:layout_marginStart="4dp"
 		android:text="-"
 		app:layout_constraintBaseline_toBaselineOf="@+id/buttonTimeFrom"
 		app:layout_constraintEnd_toStartOf="@+id/buttonTimeTo"
 		app:layout_constraintHorizontal_bias="0.5"
-		app:layout_constraintHorizontal_chainStyle="packed"
 		app:layout_constraintStart_toEndOf="@+id/buttonTimeFrom" />
 
 	<Button
@@ -107,11 +105,25 @@
 		android:background="@drawable/pickable_item"
 		android:padding="5dp"
 		android:text="19:30"
-		app:layout_constraintBaseline_toBaselineOf="@+id/hyphen"
-		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintBaseline_toBaselineOf="@+id/buttonTimeFrom"
+		app:layout_constraintEnd_toStartOf="@+id/imageError"
 		app:layout_constraintHorizontal_bias="0.5"
 		app:layout_constraintStart_toEndOf="@+id/hyphen"
 		tools:text="9:00" />
+
+	<ImageView
+		android:id="@+id/imageError"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginEnd="8dp"
+		android:src="@drawable/ic_error_red_24dp"
+		android:visibility="gone"
+		app:layout_constraintBottom_toBottomOf="@+id/buttonTimeTo"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintHorizontal_bias="0.5"
+		app:layout_constraintStart_toEndOf="@+id/buttonTimeTo"
+		app:layout_constraintTop_toTopOf="@+id/buttonTimeTo"
+		tools:visibility="visible" />
 
 	<View
 		android:id="@+id/divider"
@@ -146,7 +158,7 @@
 		app:layout_constraintStart_toEndOf="@id/imagesBarrier"
 		app:layout_constraintTop_toBottomOf="@+id/divider" />
 
-	<cz.budikpet.bachelorwork.screens.ContactsCompletionView
+	<cz.budikpet.bachelorwork.screens.TokenCompletionView
 		android:id="@+id/timetablesTokenAuto"
 		android:layout_width="0dp"
 		android:layout_height="wrap_content"

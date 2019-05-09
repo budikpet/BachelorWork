@@ -84,7 +84,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         setSupportActionBar(toolbar)
         progressBar = findViewById(R.id.progressBar)
 
-        initSideBar()
+        initSideBar(savedInstanceState)
 
         initFragments(savedInstanceState)
 
@@ -106,7 +106,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         viewModel.onDestroy()
     }
 
-    private fun initSideBar() {
+    private fun initSideBar(savedInstanceState: Bundle?) {
         val drawerLayout = findViewById<DrawerLayout>(R.id.drawerLayout)
         val sidebarNavView = findViewById<NavigationView>(R.id.sidebarNavView)
 
@@ -246,18 +246,30 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 R.id.sidebarDayView -> {
                     viewModel.daysPerMultidayViewFragment = 1
                     replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
+                    searchSuggestions.visibility = View.VISIBLE
                 }
                 R.id.sidebarThreeDayView -> {
                     viewModel.daysPerMultidayViewFragment = 3
                     replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
+                    searchSuggestions.visibility = View.VISIBLE
                 }
                 R.id.sidebarWeekView -> {
                     viewModel.daysPerMultidayViewFragment = 7
                     replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
+                    searchSuggestions.visibility = View.VISIBLE
                 }
-                R.id.sidebarSavedCalendars -> replace(R.id.mainFragmentHolder, CalendarsListFragment())
-                R.id.sidebarFreeTime -> replace(R.id.mainFragmentHolder, FreeTimeFragment())
-                R.id.sidebarSettings -> Log.i(TAG, "settings")
+                R.id.sidebarSavedCalendars -> {
+                    replace(R.id.mainFragmentHolder, CalendarsListFragment())
+                    searchSuggestions.visibility = View.GONE
+                }
+                R.id.sidebarFreeTime -> {
+                    replace(R.id.mainFragmentHolder, FreeTimeFragment())
+                    searchSuggestions.visibility = View.GONE
+                }
+                R.id.sidebarSettings -> {
+                    Log.i(TAG, "settings")
+                    searchSuggestions.visibility = View.GONE
+                }
             }
             setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
         }

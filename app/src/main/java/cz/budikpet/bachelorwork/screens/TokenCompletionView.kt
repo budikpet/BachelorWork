@@ -12,7 +12,7 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.SearchItem
 
-class ContactsCompletionView(context: Context, attrs: AttributeSet) :
+class TokenCompletionView(context: Context, attrs: AttributeSet) :
     TokenCompleteTextView<SearchItem>(context, attrs) {
 
     init {

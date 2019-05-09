@@ -19,7 +19,7 @@ import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
-import cz.budikpet.bachelorwork.screens.ContactsCompletionView
+import cz.budikpet.bachelorwork.screens.TokenCompletionView
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import kotlinx.android.synthetic.main.fragment_event_edit.*
 import org.joda.time.LocalDate
@@ -123,7 +123,7 @@ class EventEditFragment : Fragment() {
 
         initTimeButtons(layout)
 
-        val teachersTokenAuto = layout.findViewById<ContactsCompletionView>(R.id.teachersTokenAuto)
+        val teachersTokenAuto = layout.findViewById<TokenCompletionView>(R.id.teachersTokenAuto)
         teachersTokenAuto.allowCollapse(false)
         initTeachersAutoTextView(teachersTokenAuto, ItemType.PERSON)
 
@@ -164,8 +164,9 @@ class EventEditFragment : Fragment() {
         }
     }
 
-    private fun initTeachersAutoTextView(teachersTokenAuto: ContactsCompletionView, itemType: ItemType) {
+    private fun initTeachersAutoTextView(teachersTokenAuto: TokenCompletionView, itemType: ItemType) {
         teachersTokenAuto.setAdapter(AutoSuggestAdapter(context!!, android.R.layout.simple_list_item_1) {
+            // Filter out items that were already selected
             !selectedEvent!!.teacherIds.contains(it.id)
         })
         teachersTokenAuto.addTextChangedListener(object : TextWatcher {
