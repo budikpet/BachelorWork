@@ -81,6 +81,7 @@ class FreeTimeFragment : Fragment() {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+        inflater?.inflate(R.menu.free_time_bar, menu)
         super.onCreateOptionsMenu(menu, inflater)
 
         supportActionBar = (activity as AppCompatActivity).supportActionBar
@@ -92,6 +93,7 @@ class FreeTimeFragment : Fragment() {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item?.itemId) {
             android.R.id.home -> hideFreeTime()
+            R.id.itemRun -> showFreeTime()
         }
 
         return super.onOptionsItemSelected(item)

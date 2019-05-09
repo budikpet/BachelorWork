@@ -109,6 +109,7 @@ class CalendarsListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+        inflater?.inflate(R.menu.calendar_list_bar, menu)
         super.onCreateOptionsMenu(menu, inflater)
 
         val supportActionBar = (activity as AppCompatActivity).supportActionBar

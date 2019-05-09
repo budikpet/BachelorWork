@@ -3,7 +3,7 @@
 	xmlns:android="http://schemas.android.com/apk/res/android">
 
 	<item
-		android:id="@+id/itemSaveEvent"
-		android:title="@string/menuItem_SaveEvent"
+		android:id="@+id/itemRun"
+		android:title="Run"
 		app:showAsAction="ifRoom|withText" />
 </menu>

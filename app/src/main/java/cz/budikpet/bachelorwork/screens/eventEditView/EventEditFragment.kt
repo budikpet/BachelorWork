@@ -73,7 +73,7 @@ class EventEditFragment : Fragment() {
     }
 
     private fun menuItemClicked(menuItem: MenuItem): Boolean {
-        if (menuItem.itemId == R.id.saveEvent) {
+        if (menuItem.itemId == R.id.itemSaveEvent) {
             prepareExit()
 
             when {
