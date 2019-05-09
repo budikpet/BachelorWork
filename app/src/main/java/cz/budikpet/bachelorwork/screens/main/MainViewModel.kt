@@ -440,11 +440,10 @@ class MainViewModel : ViewModel() {
     /**
      * @return true if the currently selected timetable is available offline.
      */
-    fun isSelectedCalendarAvailableOffline(): Boolean {
+    fun isCalendarAvailableOffline(timetableOwnerUsername: String): Boolean {
         val savedTimetables = this.savedTimetables.value
-        val timetableOwnerUsername = this.timetableOwner.value?.first
 
-        if (savedTimetables != null && timetableOwnerUsername != null) {
+        if (savedTimetables != null) {
             return savedTimetables.any { it.id == timetableOwnerUsername }
         }
 

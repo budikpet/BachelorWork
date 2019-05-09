@@ -44,6 +44,7 @@ class MultidayFragmentHolder : Fragment() {
     private lateinit var viewModel: MainViewModel
 
     private val addCalendarSnackbar: Snackbar by lazy {
+        var timetableOwnerUsername: String = viewModel.timetableOwner.value!!.first
         val mainActivityLayout = activity?.findViewById<ConstraintLayout>(R.id.main_activity)
         val snackbar = Snackbar
             .make(
@@ -52,14 +53,14 @@ class MultidayFragmentHolder : Fragment() {
             )
             .setAction(getString(R.string.snackbar_Undo)) {
                 // Change the menuItem back
-                updateOfflineAvailableItem(viewModel.isSelectedCalendarAvailableOffline())
+                updateOfflineAvailableItem(viewModel.isCalendarAvailableOffline(timetableOwnerUsername))
             }
             .addCallback(object : Snackbar.Callback() {
                 override fun onDismissed(snackbar: Snackbar, event: Int) {
                     if (event != DISMISS_EVENT_ACTION) {
                         // Undo button was not pressed, make timetable available/unavailable offline
-                        val calendarName = MyApplication.calendarNameFromId(viewModel.timetableOwner.value!!.first)
-                        if (viewModel.isSelectedCalendarAvailableOffline()) {
+                        val calendarName = MyApplication.calendarNameFromId(timetableOwnerUsername)
+                        if (viewModel.isCalendarAvailableOffline(timetableOwnerUsername)) {
                             // Available offline, remove
                             viewModel.removeCalendar(calendarName)
                         } else {
@@ -173,8 +174,6 @@ class MultidayFragmentHolder : Fragment() {
 
             override fun onMenuItemActionCollapse(item: MenuItem?): Boolean {
                 // User left the searchView
-                viewModel.searchItems.postValue(listOf())
-                viewModel.lastSearchQuery = ""
                 return true
             }
 
@@ -213,7 +212,7 @@ class MultidayFragmentHolder : Fragment() {
     private fun offlineAvailableMenuItemClicked() {
         addCalendarSnackbar.apply {
             when {
-                viewModel.isSelectedCalendarAvailableOffline() -> {
+                viewModel.isCalendarAvailableOffline(viewModel.timetableOwner.value!!.first) -> {
                     // Available offline, make unavailable
                     setText(R.string.snackbar_CalendarUnavailable)
                     updateOfflineAvailableItem(false)
@@ -231,6 +230,8 @@ class MultidayFragmentHolder : Fragment() {
     private fun subscribeObservers() {
 
         viewModel.timetableOwner.observe(this, Observer {
+            // Update app bar after a new timetable is selected
+//            viewModel.searchItems.postValue()
             updateAppBar(viewModel.currentlySelectedDate)
         })
 
@@ -242,7 +243,7 @@ class MultidayFragmentHolder : Fragment() {
         })
     }
 
-    fun resetViewPager(date: DateTime = DateTime()) {
+    private fun resetViewPager(date: DateTime = DateTime()) {
         pagerPosition = PREFILLED_WEEKS / 2
 
         viewModel.currentlySelectedDate = date
@@ -314,7 +315,7 @@ class MultidayFragmentHolder : Fragment() {
         if (currUsername != null) {
             supportActionBar.setDisplayHomeAsUpEnabled(currUsername != viewModel.ctuUsername)
             shareMenuItem?.isVisible = currUsername == viewModel.ctuUsername
-            updateOfflineAvailableItem(viewModel.isSelectedCalendarAvailableOffline())
+            updateOfflineAvailableItem(viewModel.isCalendarAvailableOffline(currUsername))
         }
     }
 

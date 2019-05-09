@@ -130,6 +130,7 @@ class MultidayViewFragment : Fragment() {
         viewModel.events.observe(this, Observer { events ->
             if (events != null) {
                 // Add events to the view
+                clearColumns()
                 updateEventsView(events)
             }
         })
@@ -213,6 +214,12 @@ class MultidayViewFragment : Fragment() {
 
     // MARK: Dynamically added events
 
+    private fun clearColumns() {
+        for (column in eventsColumns) {
+            column.removeAllViews()
+        }
+    }
+
     /**
      * Add events from the collection into the view.
      */
@@ -242,11 +249,6 @@ class MultidayViewFragment : Fragment() {
             }
 
             return
-        }
-
-        // Clear columns
-        for (column in eventsColumns) {
-            column.removeAllViews()
         }
 
         // Sets up indexes. Events with the same index are overlapping.
