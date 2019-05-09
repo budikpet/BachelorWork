@@ -21,9 +21,9 @@
 			android:layout_marginStart="8dp"
 			android:layout_marginTop="12dp"
 			android:layout_marginEnd="8dp"
-			android:layout_marginBottom="32dp"
+			android:layout_marginBottom="8dp"
 			android:textSize="18sp"
-			card_view:layout_constraintBottom_toBottomOf="parent"
+			card_view:layout_constraintBottom_toTopOf="@+id/searchItemId"
 			card_view:layout_constraintEnd_toEndOf="parent"
 			card_view:layout_constraintStart_toEndOf="@+id/barrier"
 			card_view:layout_constraintTop_toTopOf="parent"
@@ -31,11 +31,13 @@
 
 		<TextView
 			android:id="@+id/searchItemId"
-			android:layout_width="wrap_content"
+			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_marginStart="8dp"
-			android:layout_marginBottom="8dp"
+			android:layout_marginEnd="8dp"
+			android:layout_marginBottom="12dp"
 			card_view:layout_constraintBottom_toBottomOf="parent"
+			card_view:layout_constraintEnd_toEndOf="parent"
 			card_view:layout_constraintStart_toEndOf="@+id/barrier"
 			card_view:layout_constraintTop_toBottomOf="@+id/searchItemTitle"
 			tools:text="DummyId" />
@@ -45,10 +47,11 @@
 			android:layout_width="36dp"
 			android:layout_height="0dp"
 			android:layout_marginStart="8dp"
-			card_view:layout_constraintBottom_toBottomOf="@+id/searchItemId"
+			android:layout_marginTop="8dp"
+			android:layout_marginBottom="8dp"
+			card_view:layout_constraintBottom_toBottomOf="parent"
 			card_view:layout_constraintStart_toStartOf="parent"
-			card_view:layout_constraintTop_toTopOf="@+id/searchItemTitle"
-			card_view:layout_constraintVertical_bias="0.0"
+			card_view:layout_constraintTop_toTopOf="parent"
 			tools:srcCompat="@drawable/ic_person_black_24dp" />
 
 		<android.support.constraint.Barrier

@@ -7,13 +7,12 @@ import android.support.constraint.ConstraintLayout
 import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v7.app.AlertDialog
+import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
@@ -73,6 +72,8 @@ class CalendarsListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
             ViewModelProviders.of(this).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
+        setHasOptionsMenu(true)
+
         subscribeObservers()
     }
 
@@ -81,7 +82,7 @@ class CalendarsListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
         savedInstanceState: Bundle?
     ): View? {
         calendarsList = inflater.inflate(
-            cz.budikpet.bachelorwork.R.layout.fragment_calendars_list,
+            R.layout.fragment_calendars_list,
             container,
             false
         ) as RecyclerView
@@ -105,6 +106,15 @@ class CalendarsListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
         itemTouchHelper.attachToRecyclerView(calendarsList)
 
         return calendarsList
+    }
+
+    override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
+        super.onCreateOptionsMenu(menu, inflater)
+
+        val supportActionBar = (activity as AppCompatActivity).supportActionBar
+        supportActionBar?.title = getString(R.string.sidebar_SavedCalendars)
+        supportActionBar?.subtitle = null
+        supportActionBar?.setDisplayHomeAsUpEnabled(false)
     }
 
     private fun subscribeObservers() {

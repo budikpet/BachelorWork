@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/freeTimeLayout"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent"
+	tools:context=".screens.freeTimeView.FreeTimeFragment">
+
+	<android.support.constraint.Barrier
+		android:id="@+id/textBarrier"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		app:barrierDirection="end"
+		app:constraint_referenced_ids="imageTime,imageTimetables"
+		tools:layout_editor_absoluteX="411dp" />
+
+	<ImageView
+		android:id="@+id/imageTime"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="8dp"
+		android:src="@drawable/ic_time_black_24dp"
+		app:layout_constraintBottom_toBottomOf="@+id/buttonWeek"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="@+id/buttonWeek" />
+
+	<TextView
+		android:id="@+id/textViewWeek"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="16dp"
+		android:text="Selected week"
+		app:layout_constraintEnd_toEndOf="@+id/buttonWeek"
+		app:layout_constraintStart_toStartOf="@+id/buttonWeek"
+		app:layout_constraintTop_toTopOf="parent"
+		tools:text="Selected week" />
+
+	<Button
+		android:id="@+id/buttonWeek"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="8dp"
+		android:layout_marginTop="8dp"
+		android:padding="5dp"
+		android:text="&lt; 6.5.2019 - 12.5.2019 &gt;"
+		app:layout_constraintHorizontal_chainStyle="packed"
+		app:layout_constraintStart_toEndOf="@id/textBarrier"
+		app:layout_constraintTop_toBottomOf="@+id/textViewWeek"
+		tools:text="&lt; 6.5.2019 - 12.5.2019 &gt;" />
+
+	<TextView
+		android:id="@+id/textViewTime"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginTop="16dp"
+		android:text="Selected time"
+		app:layout_constraintEnd_toEndOf="@+id/buttonTimeTo"
+		app:layout_constraintStart_toStartOf="@+id/buttonTimeFrom"
+		app:layout_constraintTop_toTopOf="parent"
+		tools:text="Selected time" />
+
+	<Button
+		android:id="@+id/buttonTimeFrom"
+		style="@style/PickableTextStyle"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="16dp"
+		android:background="@drawable/pickable_item"
+		android:padding="5dp"
+		android:paddingStart="5dp"
+		android:text="7:30"
+		app:layout_constraintBaseline_toBaselineOf="@+id/buttonWeek"
+		app:layout_constraintEnd_toStartOf="@+id/hyphen"
+		app:layout_constraintHorizontal_chainStyle="packed"
+		app:layout_constraintStart_toEndOf="@id/buttonWeek"
+		tools:text="7:30" />
+
+	<TextView
+		android:id="@+id/hyphen"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="4dp"
+		android:text="-"
+		app:layout_constraintBaseline_toBaselineOf="@+id/buttonTimeFrom"
+		app:layout_constraintEnd_toStartOf="@+id/buttonTimeTo"
+		app:layout_constraintHorizontal_bias="0.5"
+		app:layout_constraintHorizontal_chainStyle="packed"
+		app:layout_constraintStart_toEndOf="@+id/buttonTimeFrom" />
+
+	<Button
+		android:id="@+id/buttonTimeTo"
+		style="@style/PickableTextStyle"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="4dp"
+		android:layout_marginEnd="8dp"
+		android:background="@drawable/pickable_item"
+		android:padding="5dp"
+		android:text="19:30"
+		app:layout_constraintBaseline_toBaselineOf="@+id/hyphen"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintHorizontal_bias="0.5"
+		app:layout_constraintStart_toEndOf="@+id/hyphen"
+		tools:text="9:00" />
+
+	<View
+		android:id="@+id/divider"
+		android:layout_width="0dp"
+		android:layout_height="2dp"
+		android:layout_marginStart="8dp"
+		android:layout_marginTop="8dp"
+		android:layout_marginEnd="8dp"
+		android:background="@color/divider_grey"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintStart_toEndOf="@id/textBarrier"
+		app:layout_constraintTop_toBottomOf="@+id/buttonTimeTo" />
+
+	<ImageView
+		android:id="@+id/imageTimetables"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="8dp"
+		android:src="@drawable/ic_today_black_24dp"
+		app:layout_constraintBottom_toBottomOf="@+id/textViewTimetables"
+		app:layout_constraintStart_toStartOf="parent"
+		app:layout_constraintTop_toTopOf="@+id/textViewTimetables" />
+
+	<TextView
+		android:id="@+id/textViewTimetables"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="8dp"
+		android:layout_marginTop="8dp"
+		android:text="Timetables:"
+		app:layout_constraintStart_toEndOf="@id/textBarrier"
+		app:layout_constraintTop_toBottomOf="@+id/divider" />
+
+	<cz.budikpet.bachelorwork.screens.ContactsCompletionView
+		android:id="@+id/timetablesTokenAuto"
+		android:layout_width="0dp"
+		android:layout_height="wrap_content"
+		android:layout_marginStart="4dp"
+		android:layout_marginTop="8dp"
+		android:layout_marginEnd="8dp"
+		android:focusedByDefault="false"
+		android:hint="Select timetables"
+		android:lineSpacingExtra="2dp"
+		app:layout_constraintEnd_toEndOf="parent"
+		app:layout_constraintHorizontal_bias="1.0"
+		app:layout_constraintStart_toEndOf="@id/textBarrier"
+		app:layout_constraintTop_toBottomOf="@+id/textViewTimetables" />
+
+</android.support.constraint.ConstraintLayout>

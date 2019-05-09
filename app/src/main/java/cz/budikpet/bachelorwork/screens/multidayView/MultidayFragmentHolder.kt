@@ -44,7 +44,7 @@ class MultidayFragmentHolder : Fragment() {
     private lateinit var viewModel: MainViewModel
 
     private val addCalendarSnackbar: Snackbar by lazy {
-        var timetableOwnerUsername: String = viewModel.timetableOwner.value!!.first
+        val timetableOwnerUsername: String = viewModel.timetableOwner.value!!.first
         val mainActivityLayout = activity?.findViewById<ConstraintLayout>(R.id.main_activity)
         val snackbar = Snackbar
             .make(
@@ -306,11 +306,12 @@ class MultidayFragmentHolder : Fragment() {
         val interval = Interval(currDate, currDate.plusDays(viewModel.daysPerMultidayViewFragment))
         itemGoToToday?.isVisible = !interval.contains(DateTime().withTimeAtStartOfDay())
 
-        // Update name
+        // Update title and subtitle
         val lastDate = currDate.plusDays(viewModel.daysPerMultidayViewFragment - 1)
+        supportActionBar.title = viewModel.timetableOwner.value?.first
         supportActionBar.subtitle = "${currDate.toString("dd.MM")} – ${lastDate.toString("dd.MM")}"
 
-        // Update back button
+        // Update buttons
         val currUsername = viewModel.timetableOwner.value?.first
         if (currUsername != null) {
             supportActionBar.setDisplayHomeAsUpEnabled(currUsername != viewModel.ctuUsername)

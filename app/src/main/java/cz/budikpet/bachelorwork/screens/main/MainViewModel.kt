@@ -10,6 +10,7 @@ import com.google.common.collect.TreeRangeSet
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.MyApplication.Companion.calendarNameFromId
 import cz.budikpet.bachelorwork.MyApplication.Companion.idFromCalendarName
+import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.CalendarListItem
@@ -140,9 +141,9 @@ class MainViewModel : ViewModel() {
 
     fun goToLastMultidayView() {
         val id = when (daysPerMultidayViewFragment) {
-            1 -> cz.budikpet.bachelorwork.R.id.sidebarDayView
-            3 -> cz.budikpet.bachelorwork.R.id.sidebarThreeDayView
-            else -> cz.budikpet.bachelorwork.R.id.sidebarWeekView
+            1 -> R.id.sidebarDayView
+            3 -> R.id.sidebarThreeDayView
+            else -> R.id.sidebarWeekView
         }
         selectedSidebarItem.postValue(id)
     }
@@ -222,11 +223,14 @@ class MainViewModel : ViewModel() {
 
     // MARK: Google Calendar
 
-    fun signedInToGoogle() {
+    /**
+     * The application has all permissions, is signed into Google and CTU accounts.
+     */
+    fun ready() {
         val currOwner = timetableOwner.value
 
         if (currOwner == null) {
-            selectedSidebarItem.postValue(cz.budikpet.bachelorwork.R.id.sidebarWeekView)
+            selectedSidebarItem.postValue(R.id.sidebarFreeTime)     // TODO: Change back to R.id.sidebarWeekView
             timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
             updateCalendars(ctuUsername)
         }

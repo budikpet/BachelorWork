@@ -28,6 +28,7 @@ import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.req
 import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListFragment
 import cz.budikpet.bachelorwork.screens.eventEditView.EventEditFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
+import cz.budikpet.bachelorwork.screens.freeTimeView.FreeTimeFragment
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
 import cz.budikpet.bachelorwork.util.*
 import kotlinx.android.synthetic.main.activity_main.*
@@ -254,9 +255,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                     viewModel.daysPerMultidayViewFragment = 7
                     replace(R.id.mainFragmentHolder, MultidayFragmentHolder())
                 }
-                R.id.sidebarSavedCalendars -> {
-                    replace(R.id.mainFragmentHolder, CalendarsListFragment())
-                }
+                R.id.sidebarSavedCalendars -> replace(R.id.mainFragmentHolder, CalendarsListFragment())
+                R.id.sidebarFreeTime -> replace(R.id.mainFragmentHolder, FreeTimeFragment())
                 R.id.sidebarSettings -> Log.i(TAG, "settings")
             }
             setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
@@ -293,7 +293,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
                 // TODO: Check if the google account still exists
 
-                viewModel.signedInToGoogle()
+                viewModel.ready()
 
             } else {
                 // Ask for a Google Account
@@ -319,7 +319,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
                 credential.selectedAccountName = accountName
 
-                viewModel.signedInToGoogle()
+                viewModel.ready()
 
                 viewModel.updateCalendars()
             } else {

@@ -6,8 +6,6 @@
 	android:name="cz.budikpet.bachelorwork.screens.calendarListView.calendarListFragment"
 	android:layout_width="match_parent"
 	android:layout_height="match_parent"
-	android:layout_marginLeft="16dp"
-	android:layout_marginRight="16dp"
 	app:layoutManager="LinearLayoutManager"
 	tools:context=".screens.calendarListView.CalendarsListFragment"
 	tools:listitem="@layout/search_item_card" />
