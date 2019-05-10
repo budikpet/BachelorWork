@@ -75,4 +75,6 @@
 	<string name="message_CalendarAdded">Timetable added.</string>
 	<string name="message_CalendarShared">Timetable shared.</string>
 	<string name="message_CalendarUnshared">Timetable unshared.</string>
+	<string name="alertDialog_message_ctuLogOut">Do you wish to log out of the CTU account?</string>
+	<string name="alertDialog_message_googleLogout">Do you wish to log out of the Google account?</string>
 </resources>

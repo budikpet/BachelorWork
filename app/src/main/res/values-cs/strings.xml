@@ -76,4 +76,6 @@
 	<string name="message_CalendarAdded">Rozvrh hodin přidán.</string>
 	<string name="message_CalendarShared">Rozvrh hodin sdílen.</string>
 	<string name="message_CalendarUnshared">Rozvrh hodin již není sdílen.</string>
+	<string name="alertDialog_message_ctuLogOut">Chcete se odhlásit z účtu ČVUT?</string>
+	<string name="alertDialog_message_googleLogout">Chcete se odhlásit z účtu Google?</string>
 </resources>

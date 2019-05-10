@@ -21,9 +21,5 @@
 			android:summary="Can the application use Mobile data when Wi-fi connection is not available?"
 			android:title="Use mobile data" />
 	</PreferenceCategory>
-	<ListPreference
-		android:key="prefEmails"
-		android:summary="All email addresses you have shared your timetable with."
-		android:title="Email addresses" />
 
 </PreferenceScreen>

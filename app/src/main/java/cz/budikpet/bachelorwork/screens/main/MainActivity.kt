@@ -50,7 +50,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     companion object {
-        private const val CODE_GOOGLE_LOGIN = 0
+        const val CODE_GOOGLE_LOGIN = 0
     }
 
     private lateinit var viewModel: MainViewModel
@@ -152,11 +152,10 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     }
 
     private fun subscribeObservers() {
-        viewModel.operationRunning.observe(this, Observer { updating ->
-            Log.i(TAG, "Calendars updating: $updating")
-
-            if (updating != null) {
-                if (!updating) {
+        viewModel.operationsRunning.observe(this, Observer { operationsRunning ->
+            Log.i(TAG, "Running: $operationsRunning")
+            if (operationsRunning != null) {
+                if (operationsRunning <= 0) {
                     // Update done
                     progressBar.visibility = View.GONE
                 } else {
@@ -290,7 +289,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     /*
     private fun initButtons() {
         signoutBtn.setOnClickListener {
-            viewModel.signOut()
+            viewModel.ctuLogOut()
 
             val mainIntent = Intent(this, CTULoginActivity::class.java)
             mainIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP

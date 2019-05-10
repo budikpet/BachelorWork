@@ -83,7 +83,7 @@ class MainViewModel : ViewModel() {
     var eventToEditChanges: TimetableEvent? = null
 
     /** Indicates whether some operation is running. */
-    val operationRunning = MutableLiveData<Boolean>()
+    val operationsRunning = MutableLiveData<Int>()
 
     /** Any exception that was thrown and must be somehow shown to the user. */
     val thrownException = MutableLiveData<Throwable>()
@@ -212,7 +212,11 @@ class MainViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    fun signOut() {
+    fun ctuLogOut() {
+        sharedPreferences.edit {
+            remove(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString())
+            remove(SharedPreferencesKeys.CTU_USERNAME.toString())
+        }
         repository.signOut()
     }
 
@@ -248,6 +252,7 @@ class MainViewModel : ViewModel() {
      */
     fun ready() {
         val currOwner = timetableOwner.value
+        operationsRunning.value = 0
 
         if (currOwner == null) {
             selectedSidebarItem.postValue(R.id.sidebarSettings)     // TODO: Change back to R.id.sidebarWeekView
@@ -274,7 +279,7 @@ class MainViewModel : ViewModel() {
         Log.i(TAG, "Update started")
         updatedEventsInterval = loadedEventsInterval
 
-        operationRunning.postValue(true)
+        operationsRunning.value = operationsRunning.value!! + 1
         compositeDisposable.clear()
 
         val disposable = repository.getGoogleCalendarList()
@@ -320,7 +325,7 @@ class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Update done")
-                operationRunning.postValue(false)
+                operationsRunning.value = operationsRunning.value!! - 1
                 if(username != null) {
                     showMessage.postValue(context.getString(R.string.message_TimetableUpdated).format(username))
                 } else {
@@ -576,7 +581,7 @@ class MainViewModel : ViewModel() {
 
         loadedEventsInterval = withMiddleDate(middleDate)
 
-        operationRunning.postValue(true)
+        operationsRunning.value = operationsRunning.value!! + 1
         val disposable = repository.getLocalCalendarListItems()
             .filter { it.displayName == calendarNameFromId(pair.first) }
             .flatMap { repository.getCalendarEvents(it.id, loadedEventsInterval.start, loadedEventsInterval.end) }
@@ -597,13 +602,13 @@ class MainViewModel : ViewModel() {
             .subscribe(
                 { events ->
                     this.events.postValue(events)
-                    operationRunning.postValue(false)
+                    operationsRunning.value = operationsRunning.value!! - 1
                 },
                 { error ->
                     Log.e(TAG, "LoadEvents error: $error")
                     !checkNotFound(error)
                     thrownException.postValue(error)
-                    operationRunning.postValue(false)
+                    operationsRunning.value = operationsRunning.value!! - 1
                 }
             )
 
@@ -670,7 +675,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun sharePersonalTimetable(email: String) {
-        operationRunning.postValue(true)
+        operationsRunning.value = operationsRunning.value!! + 1
         val disposable = repository.sharePersonalCalendar(email)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -678,13 +683,13 @@ class MainViewModel : ViewModel() {
                 { result ->
                     Log.i(TAG, "CalendarShared, ACL: $result")
                     showMessage.postValue(context.getString(R.string.message_CalendarShared))
-                    operationRunning.postValue(false)
+                    operationsRunning.value = operationsRunning.value!! - 1
                     updateSharedEmails()
                 },
                 { error ->
                     Log.e(TAG, "sharePersonalTimetable: $error")
                     thrownException.postValue(error)
-                    operationRunning.postValue(false)
+                    operationsRunning.value = operationsRunning.value!! - 1
                     updateSharedEmails()
                 })
 
@@ -692,7 +697,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun unsharePersonalTimetable(email: String) {
-        operationRunning.postValue(true)
+        operationsRunning.value = operationsRunning.value!! + 1
         val disposable = repository.unsharePersonalCalendar(email)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -704,7 +709,7 @@ class MainViewModel : ViewModel() {
             .subscribe {
                 Log.i(TAG, "Calendar unshared successfully.")
                 showMessage.postValue(context.getString(R.string.message_CalendarUnshared))
-                operationRunning.postValue(false)
+                operationsRunning.value = operationsRunning.value!! - 1
                 updateSharedEmails()
             }
 
@@ -753,7 +758,7 @@ class MainViewModel : ViewModel() {
         }
 
         compositeDisposable.clear()
-        operationRunning.postValue(true)
+        operationsRunning.value = operationsRunning.value!! + 1
         val disposable = Observable.fromIterable(timetables)
             .flatMap {
                 val savedTimetables = savedTimetables.value
@@ -812,12 +817,12 @@ class MainViewModel : ViewModel() {
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 {
-                    operationRunning.postValue(false)
+                    operationsRunning.value = operationsRunning.value!! - 1
                 },
                 { error ->
                     Log.e(TAG, "getFreeTimeEvents: $error")
                     thrownException.postValue(error)
-                    operationRunning.postValue(false)
+                    operationsRunning.value = operationsRunning.value!! - 1
                 })
 
         compositeDisposable.add(disposable)
