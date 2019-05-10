@@ -7,7 +7,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.design.widget.NavigationView
-import android.support.design.widget.Snackbar
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -77,17 +76,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             .setNegativeButton(getString(R.string.alertDialog_quit)) { dialog, id ->
                 quitApplication()
             }
-    }
-
-    private val shareDialogView by lazy { layoutInflater.inflate(R.layout.dialog_share_timetable, null) }
-    private val shareTimetableDialogBuilder: AlertDialog.Builder by lazy {
-        val emailEditText = shareDialogView.emailEditText
-
-        AlertDialog.Builder(this)
-            .setPositiveButton(getString(R.string.alertDialog_share)) { dialog, id ->
-                viewModel.sharePersonalTimetable(emailEditText.text.toString())
-            }
-            .setNegativeButton(getString(R.string.alertDialog_quit)) { _, _ -> }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -376,10 +364,24 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
                 return true
             }
-            R.id.itemSharePersonalTimetable -> shareTimetableDialogBuilder.setView(shareDialogView).show()
+            R.id.itemSharePersonalTimetable -> showShareDialog()
         }
 
         return super.onOptionsItemSelected(item)
+    }
+
+    private fun showShareDialog() {
+        val shareDialogView = layoutInflater.inflate(R.layout.dialog_share_timetable, null)
+        val emailEditText = shareDialogView.emailEditText
+
+        AlertDialog.Builder(this)
+            .setView(shareDialogView)
+            .setPositiveButton(getString(R.string.alertDialog_share)) { dialog, id ->
+                viewModel.sharePersonalTimetable(emailEditText.text.toString())
+            }
+            .setNegativeButton(getString(R.string.alertDialog_quit)) { _, _ -> }
+            .show()
+
     }
 
     // MARK: Exceptions
@@ -404,7 +406,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         } else if (exception is NoInternetConnectionException) {
             Log.e(TAG, "Could not connect to the internet.")
             text = getString(R.string.exceptionInternetUnavailable)
-        } else if(exception is SocketTimeoutException) {
+        } else if (exception is SocketTimeoutException) {
             text = getString(R.string.exceptionSocket)
         } else {
             Log.e(TAG, "Unknown exception occurred: $exception")
