@@ -25,6 +25,7 @@ import cz.budikpet.bachelorwork.screens.eventEditView.AutoSuggestAdapter
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
+import cz.budikpet.bachelorwork.util.inTransaction
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
 import org.joda.time.LocalDate
@@ -43,6 +44,7 @@ class FreeTimeFragment : Fragment() {
         field = value
         viewModel.selectedWeekStart = value
     }
+    private lateinit var selectedWeekEnd: DateTime
     private var selectedStartTime: LocalTime = LocalTime()
         set(value) {
             field = value
@@ -99,6 +101,11 @@ class FreeTimeFragment : Fragment() {
             initSelectedTimes()
         }
 
+        childFragmentManager.inTransaction {
+            replace(R.id.fragmentShowFreeTime, multidayFreeTimeViewFragment)
+            hide(multidayFreeTimeViewFragment)
+        }
+
         subscribeObservers()
     }
 
@@ -145,16 +152,36 @@ class FreeTimeFragment : Fragment() {
                 adapter.setData(searchItemsList)
             }
         })
+
+        viewModel.freeTimeEvents.observe(this, Observer { events ->
+            childFragmentManager.inTransaction {
+                if(events != null && events.count() > 0) {
+                    // Show timetable
+                    show(multidayFreeTimeViewFragment)
+                    multidayFreeTimeViewFragment.showCustomEvents(events)
+                } else {
+                    hide(multidayFreeTimeViewFragment)
+                }
+
+                return@inTransaction this
+            }
+        })
     }
 
     private fun showFreeTime() {
+        if(timetablesCompletionView.objects.count() <= 0) {
+            timetablesCompletionView.error = "Please specify at least one timetable."
+        }
+
         if (areSelectedTimesCorrect()) {
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
+            viewModel.getFreeTimeEvents(selectedWeekStart, selectedWeekEnd, selectedStartTime, selectedEndTime, viewModel.freeTimeTimetables)
         }
     }
 
     private fun hideFreeTime() {
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
+        viewModel.freeTimeEvents.postValue(arrayListOf())
     }
 
     private fun initCompletionView(layout: View) {
@@ -266,6 +293,7 @@ class FreeTimeFragment : Fragment() {
         buttonWeek.text = dateStringFormat.format(dateStart.toString("dd.MM.YYYY"), dateEnd.toString("dd.MM.YYYY"))
 
         this.selectedWeekStart = dateStart.withTimeAtStartOfDay()
+        this.selectedWeekEnd = dateStart.plusDays(MultidayViewFragment.MAX_COLUMNS).withTimeAtStartOfDay()
     }
 
     private fun areSelectedTimesCorrect(): Boolean {

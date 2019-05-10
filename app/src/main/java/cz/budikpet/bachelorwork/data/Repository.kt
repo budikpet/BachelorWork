@@ -424,6 +424,12 @@ class Repository @Inject constructor(private val context: Context) {
         }
     }
 
+    fun getLocalCalendarListItem(siriusUsername: String): Single<CalendarListItem> {
+        return getLocalCalendarListItems()
+            .filter { it.displayName == MyApplication.calendarNameFromId(siriusUsername) }
+            .firstOrError()
+    }
+
     /**
      * Updates an event in a calendar using Android calendar provider.
      */

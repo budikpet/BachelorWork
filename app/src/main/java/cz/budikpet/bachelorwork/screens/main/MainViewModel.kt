@@ -28,10 +28,7 @@ import io.reactivex.functions.BiFunction
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
-import org.joda.time.DateTime
-import org.joda.time.DateTimeConstants
-import org.joda.time.Interval
-import org.joda.time.LocalTime
+import org.joda.time.*
 import retrofit2.HttpException
 import javax.inject.Inject
 
@@ -62,6 +59,8 @@ class MainViewModel : ViewModel() {
 
     /** All timetables that were saved to the Google Calendar. */
     val savedTimetables = MutableLiveData<ArrayList<SearchItem>>()
+
+    val freeTimeEvents = MutableLiveData<ArrayList<TimetableEvent>>()
 
     // MARK: State
 
@@ -686,6 +685,86 @@ class MainViewModel : ViewModel() {
         eventToEditChanges = event.deepCopy()
         eventToEdit.postValue(event.deepCopy())
 
+    }
+
+    fun getFreeTimeEvents(
+        weekStart: DateTime,
+        weekEnd: DateTime,
+        startTime: LocalTime,
+        endTime: LocalTime,
+        timetables: ArrayList<SearchItem>
+    ) {
+        val timeRange = Range.closed(startTime, endTime)
+
+        val numOfDays = Days.daysBetween(weekStart.toLocalDate(), weekEnd.toLocalDate()).days
+
+        val rangeSet = TreeRangeSet.create<DateTime>()
+        for(i in 0 until numOfDays) {
+            val range = Range.closed(weekStart.plusDays(i).withTime(startTime), weekStart.plusDays(i).withTime(endTime))
+            rangeSet.add(range)
+        }
+
+        val disposable = Observable.fromIterable(timetables)
+            .flatMap {
+                val savedTimetables = savedTimetables.value
+                if (savedTimetables != null) {
+                    if (savedTimetables.contains(it)) {
+                        // Timetable is available in a calendar
+                        return@flatMap repository.getLocalCalendarListItem(it.id)
+                            .flatMapObservable { calendarItem ->
+                                repository.getCalendarEvents(calendarItem.id, weekStart, weekEnd)
+                            }
+                    }
+                }
+
+                return@flatMap repository.getSiriusEventsOf(it.type, it.id, weekStart, weekEnd)
+                    .flatMap { Observable.fromIterable(it.events) }
+                    .map { TimetableEvent.from(it) }
+            }
+            .map { Pair(it.starts_at, it.ends_at) }
+            .observeOn(Schedulers.computation())
+            .filter {
+                // Filter out event that are not in specified time range
+                val eventTimeRange = Range.closed(it.first.toLocalTime(), it.second.toLocalTime())
+                return@filter timeRange.isConnected(eventTimeRange)
+            }
+            .doOnNext {
+                val eventTimeRange = Range.closed(it.first, it.second)
+                rangeSet.remove(eventTimeRange)
+            }
+            .doOnComplete {
+                Log.i(TAG, "$rangeSet")
+
+                val events = arrayListOf<TimetableEvent>()
+                for(range in rangeSet.asRanges()) {
+                    val startsAt = range.lowerEndpoint()
+                    val endsAt = range.upperEndpoint()
+                    val hours = Hours.hoursBetween(startsAt, endsAt).hours
+                    val minutes = Minutes.minutesBetween(startsAt, endsAt).minutes
+
+                    var acronym = "${minutes % 60} m"
+                    if(hours > 0) {
+                        acronym = "$hours h $acronym"
+                    }
+
+                    val event = TimetableEvent(starts_at = startsAt, ends_at = endsAt, acronym = acronym)
+                    events.add(event)
+                }
+
+                freeTimeEvents.postValue(events)
+            }
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result ->
+//                    Log.i(TAG, "getFreeTimeEvents: $result")
+                },
+                { error ->
+                    Log.e(TAG, "getFreeTimeEvents: $error")
+                    thrownException.postValue(error)
+                })
+
+        compositeDisposable.add(disposable)
     }
 
     fun test() {
