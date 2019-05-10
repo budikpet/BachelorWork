@@ -85,6 +85,8 @@ class MainViewModel : ViewModel() {
     /** Indicates whether some operation is running. */
     val operationsRunning = MutableLiveData<Int>()
 
+    val ctuSignedOut = MutableLiveData<Boolean>()
+
     /** Any exception that was thrown and must be somehow shown to the user. */
     val thrownException = MutableLiveData<Throwable>()
 
@@ -218,6 +220,7 @@ class MainViewModel : ViewModel() {
             remove(SharedPreferencesKeys.CTU_USERNAME.toString())
         }
         repository.signOut()
+        ctuSignedOut.postValue(true)
     }
 
     fun searchSirius(query: String, itemType: ItemType? = null) {

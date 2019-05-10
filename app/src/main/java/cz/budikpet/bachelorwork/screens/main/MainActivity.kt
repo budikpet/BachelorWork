@@ -26,6 +26,7 @@ import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListFragment
+import cz.budikpet.bachelorwork.screens.ctuLogin.CTULoginActivity
 import cz.budikpet.bachelorwork.screens.emailListView.EmailListFragment
 import cz.budikpet.bachelorwork.screens.eventEditView.EventEditFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
@@ -245,6 +246,13 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 displaySelectedMainFragment(it)
             }
         })
+
+        viewModel.ctuSignedOut.observe(this, Observer {
+            val mainIntent = Intent(this, CTULoginActivity::class.java)
+            mainIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
+            startActivity(mainIntent)
+            finish()
+        })
     }
 
     private fun displaySelectedMainFragment(itemId: Int) {
@@ -285,19 +293,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             setCustomAnimations(android.R.anim.fade_in, android.R.anim.fade_out)
         }
     }
-
-    /*
-    private fun initButtons() {
-        signoutBtn.setOnClickListener {
-            viewModel.ctuLogOut()
-
-            val mainIntent = Intent(this, CTULoginActivity::class.java)
-            mainIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
-            startActivity(mainIntent)
-            finish()
-        }
-    }
-*/
 
     // MARK: Google account
 
@@ -343,8 +338,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 credential.selectedAccountName = accountName
 
                 viewModel.ready()
-
-                viewModel.updateCalendars()
             } else {
                 Log.i(TAG, "Google account not specified.")
                 alertDialogBuilder.show()

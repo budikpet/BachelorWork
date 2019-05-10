@@ -62,7 +62,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 .setTitle(context.getString(R.string.alertDialog_title_notice))
                 .setMessage(getString(R.string.alertDialog_message_ctuLogOut))
                 .setPositiveButton(context.getString(R.string.alertDialog_positive_yes)) { dialog, which ->
-                    startActivityForResult(credential.newChooseAccountIntent(), MainActivity.CODE_GOOGLE_LOGIN)
+                    viewModel.ctuLogOut()
                 }
                 .setNegativeButton(context.getString(R.string.alertDialog_negative_no)) { dialog, which -> }
                 .show()
@@ -76,7 +76,7 @@ class SettingsFragment : PreferenceFragmentCompat() {
                 .setTitle(context.getString(R.string.alertDialog_title_notice))
                 .setMessage(getString(R.string.alertDialog_message_googleLogout))
                 .setPositiveButton(context.getString(R.string.alertDialog_positive_yes)) { dialog, which ->
-                    viewModel.ctuLogOut()
+                    startActivityForResult(credential.newChooseAccountIntent(), MainActivity.CODE_GOOGLE_LOGIN)
                 }
                 .setNegativeButton(context.getString(R.string.alertDialog_negative_no)) { dialog, which -> }
                 .show()
