@@ -26,6 +26,7 @@ import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListFragment
+import cz.budikpet.bachelorwork.screens.emailListView.EmailListFragment
 import cz.budikpet.bachelorwork.screens.eventEditView.EventEditFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
 import cz.budikpet.bachelorwork.screens.freeTimeView.FreeTimeFragment
@@ -33,6 +34,7 @@ import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
 import cz.budikpet.bachelorwork.settings.SettingsFragment
 import cz.budikpet.bachelorwork.util.*
 import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.dialog_share_timetable.view.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import pub.devrel.easypermissions.EasyPermissions
@@ -74,6 +76,18 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             .setNegativeButton(getString(R.string.alertDialog_quit)) { dialog, id ->
                 quitApplication()
             }
+    }
+
+    private val shareTimetableDialogBuilder: AlertDialog.Builder by lazy {
+        val shareDialogView = layoutInflater.inflate(R.layout.dialog_share_timetable, null)
+        val emailEditText = shareDialogView.emailEditText
+
+        AlertDialog.Builder(this)
+            .setView(shareDialogView)
+            .setPositiveButton(getString(R.string.alertDialog_share)) { dialog, id ->
+                viewModel.sharePersonalTimetable(emailEditText.text.toString())
+            }
+            .setNegativeButton(getString(R.string.alertDialog_quit)) { _, _ -> }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -268,6 +282,10 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                     replace(R.id.mainFragmentHolder, FreeTimeFragment())
                     searchSuggestions.visibility = View.GONE
                 }
+                R.id.sidebarShareTimetable -> {
+                    replace(R.id.mainFragmentHolder, EmailListFragment())
+                    searchSuggestions.visibility = View.GONE
+                }
                 R.id.sidebarSettings -> {
                     replace(R.id.mainFragmentHolder, SettingsFragment())
                     searchSuggestions.visibility = View.GONE
@@ -354,6 +372,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
                 return true
             }
+            R.id.itemSharePersonalTimetable -> shareTimetableDialogBuilder.show()
         }
 
         return super.onOptionsItemSelected(item)

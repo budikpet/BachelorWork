@@ -68,4 +68,5 @@
 	<string name="menuItem_Run">Run</string>
 	<string name="exceptionSocket">Exception occurred when trying to connect to the Internet.</string>
 	<string name="exceptionUnauthorized">You are not authorized to view timetable of %1$s.</string>
+	<string name="sidebar_ShareTimetable">Share timetable</string>
 </resources>

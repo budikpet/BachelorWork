@@ -58,7 +58,11 @@ class MainViewModel : ViewModel() {
     /** All timetables that were saved to the Google Calendar. */
     val savedTimetables = MutableLiveData<ArrayList<SearchItem>>()
 
+    /** Timetable events that represent free time. */
     val freeTimeEvents = MutableLiveData<ArrayList<TimetableEvent>>()
+
+    /** Email addresses of people the user shares his timetable with. */
+    val emails = MutableLiveData<ArrayList<String>>()
 
     // MARK: State
 
@@ -242,6 +246,7 @@ class MainViewModel : ViewModel() {
             selectedSidebarItem.postValue(R.id.sidebarSettings)     // TODO: Change back to R.id.sidebarWeekView
             timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
             updateCalendars(ctuUsername)
+            updateSharedEmails()
         }
     }
 
@@ -311,6 +316,7 @@ class MainViewModel : ViewModel() {
                 operationRunning.postValue(false)
                 loadEvents()
                 updateSavedTimetables()
+                updateSharedEmails()
 
                 // Refresh Google Calendar without waiting
                 repository.startCalendarRefresh()
@@ -655,10 +661,12 @@ class MainViewModel : ViewModel() {
             .subscribe(
                 { result ->
                     Log.i(TAG, "CalendarShared, ACL: $result")
+                    updateSharedEmails()
                 },
                 { error ->
                     Log.e(TAG, "sharePersonalTimetable: $error")
                     thrownException.postValue(error)
+                    updateSharedEmails()
                 })
 
         compositeDisposable.add(disposable)
@@ -675,7 +683,26 @@ class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Calendar unshared successfully.")
+                updateSharedEmails()
             }
+
+        compositeDisposable.add(disposable)
+    }
+
+    fun updateSharedEmails() {
+        val disposable = repository.getEmails(calendarNameFromId(ctuUsername))
+            .toList()
+            .subscribeOn(Schedulers.io())
+            .observeOn(AndroidSchedulers.mainThread())
+            .subscribe(
+                { result ->
+                    Log.i(TAG, "updateSharedEmails: $result")
+                    emails.postValue(ArrayList(result))
+                },
+                { error ->
+                    Log.e(TAG, "updateSharedEmails: $error")
+                    thrownException.postValue(error)
+                })
 
         compositeDisposable.add(disposable)
     }
@@ -698,7 +725,7 @@ class MainViewModel : ViewModel() {
         val numOfDays = Days.daysBetween(weekStart.toLocalDate(), weekEnd.toLocalDate()).days
 
         val rangeSet = TreeRangeSet.create<DateTime>()
-        for(i in 0 until numOfDays) {
+        for (i in 0 until numOfDays) {
             val range = Range.closed(weekStart.plusDays(i).withTime(startTime), weekStart.plusDays(i).withTime(endTime))
             rangeSet.add(range)
         }
@@ -739,17 +766,17 @@ class MainViewModel : ViewModel() {
                 Log.i(TAG, "$rangeSet")
 
                 val events = arrayListOf<TimetableEvent>()
-                for(range in rangeSet.asRanges()) {
+                for (range in rangeSet.asRanges()) {
                     val startsAt = range.lowerEndpoint()
                     val endsAt = range.upperEndpoint()
                     val hours = Hours.hoursBetween(startsAt, endsAt).hours
                     val minutes = Minutes.minutesBetween(startsAt, endsAt).minutes
 
                     var acronym = ""
-                    if(minutes % 60 != 0) {
+                    if (minutes % 60 != 0) {
                         acronym = "${minutes % 60} m"
                     }
-                    if(hours > 0) {
+                    if (hours > 0) {
                         acronym = "$hours h $acronym"
                     }
 

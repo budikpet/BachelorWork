@@ -91,18 +91,6 @@ class MultidayFragmentHolder : Fragment() {
         )
     }
 
-    private val shareTimetableDialogBuilder: AlertDialog.Builder by lazy {
-        val shareDialogView = layoutInflater.inflate(R.layout.dialog_share_timetable, null)
-        val emailEditText = shareDialogView.emailEditText
-
-        AlertDialog.Builder(context!!)
-            .setView(shareDialogView)
-            .setPositiveButton(getString(R.string.alertDialog_share)) { dialog, id ->
-                viewModel.sharePersonalTimetable(emailEditText.text.toString())
-            }
-            .setNegativeButton(getString(R.string.alertDialog_quit)) { _, _ -> }
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -199,7 +187,6 @@ class MultidayFragmentHolder : Fragment() {
             R.id.itemGoToToday -> resetViewPager()
             R.id.itemGoToDate -> datePickerDialog.show()
             R.id.itemOfflineAvailable -> offlineAvailableMenuItemClicked()
-            R.id.itemSharePersonalTimetable -> shareTimetableDialogBuilder.show()
             android.R.id.home -> {
                 // Go back to the users' timetable
                 viewModel.timetableOwner.postValue(Pair(viewModel.ctuUsername, ItemType.PERSON))

@@ -20,9 +20,7 @@ class CalendarsListSwipeDelete(private val context: Context, private val listene
         recyclerView: RecyclerView,
         viewHolder: RecyclerView.ViewHolder,
         p2: RecyclerView.ViewHolder
-    ): Boolean {
-        TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
-    }
+    ): Boolean = false
 
     override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
         val position = viewHolder.adapterPosition

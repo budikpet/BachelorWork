@@ -12,6 +12,7 @@ import com.google.api.client.http.HttpRequestInitializer
 import com.google.api.client.http.javanet.NetHttpTransport
 import com.google.api.client.json.gson.GsonFactory
 import com.google.api.services.calendar.Calendar
+import com.google.api.services.calendar.model.Acl
 import com.google.api.services.calendar.model.AclRule
 import com.google.api.services.calendar.model.CalendarListEntry
 import com.google.gson.Gson
@@ -679,14 +680,38 @@ class Repository @Inject constructor(private val context: Context) {
     }
 
     /**
+     * Gets email addresses of people the user shares his timetable with using Google Calendar API.
+     */
+    fun getEmails(calendarName: String): Observable<String> {
+        return hasInternetConnection()
+            .flatMap { getGoogleCalendar(calendarName) }
+            .flatMapObservable { calendar ->
+                Observable.fromCallable {
+                    calendarService.acl().list(calendar.id).execute()
+                }
+            }
+            .flatMap { Observable.fromIterable(it.items) }
+            .filter { !it.id.contains("@group.calendar", ignoreCase = true) }
+            .map { it.scope.value }
+            .filter {
+                val googleAccountName = sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), null)
+                if(googleAccountName != null) {
+                    return@filter it != googleAccountName
+                }
+
+                return@filter true
+            }
+    }
+
+    /**
      * @return true for an error that should not be retried.
      */
     private fun isSpecialError(error: Throwable): Boolean {
-        if(error !is NoInternetConnectionException) {
+        if (error !is NoInternetConnectionException) {
             return true
-        } else if(error !is HttpException) {
+        } else if (error !is HttpException) {
             val error = error as HttpException
-            if(error.code() == 403) {
+            if (error.code() == 403) {
                 return true
             }
         }

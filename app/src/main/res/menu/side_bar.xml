@@ -15,13 +15,17 @@
 			android:icon="@drawable/ic_view_week_black_24dp"
 			android:title="@string/sidebar_WeekView" />
 		<item
-			android:id="@+id/sidebarSavedCalendars"
-			android:icon="@drawable/ic_save_black_24dp"
-			android:title="@string/sidebar_SavedCalendars" />
-		<item
 			android:id="@+id/sidebarFreeTime"
 			android:icon="@drawable/ic_time_black_24dp"
 			android:title="@string/sidebar_FindFreeTime" />
+		<item
+			android:id="@+id/sidebarShareTimetable"
+			android:icon="@drawable/ic_share_black_24dp"
+			android:title="@string/sidebar_ShareTimetable" />
+		<item
+			android:id="@+id/sidebarSavedCalendars"
+			android:icon="@drawable/ic_save_black_24dp"
+			android:title="@string/sidebar_SavedCalendars" />
 	</group>
 	<item
 		android:id="@+id/sidebarSettings"
