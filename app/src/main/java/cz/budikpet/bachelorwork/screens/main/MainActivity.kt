@@ -15,7 +15,6 @@ import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.Toolbar
 import android.util.Log
 import android.view.Gravity
-import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.ProgressBar
@@ -36,6 +35,7 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import pub.devrel.easypermissions.EasyPermissions
 import retrofit2.HttpException
+import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 
@@ -376,6 +376,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         } else if (exception is NoInternetConnectionException) {
             Log.e(TAG, "Could not connect to the internet.")
             text = getString(R.string.exceptionInternetUnavailable)
+        } else if(exception is SocketTimeoutException) {
+            text = getString(R.string.exceptionSocket)
         } else {
             Log.e(TAG, "Unknown exception occurred: $exception")
         }

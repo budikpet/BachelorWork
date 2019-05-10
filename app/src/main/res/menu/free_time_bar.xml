@@ -4,6 +4,6 @@
 
 	<item
 		android:id="@+id/itemRun"
-		android:title="Run"
+		android:title="@string/menuItem_Run"
 		app:showAsAction="ifRoom|withText" />
 </menu>

@@ -206,6 +206,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun searchSirius(query: String, itemType: ItemType? = null) {
+
         val disposable = repository.searchSirius(query)
             .filter {
                 when {

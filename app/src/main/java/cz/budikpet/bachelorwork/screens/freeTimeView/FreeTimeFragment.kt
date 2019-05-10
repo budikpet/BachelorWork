@@ -5,14 +5,17 @@ import android.app.DatePickerDialog
 import android.app.TimePickerDialog
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
+import android.content.Context
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.support.constraint.ConstraintLayout
 import android.support.v4.app.Fragment
 import android.support.v7.app.ActionBar
 import android.support.v7.app.AppCompatActivity
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.*
+import android.view.inputmethod.InputMethodManager
 import android.widget.Button
 import android.widget.ImageView
 import com.tokenautocomplete.TokenCompleteTextView
@@ -26,6 +29,7 @@ import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.inTransaction
+import kotlinx.android.synthetic.main.fragment_free_time.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
 import org.joda.time.LocalDate
@@ -60,13 +64,14 @@ class FreeTimeFragment : Fragment() {
     internal lateinit var sharedPreferences: SharedPreferences
     private lateinit var viewModel: MainViewModel
 
-    private lateinit var itemRun: MenuItem
+    private var itemRun: MenuItem? = null
     private var supportActionBar: ActionBar? = null
     private lateinit var imageError: ImageView
     private lateinit var buttonWeek: Button
     private lateinit var buttonTimeFrom: Button
     private lateinit var buttonTimeTo: Button
     private lateinit var timetablesCompletionView: TokenCompleteTextView<SearchItem>
+    private lateinit var freeTimeLayout: ConstraintLayout
 
     private val multidayFreeTimeViewFragment: MultidayViewFragment by lazy {
         MultidayViewFragment.newInstance(MultidayViewFragment.MAX_COLUMNS, selectedWeekStart, usesCustomEvents = true)
@@ -110,6 +115,12 @@ class FreeTimeFragment : Fragment() {
         subscribeObservers()
     }
 
+    override fun onDestroy() {
+        super.onDestroy()
+        hideFreeTime()
+        viewModel.searchItems.postValue(arrayListOf())
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
@@ -117,6 +128,8 @@ class FreeTimeFragment : Fragment() {
         // Inflate the layout for this fragment
         val layout = inflater.inflate(R.layout.fragment_free_time, container, false)
         setHasOptionsMenu(true)
+
+        freeTimeLayout = layout.findViewById(R.id.freeTimeLayout)
 
         imageError = layout.findViewById(R.id.imageError)
 
@@ -173,12 +186,14 @@ class FreeTimeFragment : Fragment() {
     }
 
     private fun showFreeTime() {
+        hideSoftKeyboard(freeTimeLayout)
         if(timetablesCompletionView.objects.count() <= 0) {
-            timetablesCompletionView.error = "Please specify at least one timetable."
+            timetablesCompletionView.error = getString(R.string.error_FieldBlank)
+            return
         }
 
         if (areSelectedTimesCorrect()) {
-            itemRun.setVisible(false)
+            itemRun?.setVisible(false)
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
             viewModel.getFreeTimeEvents(selectedWeekStart, selectedWeekEnd, selectedStartTime, selectedEndTime, viewModel.freeTimeTimetables)
         }
@@ -187,8 +202,8 @@ class FreeTimeFragment : Fragment() {
     private fun hideFreeTime() {
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         viewModel.freeTimeEvents.postValue(arrayListOf())
-        itemRun.setVisible(true)
-
+        itemRun?.isVisible = true
+        hideSoftKeyboard(freeTimeLayout)
     }
 
     private fun initCompletionView(layout: View) {
@@ -312,6 +327,11 @@ class FreeTimeFragment : Fragment() {
             imageError.visibility = View.VISIBLE
             false
         }
+    }
+
+    private fun hideSoftKeyboard(view: View) {
+        val imm = context!!.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(view.applicationWindowToken, 0)
     }
 
     companion object {

@@ -62,4 +62,10 @@
 	<string name="hint_Teachers">Učitelé</string>
 	<string name="error_FieldBlank">Toto pole nesmí být prázdné.</string>
 	<string name="sidebar_FindFreeTime">Vyhledat volný čas</string>
+	<string name="week">Týden:</string>
+	<string name="time">Čas:</string>
+	<string name="timetables">Rozvrhy hodin:</string>
+	<string name="hint_selectTimetables">Vyberte rozvrhy hodin</string>
+	<string name="menuItem_Run">Použít</string>
+	<string name="exceptionSocket">Při připojování k Internetu došlo k chybě.</string>
 </resources>
