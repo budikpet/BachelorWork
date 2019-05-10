@@ -239,7 +239,7 @@ class MainViewModel : ViewModel() {
         val currOwner = timetableOwner.value
 
         if (currOwner == null) {
-            selectedSidebarItem.postValue(R.id.sidebarFreeTime)     // TODO: Change back to R.id.sidebarWeekView
+            selectedSidebarItem.postValue(R.id.sidebarSettings)     // TODO: Change back to R.id.sidebarWeekView
             timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
             updateCalendars(ctuUsername)
         }

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+	<PreferenceCategory
+		android:title="Accounts">
+
+		<Preference
+			android:key="prefSiriusLogout"
+			android:title="CTU account logout" />
+		<Preference
+			android:key="prefGoogleLogout"
+			android:title="Google account logout" />
+
+	</PreferenceCategory>
+
+	<PreferenceCategory android:title="Other">
+
+		<CheckBoxPreference
+			android:defaultValue="false"
+			android:key="prefSync"
+			android:summary="Can the application use Mobile data when Wi-fi connection is not available?"
+			android:title="Use mobile data" />
+	</PreferenceCategory>
+	<ListPreference
+		android:key="prefEmails"
+		android:summary="All email addresses you have shared your timetable with."
+		android:title="Email addresses" />
+
+</PreferenceScreen>

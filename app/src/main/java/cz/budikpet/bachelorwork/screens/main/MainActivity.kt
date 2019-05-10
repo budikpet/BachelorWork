@@ -22,6 +22,7 @@ import android.widget.Toast
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListFragment
@@ -29,6 +30,7 @@ import cz.budikpet.bachelorwork.screens.eventEditView.EventEditFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
 import cz.budikpet.bachelorwork.screens.freeTimeView.FreeTimeFragment
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
+import cz.budikpet.bachelorwork.settings.SettingsFragment
 import cz.budikpet.bachelorwork.util.*
 import kotlinx.android.synthetic.main.activity_main.*
 import net.openid.appauth.AuthorizationException
@@ -267,7 +269,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                     searchSuggestions.visibility = View.GONE
                 }
                 R.id.sidebarSettings -> {
-                    Log.i(TAG, "settings")
+                    replace(R.id.mainFragmentHolder, SettingsFragment())
                     searchSuggestions.visibility = View.GONE
                 }
             }
@@ -372,6 +374,9 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 text = getString(R.string.exceptionCTUInternal)
             } else if (exception.code() == 404) {
                 text = getString(R.string.exceptionTimetableNotFound)
+            } else if (exception.code() == 403) {
+                text = getString(R.string.exceptionUnauthorized).format(viewModel.timetableOwner.value!!.first)
+                viewModel.timetableOwner.postValue(Pair(viewModel.ctuUsername, ItemType.PERSON))
             }
         } else if (exception is NoInternetConnectionException) {
             Log.e(TAG, "Could not connect to the internet.")
