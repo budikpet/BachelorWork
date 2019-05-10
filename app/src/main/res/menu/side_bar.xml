@@ -18,6 +18,8 @@
 			android:id="@+id/sidebarFreeTime"
 			android:icon="@drawable/ic_time_black_24dp"
 			android:title="@string/sidebar_FindFreeTime" />
+	</group>
+	<group android:id="@+id/otherViewGroup" >
 		<item
 			android:id="@+id/sidebarShareTimetable"
 			android:icon="@drawable/ic_share_black_24dp"
