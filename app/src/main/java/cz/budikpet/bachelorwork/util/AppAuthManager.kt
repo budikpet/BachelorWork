@@ -100,7 +100,7 @@ class AppAuthManager @Inject constructor(context: Context) {
                 if (ex != null) {
                     Log.e(TAG, "Request failed: $ex.")
                     // Need to refresh the accessToken
-                    emitter.onError(UserNotAuthenticatedException())
+                    emitter.onError(CTUUserNotAuthenticatedException())
                 } else {
                     // AccessToken is fresh
                     emitter.onSuccess(accessToken!!)
@@ -151,7 +151,7 @@ class AppAuthManager @Inject constructor(context: Context) {
                 Log.e(TAG, "Authorization flow failed: " + exception.message)
                 emitter.onError(exception)
             } else {
-                emitter.onError(UserNotAuthenticatedException("No authorization state retained - reauthorization required"))
+                emitter.onError(CTUUserNotAuthenticatedException("No authorization state retained - reauthorization required"))
             }
         }
     }
@@ -203,7 +203,7 @@ class AppAuthManager @Inject constructor(context: Context) {
             val message = "Authorization Code exchange failed" + if (authException != null) authException.error else ""
 
             // WrongThread inference is incorrect for lambdas
-            emitter.onError(UserNotAuthenticatedException(message))
+            emitter.onError(CTUUserNotAuthenticatedException(message))
         } else {
             // The Authorization Code exchange was successful
             Log.i(TAG, "AccessToken: ${getAccessToken()}")

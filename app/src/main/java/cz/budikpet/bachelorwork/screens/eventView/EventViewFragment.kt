@@ -15,6 +15,7 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.SearchItem
@@ -104,7 +105,7 @@ class EventViewFragment : Fragment() {
         }
 
         // Update info
-        this.headerView.setBackgroundColor(resources.getColor(selectedEvent.color, null))
+        this.headerView.setBackgroundColor(MyApplication.getColor(resources, selectedEvent.color))
         this.viewAcronym.text = selectedEvent.acronym
         this.viewEventType.text = selectedEvent.event_type.getLabel(context!!)
         this.viewEventRoom.text = selectedEvent.room
@@ -112,7 +113,7 @@ class EventViewFragment : Fragment() {
             "${selectedEvent.starts_at.dayOfWeek().asText} ${selectedEvent.starts_at.toString("dd.MM.YYYY")}"
         this.viewEventTime.text = "${timeString(selectedEvent.starts_at)} – ${timeString(selectedEvent.ends_at)}"
 
-        if(selectedEvent.fullName.count() > 0) {
+        if (selectedEvent.fullName.count() > 0) {
             viewEventName.visibility = View.VISIBLE
             clickableTextView(viewEventName, SearchItem(selectedEvent.acronym, selectedEvent.fullName, ItemType.COURSE))
         } else {
@@ -120,7 +121,10 @@ class EventViewFragment : Fragment() {
         }
 
         if (selectedEvent.room != null) {
-            clickableTextView(viewEventRoom, SearchItem(selectedEvent.room!!, selectedEvent.room!!, type = ItemType.ROOM))
+            clickableTextView(
+                viewEventRoom,
+                SearchItem(selectedEvent.room!!, selectedEvent.room!!, type = ItemType.ROOM)
+            )
         }
 
         if (selectedEvent.capacity == 0 && selectedEvent.occupied == 0) {
@@ -171,7 +175,7 @@ class EventViewFragment : Fragment() {
 
         // Make textview clickable
         textView.paintFlags = textView.paintFlags or UNDERLINE_TEXT_FLAG
-        textView.setTextColor(resources.getColor(R.color.clickableText, null))
+        textView.setTextColor(MyApplication.getColor(resources, R.color.clickableText))
         textView.setOnClickListener {
             alertDialogBuilder.setMessage(
                 String.format(

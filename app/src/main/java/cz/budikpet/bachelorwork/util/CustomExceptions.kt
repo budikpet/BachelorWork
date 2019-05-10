@@ -1,8 +1,9 @@
 package cz.budikpet.bachelorwork.util
 
-import android.security.keystore.UserNotAuthenticatedException
 import java.net.ConnectException
 
-class GoogleAccountNotFoundException() : UserNotAuthenticatedException()
+class GoogleAccountNotFoundException(message: String = "") : Throwable(message)
 
-class NoInternetConnectionException() : ConnectException()
+class NoInternetConnectionException(message: String = "") : ConnectException(message)
+
+class CTUUserNotAuthenticatedException(message: String = "") : Throwable(message)

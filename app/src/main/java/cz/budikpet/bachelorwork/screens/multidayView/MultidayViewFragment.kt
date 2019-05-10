@@ -383,14 +383,14 @@ class MultidayViewFragment : Fragment() {
         name.setSpan(android.text.style.StyleSpan(Typeface.BOLD), 0, name.count(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
 
         if (event.room != null) {
-            if (event.room!!.count() > 0) {
+            if (event.room.count() > 0) {
                 name.append("\n${event.room}")
             }
         }
 
         eventView.text = name
 
-        eventView.setBackgroundColor(resources.getColor(event.color, null))
+        eventView.setBackgroundColor(MyApplication.getColor(resources, event.color))
         eventView.height = getEventViewHeight(event)
         eventView.tag = event
         eventView.setOnClickListener(onEventClickListener)

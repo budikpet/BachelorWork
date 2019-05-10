@@ -1,6 +1,10 @@
 package cz.budikpet.bachelorwork
 
 import android.app.Application
+import android.content.Context
+import android.content.res.Resources
+import android.os.Build
+import android.support.multidex.MultiDexApplication
 import android.util.Log
 import cz.budikpet.bachelorwork.di.AppComponent
 import cz.budikpet.bachelorwork.di.AppModule
@@ -9,14 +13,18 @@ import io.reactivex.plugins.RxJavaPlugins
 import org.joda.time.LocalTime
 import java.io.IOException
 import java.net.SocketException
+import android.support.multidex.MultiDex
+import android.support.v7.app.AppCompatDelegate
 
 
-class MyApplication : Application() {
+class MyApplication : MultiDexApplication() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     companion object {
         const val CALENDARS_NAME = "CTUTimetable"
         const val NUM_OF_WEEKS_TO_UPDATE = 4
+        val sdkVersion = Build.VERSION.SDK_INT
+        val version23 = Build.VERSION_CODES.M
 
         internal lateinit var appComponent: AppComponent
 
@@ -28,13 +36,37 @@ class MyApplication : Application() {
             return calendarName.substringBefore("_")
         }
 
-        fun getLastLesson(startTime: LocalTime, numOfLessons: Int, lessonLength: Int, breakLength: Int):LocalTime {
+        fun getLastLesson(startTime: LocalTime, numOfLessons: Int, lessonLength: Int, breakLength: Int): LocalTime {
             return startTime.plusMinutes(numOfLessons * (lessonLength + breakLength) - breakLength)
         }
+
+        /**
+         * Performs API version check.
+         * @return color integer
+         */
+        fun getColor(resources: Resources, colorId: Int): Int {
+            return when {
+                Build.VERSION.SDK_INT >= Build.VERSION_CODES.M -> {
+                    resources.getColor(colorId, null)
+                }
+                else -> {
+                    resources.getColor(colorId)
+                }
+            }
+        }
+    }
+
+    override fun attachBaseContext(base: Context) {
+        super.attachBaseContext(base)
+        MultiDex.install(this)
     }
 
     override fun onCreate() {
         super.onCreate()
+
+        if(sdkVersion < version23) {
+            AppCompatDelegate.setCompatVectorFromResourcesEnabled(true);
+        }
 
         // Create an instance of @AppComponent
         appComponent = DaggerAppComponent.builder()
