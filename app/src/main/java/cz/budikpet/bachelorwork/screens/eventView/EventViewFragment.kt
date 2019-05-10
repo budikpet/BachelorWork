@@ -112,9 +112,15 @@ class EventViewFragment : Fragment() {
             "${selectedEvent.starts_at.dayOfWeek().asText} ${selectedEvent.starts_at.toString("dd.MM.YYYY")}"
         this.viewEventTime.text = "${timeString(selectedEvent.starts_at)} – ${timeString(selectedEvent.ends_at)}"
 
-        clickableTextView(viewEventName, SearchItem(selectedEvent.acronym, selectedEvent.fullName, ItemType.COURSE))
+        if(selectedEvent.fullName.count() > 0) {
+            viewEventName.visibility = View.VISIBLE
+            clickableTextView(viewEventName, SearchItem(selectedEvent.acronym, selectedEvent.fullName, ItemType.COURSE))
+        } else {
+            viewEventName.visibility = View.GONE
+        }
+
         if (selectedEvent.room != null) {
-            clickableTextView(viewEventRoom, SearchItem(selectedEvent.room!!, type = ItemType.ROOM))
+            clickableTextView(viewEventRoom, SearchItem(selectedEvent.room!!, selectedEvent.room!!, type = ItemType.ROOM))
         }
 
         if (selectedEvent.capacity == 0 && selectedEvent.occupied == 0) {
@@ -157,7 +163,7 @@ class EventViewFragment : Fragment() {
     }
 
     private fun clickableTextView(textView: TextView, searchItem: SearchItem) {
-        textView.text = searchItem.toString()
+        textView.text = searchItem.title
 
         if (!viewModel.canBeClicked(searchItem)) {
             return

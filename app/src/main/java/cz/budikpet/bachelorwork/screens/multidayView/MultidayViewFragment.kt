@@ -44,7 +44,7 @@ class MultidayViewFragment : Fragment() {
 
     private var eventsColumnsCount = MAX_COLUMNS
     private val eventPadding by lazy { 2f.toDp(context!!) }
-    private lateinit var firstDate: DateTime
+    lateinit var firstDate: DateTime
     private val dpPerMinRatio = 1
     private val numOfLessons by lazy { sharedPreferences.getInt(SharedPreferencesKeys.NUM_OF_LESSONS.toString(), 0) }
     private val breakLength by lazy { sharedPreferences.getInt(SharedPreferencesKeys.LENGTH_OF_BREAK.toString(), 0) }
@@ -227,13 +227,7 @@ class MultidayViewFragment : Fragment() {
         timesList.addView(timeTextView)
     }
 
-    // MARK: Dynamically added events
-
-    private fun clearColumns() {
-        for (column in eventsColumns) {
-            column.removeAllViews()
-        }
-    }
+    // MARK: Custom
 
     /**
      * These events are going to be shown by the MultidayViewFragment.
@@ -242,6 +236,14 @@ class MultidayViewFragment : Fragment() {
         clearColumns()
 
         updateEventsView(events)
+    }
+
+    // MARK: Dynamically added events
+
+    private fun clearColumns() {
+        for (column in eventsColumns) {
+            column.removeAllViews()
+        }
     }
 
     /**

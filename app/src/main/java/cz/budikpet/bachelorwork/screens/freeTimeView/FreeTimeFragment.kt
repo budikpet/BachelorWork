@@ -60,6 +60,7 @@ class FreeTimeFragment : Fragment() {
     internal lateinit var sharedPreferences: SharedPreferences
     private lateinit var viewModel: MainViewModel
 
+    private lateinit var itemRun: MenuItem
     private var supportActionBar: ActionBar? = null
     private lateinit var imageError: ImageView
     private lateinit var buttonWeek: Button
@@ -130,6 +131,8 @@ class FreeTimeFragment : Fragment() {
         inflater?.inflate(R.menu.free_time_bar, menu)
         super.onCreateOptionsMenu(menu, inflater)
 
+        itemRun = menu!!.findItem(R.id.itemRun)
+
         supportActionBar = (activity as AppCompatActivity).supportActionBar
         supportActionBar?.title = getString(R.string.sidebar_FindFreeTime)
         supportActionBar?.subtitle = null
@@ -158,6 +161,7 @@ class FreeTimeFragment : Fragment() {
                 if(events != null && events.count() > 0) {
                     // Show timetable
                     show(multidayFreeTimeViewFragment)
+                    multidayFreeTimeViewFragment.firstDate = selectedWeekStart
                     multidayFreeTimeViewFragment.showCustomEvents(events)
                 } else {
                     hide(multidayFreeTimeViewFragment)
@@ -174,6 +178,7 @@ class FreeTimeFragment : Fragment() {
         }
 
         if (areSelectedTimesCorrect()) {
+            itemRun.setVisible(false)
             supportActionBar?.setDisplayHomeAsUpEnabled(true)
             viewModel.getFreeTimeEvents(selectedWeekStart, selectedWeekEnd, selectedStartTime, selectedEndTime, viewModel.freeTimeTimetables)
         }
@@ -182,6 +187,8 @@ class FreeTimeFragment : Fragment() {
     private fun hideFreeTime() {
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
         viewModel.freeTimeEvents.postValue(arrayListOf())
+        itemRun.setVisible(true)
+
     }
 
     private fun initCompletionView(layout: View) {

@@ -111,7 +111,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         val sidebarNavView = findViewById<NavigationView>(R.id.sidebarNavView)
 
         sidebarNavView.setNavigationItemSelectedListener { sidebarItem ->
-            displaySelectedMainFragment(sidebarItem.itemId)
+            viewModel.selectedSidebarItem.postValue(sidebarItem.itemId)
             drawerLayout.closeDrawer(Gravity.START)
             true
         }

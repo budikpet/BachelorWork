@@ -33,8 +33,6 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 
-// TODO: Parts of AllCalendarUpdate code can be reused
-
 class MainViewModel : ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
@@ -160,7 +158,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun canEditTimetable(): Boolean {
-        return timetableOwner.value!!.first == ctuUsername
+        return timetableOwner.value!!.first == ctuUsername && selectedSidebarItem.value != R.id.sidebarFreeTime
     }
 
     /**
@@ -704,6 +702,8 @@ class MainViewModel : ViewModel() {
             rangeSet.add(range)
         }
 
+        compositeDisposable.clear()
+        operationRunning.postValue(true)
         val disposable = Observable.fromIterable(timetables)
             .flatMap {
                 val savedTimetables = savedTimetables.value
@@ -713,6 +713,7 @@ class MainViewModel : ViewModel() {
                         return@flatMap repository.getLocalCalendarListItem(it.id)
                             .flatMapObservable { calendarItem ->
                                 repository.getCalendarEvents(calendarItem.id, weekStart, weekEnd)
+                                    .filter { !it.deleted }
                             }
                     }
                 }
@@ -720,6 +721,7 @@ class MainViewModel : ViewModel() {
                 return@flatMap repository.getSiriusEventsOf(it.type, it.id, weekStart, weekEnd)
                     .flatMap { Observable.fromIterable(it.events) }
                     .map { TimetableEvent.from(it) }
+                    .onErrorReturn { TimetableEvent(starts_at = weekStart.minusDays(2)) }
             }
             .map { Pair(it.starts_at, it.ends_at) }
             .observeOn(Schedulers.computation())
@@ -742,7 +744,10 @@ class MainViewModel : ViewModel() {
                     val hours = Hours.hoursBetween(startsAt, endsAt).hours
                     val minutes = Minutes.minutesBetween(startsAt, endsAt).minutes
 
-                    var acronym = "${minutes % 60} m"
+                    var acronym = ""
+                    if(minutes % 60 != 0) {
+                        acronym = "${minutes % 60} m"
+                    }
                     if(hours > 0) {
                         acronym = "$hours h $acronym"
                     }
@@ -756,44 +761,16 @@ class MainViewModel : ViewModel() {
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
-                { result ->
-//                    Log.i(TAG, "getFreeTimeEvents: $result")
+                {
+                    operationRunning.postValue(false)
                 },
                 { error ->
                     Log.e(TAG, "getFreeTimeEvents: $error")
                     thrownException.postValue(error)
+                    operationRunning.postValue(false)
                 })
 
         compositeDisposable.add(disposable)
-    }
-
-    fun test() {
-        val date = DateTime()
-
-        val a = Range.closed(
-            date.withTime(7, 30, 0, 0),
-            date.withTime(19, 30, 0, 0)
-        )
-        val b = Range.closed(
-            date.withTime(7, 30, 0, 0),
-            date.withTime(9, 0, 0, 0)
-        )
-        val c = Range.closed(
-            date.withTime(9, 15, 0, 0),
-            date.withTime(10, 45, 0, 0)
-        )
-        val d = Range.closed(
-            date.withTime(12, 45, 0, 0),
-            date.withTime(14, 15, 0, 0)
-        )
-
-        val result = TreeRangeSet.create<DateTime>()
-        result.add(a)
-        result.remove(b)
-        result.remove(c)
-        result.remove(d)
-
-        Log.i(TAG, "Result: $result")
     }
 
     companion object {

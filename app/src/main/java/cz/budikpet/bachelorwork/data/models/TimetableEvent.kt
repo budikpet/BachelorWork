@@ -10,7 +10,7 @@ data class TimetableEvent(
     val siriusId: Int? = null,
     val room: String? = null,      // Can be null
     var acronym: String = "",
-    var fullName: String = acronym,
+    var fullName: String = "",
     val event_type: EventType = EventType.OTHER,
     val starts_at: DateTime = DateTime(),
     val ends_at: DateTime = starts_at,
@@ -85,7 +85,7 @@ data class TimetableEvent(
                 event.id, room = room, acronym = event.links.course, event_type = event.event_type,
                 starts_at = DateTime(event.starts_at), ends_at = DateTime(event.ends_at), deleted = event.deleted,
                 capacity = event.capacity, occupied = event.occupied,
-                teacherIds = event.links.teachers
+                teacherIds = event.links.teachers, fullName = event.links.course
             )
 
             return timetableEvent

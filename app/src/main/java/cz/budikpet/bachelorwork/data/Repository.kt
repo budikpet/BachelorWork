@@ -30,6 +30,7 @@ import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.DateTime
+import retrofit2.HttpException
 import java.util.*
 import java.util.concurrent.TimeoutException
 import javax.inject.Inject
@@ -164,7 +165,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "SearchSirius retries: $count. Error: $error")
-                return@retry count < 21 && error !is NoInternetConnectionException
+                return@retry count < 2 && !isSpecialError(error)
             }
     }
 
@@ -187,7 +188,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "GetSiriusEventsOf retries: $count. Error: $error")
-                return@retry count < 21 && error !is NoInternetConnectionException
+                return@retry count < 21 && !isSpecialError(error)
             }
     }
 
@@ -341,7 +342,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "GetGoogleCalendarList retries: $count. Error: $error")
-                return@retry count < 21 && error !is NoInternetConnectionException
+                return@retry count < 21 && !isSpecialError(error)
             }
             .flatMapObservable { Observable.fromIterable(it.items) }
             .filter { it.summary.contains(MyApplication.CALENDARS_NAME) }
@@ -366,7 +367,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "UpdateGoogleCalendarList retries: $count. Error: $error")
-                return@retry count < 21 && error !is NoInternetConnectionException
+                return@retry count < 21 && !isSpecialError(error)
             }
     }
 
@@ -382,7 +383,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "RemoveGoogleCalendar retries: $count. Error: $error")
-                return@retry count < 21 && error !is NoInternetConnectionException
+                return@retry count < 21 && !isSpecialError(error)
             }
             .ignoreElement()
     }
@@ -618,7 +619,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "AddSecondaryGoogleCalendar retries: $count. Error: $error")
-                return@retry count < 21 && error !is NoInternetConnectionException
+                return@retry count < 21 && !isSpecialError(error)
             }
             .observeOn(Schedulers.io())
             .flatMap { createdCalendar ->
@@ -656,7 +657,7 @@ class Repository @Inject constructor(private val context: Context) {
             }
             .retry { count, error ->
                 Log.w(TAG, "SharePersonalCalendar retries: $count. Error: $error")
-                return@retry count < 21 && error !is NoInternetConnectionException
+                return@retry count < 21 && !isSpecialError(error)
             }
     }
 
@@ -675,5 +676,21 @@ class Repository @Inject constructor(private val context: Context) {
                     calendarService.acl().delete(calendar.id, ruleId).execute()
                 }
             }
+    }
+
+    /**
+     * @return true for an error that should not be retried.
+     */
+    private fun isSpecialError(error: Throwable): Boolean {
+        if(error !is NoInternetConnectionException) {
+            return true
+        } else if(error !is HttpException) {
+            val error = error as HttpException
+            if(error.code() == 403) {
+                return true
+            }
+        }
+
+        return false
     }
 }
