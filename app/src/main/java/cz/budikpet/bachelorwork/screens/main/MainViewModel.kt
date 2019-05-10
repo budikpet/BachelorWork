@@ -670,18 +670,21 @@ class MainViewModel : ViewModel() {
     }
 
     fun sharePersonalTimetable(email: String) {
+        operationRunning.postValue(true)
         val disposable = repository.sharePersonalCalendar(email)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
             .subscribe(
                 { result ->
                     Log.i(TAG, "CalendarShared, ACL: $result")
+                    showMessage.postValue(context.getString(R.string.message_CalendarShared))
+                    operationRunning.postValue(false)
                     updateSharedEmails()
                 },
                 { error ->
                     Log.e(TAG, "sharePersonalTimetable: $error")
-                    showMessage.postValue(context.getString(R.string.message_CalendarShared))
                     thrownException.postValue(error)
+                    operationRunning.postValue(false)
                     updateSharedEmails()
                 })
 
@@ -689,6 +692,7 @@ class MainViewModel : ViewModel() {
     }
 
     fun unsharePersonalTimetable(email: String) {
+        operationRunning.postValue(true)
         val disposable = repository.unsharePersonalCalendar(email)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
@@ -699,7 +703,8 @@ class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Calendar unshared successfully.")
-                showMessage.postValue(context.getString(R.string.message_CalendarAdded))
+                showMessage.postValue(context.getString(R.string.message_CalendarUnshared))
+                operationRunning.postValue(false)
                 updateSharedEmails()
             }
 

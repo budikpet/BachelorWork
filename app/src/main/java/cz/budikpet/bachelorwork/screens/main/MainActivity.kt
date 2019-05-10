@@ -79,12 +79,11 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             }
     }
 
+    private val shareDialogView by lazy { layoutInflater.inflate(R.layout.dialog_share_timetable, null) }
     private val shareTimetableDialogBuilder: AlertDialog.Builder by lazy {
-        val shareDialogView = layoutInflater.inflate(R.layout.dialog_share_timetable, null)
         val emailEditText = shareDialogView.emailEditText
 
         AlertDialog.Builder(this)
-            .setView(shareDialogView)
             .setPositiveButton(getString(R.string.alertDialog_share)) { dialog, id ->
                 viewModel.sharePersonalTimetable(emailEditText.text.toString())
             }
@@ -377,7 +376,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
                 return true
             }
-            R.id.itemSharePersonalTimetable -> shareTimetableDialogBuilder.show()
+            R.id.itemSharePersonalTimetable -> shareTimetableDialogBuilder.setView(shareDialogView).show()
         }
 
         return super.onOptionsItemSelected(item)
