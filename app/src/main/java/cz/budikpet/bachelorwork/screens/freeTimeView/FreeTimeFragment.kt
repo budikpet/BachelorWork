@@ -29,7 +29,6 @@ import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.inTransaction
-import kotlinx.android.synthetic.main.fragment_free_time.*
 import org.joda.time.DateTime
 import org.joda.time.DateTimeConstants
 import org.joda.time.LocalDate
@@ -188,7 +187,7 @@ class FreeTimeFragment : Fragment() {
     private fun showFreeTime() {
         hideSoftKeyboard(freeTimeLayout)
         if(timetablesCompletionView.objects.count() <= 0) {
-            timetablesCompletionView.error = getString(R.string.error_FieldBlank)
+            timetablesCompletionView.error = getString(R.string.error_fieldBlank)
             return
         }
 
@@ -259,7 +258,7 @@ class FreeTimeFragment : Fragment() {
 
 
         selectedStartTime = LocalTime().withMillisOfDay(lessonStartMillis)
-        selectedEndTime = selectedStartTime.plusMinutes(numOfLessons * (lessonLength + breakLength) - breakLength)
+        selectedEndTime = MyApplication.getLastLesson(selectedStartTime, numOfLessons, lessonLength, breakLength)
     }
 
     private fun initButtons(layout: View) {

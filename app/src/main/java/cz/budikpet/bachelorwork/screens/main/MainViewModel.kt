@@ -260,8 +260,8 @@ class MainViewModel : ViewModel() {
         if (currOwner == null) {
             selectedSidebarItem.postValue(R.id.sidebarSettings)     // TODO: Change back to R.id.sidebarWeekView
             timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
-            updateCalendars(ctuUsername)
-            updateSharedEmails()
+//            updateCalendars(ctuUsername)  //TODO: Enable
+//            updateSharedEmails()
         }
     }
 

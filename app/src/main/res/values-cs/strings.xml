@@ -60,7 +60,7 @@
 	<string name="hint_Room">Místnost</string>
 	<string name="hint_Note">Poznámky</string>
 	<string name="hint_Teachers">Učitelé</string>
-	<string name="error_FieldBlank">Toto pole nesmí být prázdné.</string>
+	<string name="error_fieldBlank">Toto pole nesmí být prázdné.</string>
 	<string name="sidebar_FindFreeTime">Vyhledat volný čas</string>
 	<string name="week">Týden:</string>
 	<string name="time">Čas:</string>
@@ -78,4 +78,24 @@
 	<string name="message_CalendarUnshared">Rozvrh hodin již není sdílen.</string>
 	<string name="alertDialog_message_ctuLogOut">Chcete se odhlásit z účtu ČVUT?</string>
 	<string name="alertDialog_message_googleLogout">Chcete se odhlásit z účtu Google?</string>
+	<string name="pref_accounts">Účty</string>
+	<string name="pref_CTULogout">Odhlásit se z ČVUT účtu</string>
+	<string name="pref_googleLogout">Odhlásit se z Google účtu</string>
+	<string name="pref_lessons">Hodiny</string>
+	<string name="pref_numOfLessons">Počet hodin</string>
+	<string name="pref_StartTime">Čas začátku hodin</string>
+	<string name="pref_lessonLength">Délka hodin</string>
+	<string name="pref_breakLength">Délka přestávkek</string>
+	<string name="pref_other">Ostatní</string>
+	<string name="pref_useMobileData">Používat mobilní data</string>
+	<string name="prefSum_mobileData_true">Aplikace používá pouze Wi-fi připojení.</string>
+	<string name="prefSum_mobileData_false">Aplikace používá Wi-fi připojení a Mobilní data.</string>
+	<string name="prefSum_numOfLessons">%1$s hodin</string>
+	<string name="prefSum_lessonLength">%1$s min</string>
+	<string name="prefSum_breakLength">%1$s min</string>
+	<string name="error_belowMin">Minimální povolená hodnota je %1$s.</string>
+	<string name="error_aboveMax">Maximální povolená hodnota je %1$s.</string>
+	<string name="alertDialog_title_breakLength">Specifikujte délku přestávek</string>
+	<string name="alertDialog_title_lessonLength">Specifikujte délku vyučovací hodiny</string>
+	<string name="alertDialog_title_numOfLessons">Specifikujte počet hodin</string>
 </resources>

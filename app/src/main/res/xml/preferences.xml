@@ -2,24 +2,53 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
 	<PreferenceCategory
-		android:title="Accounts">
+		android:title="@string/pref_accounts">
 
 		<Preference
+			android:id="@+id/ctuLogout"
 			android:key="prefSiriusLogout"
-			android:title="CTU account logout" />
+			android:title="@string/pref_CTULogout" />
 		<Preference
+			android:id="@+id/googleLogout"
 			android:key="prefGoogleLogout"
-			android:title="Google account logout" />
+			android:title="@string/pref_googleLogout" />
 
 	</PreferenceCategory>
 
-	<PreferenceCategory android:title="Other">
+	<PreferenceCategory android:title="@string/pref_lessons">
+		<Preference
+			android:id="@+id/NUM_OF_LESSONS"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:key="NUM_OF_LESSONS"
+			android:title="@string/pref_numOfLessons" />
+		<Preference
+			android:id="@+id/LESSONS_START_TIME"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:key="LESSONS_START_TIME"
+			android:title="@string/pref_StartTime" />
+		<Preference
+			android:id="@+id/LENGTH_OF_LESSON"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:key="LENGTH_OF_LESSON"
+			android:title="@string/pref_lessonLength" />
+		<Preference
+			android:id="@+id/LENGTH_OF_BREAK"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:key="LENGTH_OF_BREAK"
+			android:title="@string/pref_breakLength" />
+	</PreferenceCategory>
+	<PreferenceCategory android:title="@string/pref_other">
 
 		<CheckBoxPreference
+			android:id="@+id/USE_MOBILE_DATA"
 			android:defaultValue="false"
-			android:key="prefSync"
-			android:summary="Can the application use Mobile data when Wi-fi connection is not available?"
-			android:title="Use mobile data" />
+			android:key="USE_MOBILE_DATA"
+			android:summary="@string/prefSum_mobileData_true"
+			android:title="@string/pref_useMobileData" />
 	</PreferenceCategory>
 
 </PreferenceScreen>

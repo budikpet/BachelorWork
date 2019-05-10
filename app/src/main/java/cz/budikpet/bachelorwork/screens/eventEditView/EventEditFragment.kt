@@ -77,8 +77,8 @@ class EventEditFragment : Fragment() {
             prepareExit()
 
             when {
-                selectedEvent!!.fullName.count() <= 0 -> editEventName.error = getString(R.string.error_FieldBlank)
-                selectedEvent!!.acronym.count() <= 0 -> editEventAcronym.error = getString(R.string.error_FieldBlank)
+                selectedEvent!!.fullName.count() <= 0 -> editEventName.error = getString(R.string.error_fieldBlank)
+                selectedEvent!!.acronym.count() <= 0 -> editEventAcronym.error = getString(R.string.error_fieldBlank)
                 else -> viewModel.addCalendarEvent(selectedEvent!!)
 
             }

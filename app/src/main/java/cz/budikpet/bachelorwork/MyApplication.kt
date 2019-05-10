@@ -6,6 +6,7 @@ import cz.budikpet.bachelorwork.di.AppComponent
 import cz.budikpet.bachelorwork.di.AppModule
 import cz.budikpet.bachelorwork.di.DaggerAppComponent
 import io.reactivex.plugins.RxJavaPlugins
+import org.joda.time.LocalTime
 import java.io.IOException
 import java.net.SocketException
 
@@ -25,6 +26,10 @@ class MyApplication : Application() {
 
         fun idFromCalendarName(calendarName: String): String {
             return calendarName.substringBefore("_")
+        }
+
+        fun getLastLesson(startTime: LocalTime, numOfLessons: Int, lessonLength: Int, breakLength: Int):LocalTime {
+            return startTime.plusMinutes(numOfLessons * (lessonLength + breakLength) - breakLength)
         }
     }
 

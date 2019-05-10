@@ -59,7 +59,7 @@
 	<string name="hint_Room">Room</string>
 	<string name="hint_Note">Note</string>
 	<string name="hint_Teachers">Teachers</string>
-	<string name="error_FieldBlank">This field cannot be blank.</string>
+	<string name="error_fieldBlank">This field cannot be blank.</string>
 	<string name="sidebar_FindFreeTime">Find free time</string>
 	<string name="week">Week:</string>
 	<string name="time">Time:</string>
@@ -77,4 +77,24 @@
 	<string name="message_CalendarUnshared">Timetable unshared.</string>
 	<string name="alertDialog_message_ctuLogOut">Do you wish to log out of the CTU account?</string>
 	<string name="alertDialog_message_googleLogout">Do you wish to log out of the Google account?</string>
+	<string name="pref_accounts">Accounts</string>
+	<string name="pref_CTULogout">CTU account logout</string>
+	<string name="pref_googleLogout">Google account logout</string>
+	<string name="pref_lessons">Lessons</string>
+	<string name="pref_numOfLessons">Number of lessons</string>
+	<string name="pref_StartTime">Start time of lessons</string>
+	<string name="pref_lessonLength">Lesson length</string>
+	<string name="pref_breakLength">Break length</string>
+	<string name="pref_other">Other</string>
+	<string name="pref_useMobileData">Use mobile data</string>
+	<string name="prefSum_mobileData_true">The application uses only Wi-fi connection.</string>
+	<string name="prefSum_mobileData_false">The application uses Wi-fi connection and Mobile data.</string>
+	<string name="prefSum_numOfLessons">%1$s lessons</string>
+	<string name="prefSum_lessonLength">%1$s min</string>
+	<string name="prefSum_breakLength">%1$s min</string>
+	<string name="error_belowMin">Minimum allowed value is %1$s.</string>
+	<string name="error_aboveMax">Maximum allowed value is %1$s.</string>
+	<string name="alertDialog_title_breakLength">Specify length of breaks</string>
+	<string name="alertDialog_title_lessonLength">Specify length of lessons</string>
+	<string name="alertDialog_title_numOfLessons">Specify number of lessons</string>
 </resources>

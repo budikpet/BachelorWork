@@ -2,6 +2,7 @@ package cz.budikpet.bachelorwork.di
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.support.v7.preference.PreferenceManager
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
 import com.google.api.services.calendar.CalendarScopes
 import cz.budikpet.bachelorwork.api.SiriusApiService
@@ -37,7 +38,7 @@ internal class AppModule(private val context: Context) {
     @Provides
     @Singleton
     fun providesSharedPreferences(): SharedPreferences {
-        return context.getSharedPreferences("Pref", Context.MODE_PRIVATE)
+        return PreferenceManager.getDefaultSharedPreferences(context)
     }
 
     @Provides

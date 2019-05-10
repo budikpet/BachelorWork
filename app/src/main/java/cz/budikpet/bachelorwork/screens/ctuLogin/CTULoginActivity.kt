@@ -4,6 +4,7 @@ import android.app.PendingIntent
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
@@ -58,7 +59,7 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
         MyApplication.appComponent.inject(this)
         onResumeCalled = false
 
-//        setContentView(R.layout.activity_ctu_login)
+        PreferenceManager.setDefaultValues(this, R.xml.preferences, false)
 
         if (savedInstanceState == null) {
             permissionsCheckerFragment = PermissionsCheckerFragment()
