@@ -70,4 +70,10 @@
 	<string name="exceptionSocket">Při připojování k Internetu došlo k chybě.</string>
 	<string name="exceptionUnauthorized">Rozvrh hodin uživatele %1$s Vám není přístupný.</string>
 	<string name="sidebar_ShareTimetable">Sdílet rozvrh hodin</string>
+	<string name="message_TimetableUpdated">Rozvrh hodin uživatele %1$s synchronizován.</string>
+	<string name="message_TimetablesUpdated">Všechny rozvrhy hodin synchronizovány.</string>
+	<string name="message_CalendarRemoved">Rozvrh hodin odstraněn.</string>
+	<string name="message_CalendarAdded">Rozvrh hodin přidán.</string>
+	<string name="message_CalendarShared">Rozvrh hodin sdílen.</string>
+	<string name="message_CalendarUnshared">Rozvrh hodin již není sdílen.</string>
 </resources>

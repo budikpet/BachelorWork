@@ -69,4 +69,10 @@
 	<string name="exceptionSocket">Exception occurred when trying to connect to the Internet.</string>
 	<string name="exceptionUnauthorized">You are not authorized to view timetable of %1$s.</string>
 	<string name="sidebar_ShareTimetable">Share timetable</string>
+	<string name="message_TimetableUpdated">Timetable of %1$s updated.</string>
+	<string name="message_TimetablesUpdated">All timetables updated.</string>
+	<string name="message_CalendarRemoved">Timetable removed.</string>
+	<string name="message_CalendarAdded">Timetable added.</string>
+	<string name="message_CalendarShared">Timetable shared.</string>
+	<string name="message_CalendarUnshared">Timetable unshared.</string>
 </resources>

@@ -2,6 +2,7 @@ package cz.budikpet.bachelorwork.screens.main
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
+import android.content.Context
 import android.content.SharedPreferences
 import android.util.Log
 import com.google.api.services.calendar.model.CalendarListEntry
@@ -41,6 +42,9 @@ class MainViewModel : ViewModel() {
 
     @Inject
     internal lateinit var sharedPreferences: SharedPreferences
+
+    @Inject
+    internal lateinit var context: Context
 
     private var compositeDisposable = CompositeDisposable()
 
@@ -83,6 +87,9 @@ class MainViewModel : ViewModel() {
 
     /** Any exception that was thrown and must be somehow shown to the user. */
     val thrownException = MutableLiveData<Throwable>()
+
+    /** A message we want to show to the user. */
+    val showMessage = MutableLiveData<String>()
 
     /** Represents items received from Sirius API search endpoint. */
     val searchItems = MutableLiveData<List<SearchItem>>()
@@ -314,6 +321,12 @@ class MainViewModel : ViewModel() {
             .subscribe {
                 Log.i(TAG, "Update done")
                 operationRunning.postValue(false)
+                if(username != null) {
+                    showMessage.postValue(context.getString(R.string.message_TimetableUpdated).format(username))
+                } else {
+                    showMessage.postValue(context.getString(R.string.message_TimetablesUpdated))
+                }
+
                 loadEvents()
                 updateSavedTimetables()
                 updateSharedEmails()
@@ -482,6 +495,7 @@ class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Calendar removed")
+                showMessage.postValue(context.getString(R.string.message_CalendarRemoved))
                 updateSavedTimetables(true)
             }
 
@@ -498,6 +512,7 @@ class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Calendar added")
+                showMessage.postValue(context.getString(R.string.message_CalendarAdded))
                 updateSavedTimetables(true)
             }
 
@@ -665,6 +680,7 @@ class MainViewModel : ViewModel() {
                 },
                 { error ->
                     Log.e(TAG, "sharePersonalTimetable: $error")
+                    showMessage.postValue(context.getString(R.string.message_CalendarShared))
                     thrownException.postValue(error)
                     updateSharedEmails()
                 })
@@ -683,6 +699,7 @@ class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Calendar unshared successfully.")
+                showMessage.postValue(context.getString(R.string.message_CalendarAdded))
                 updateSharedEmails()
             }
 
