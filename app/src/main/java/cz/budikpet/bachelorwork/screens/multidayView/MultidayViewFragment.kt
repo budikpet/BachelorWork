@@ -8,13 +8,15 @@ import android.os.Bundle
 import android.support.constraint.ConstraintLayout
 import android.support.constraint.ConstraintSet
 import android.support.v4.app.Fragment
+import android.text.Spannable
+import android.text.SpannableStringBuilder
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.LinearLayout
 import android.widget.TextView
 import cz.budikpet.bachelorwork.MyApplication
-import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.R.*
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
@@ -22,6 +24,7 @@ import cz.budikpet.bachelorwork.util.toDp
 import kotlinx.android.synthetic.main.fragment_multidayview_list.view.*
 import org.joda.time.*
 import javax.inject.Inject
+
 
 /**
  * Fragment used to show multiple days like Google Calendar Week View.
@@ -88,7 +91,7 @@ class MultidayViewFragment : Fragment() {
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        val layout = inflater.inflate(R.layout.fragment_multidayview_list, container, false)
+        val layout = inflater.inflate(layout.fragment_multidayview_list, container, false)
         val rowsList = layout.rowsList
         val timesList = layout.timesList
 
@@ -197,8 +200,8 @@ class MultidayViewFragment : Fragment() {
         timesList: LinearLayout,
         time: DateTime
     ) {
-        val rowView = inflater.inflate(R.layout.time_row, null, false)
-        val timeTextView = inflater.inflate(R.layout.time_text_view, null, false) as TextView
+        val rowView = inflater.inflate(layout.time_row, null, false)
+        val timeTextView = inflater.inflate(layout.time_text_view, null, false) as TextView
         timeTextView.text = time.toString("HH:mm")
 
         val layoutParams =
@@ -375,7 +378,18 @@ class MultidayViewFragment : Fragment() {
      */
     private fun createEventView(event: TimetableEvent): TextView {
         val eventView = TextView(context!!)
-        eventView.text = event.acronym
+
+        val name = SpannableStringBuilder(event.acronym)
+        name.setSpan(android.text.style.StyleSpan(Typeface.BOLD), 0, name.count(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE)
+
+        if (event.room != null) {
+            if (event.room!!.count() > 0) {
+                name.append("\n${event.room}")
+            }
+        }
+
+        eventView.text = name
+
         eventView.setBackgroundColor(resources.getColor(event.color, null))
         eventView.height = getEventViewHeight(event)
         eventView.tag = event
