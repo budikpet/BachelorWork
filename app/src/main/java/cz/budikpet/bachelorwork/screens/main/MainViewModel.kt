@@ -321,6 +321,10 @@ class MainViewModel : ViewModel() {
             }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnDispose {
+                Log.i(TAG, "Dispose")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
             .onErrorComplete { exception ->
                 Log.e(TAG, "UpdateCalendars error: $exception")
                 thrownException.postValue(exception)
@@ -602,6 +606,10 @@ class MainViewModel : ViewModel() {
             .toList()
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnDispose {
+                Log.i(TAG, "Dispose")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
             .subscribe(
                 { events ->
                     this.events.postValue(events)
@@ -682,6 +690,10 @@ class MainViewModel : ViewModel() {
         val disposable = repository.sharePersonalCalendar(email)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnDispose {
+                Log.i(TAG, "Dispose")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
             .subscribe(
                 { result ->
                     Log.i(TAG, "CalendarShared, ACL: $result")
@@ -704,6 +716,10 @@ class MainViewModel : ViewModel() {
         val disposable = repository.unsharePersonalCalendar(email)
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnDispose {
+                Log.i(TAG, "Dispose")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
             .onErrorComplete { exception ->
                 Log.e(TAG, "Unshare: $exception")
                 thrownException.postValue(exception)
@@ -818,6 +834,10 @@ class MainViewModel : ViewModel() {
             }
             .subscribeOn(Schedulers.io())
             .observeOn(AndroidSchedulers.mainThread())
+            .doOnDispose {
+                Log.i(TAG, "Dispose")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
             .subscribe(
                 {
                     operationsRunning.value = operationsRunning.value!! - 1
