@@ -6,7 +6,7 @@ import cz.budikpet.bachelorwork.screens.freeTimeView.FreeTimeFragment
 import cz.budikpet.bachelorwork.screens.main.MainActivity
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
-import cz.budikpet.bachelorwork.settings.SettingsFragment
+import cz.budikpet.bachelorwork.screens.settings.SettingsFragment
 import dagger.Component
 import javax.inject.Singleton
 

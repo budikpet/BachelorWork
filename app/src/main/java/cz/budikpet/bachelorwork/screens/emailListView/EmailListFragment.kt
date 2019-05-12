@@ -98,6 +98,17 @@ class EmailListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
         supportActionBar?.setDisplayHomeAsUpEnabled(false)
     }
 
+    override fun onOptionsItemSelected(item: MenuItem?): Boolean {
+        when(item?.itemId) {
+            R.id.emailsSync -> {
+                viewModel.updateSharedEmails()
+                return true
+            }
+        }
+
+        return super.onOptionsItemSelected(item)
+    }
+
     private fun subscribeObservers() {
         viewModel.emails.observe(this, Observer { emailsList ->
             // Fill the recycler view

@@ -402,11 +402,14 @@ class Repository @Inject constructor(private val context: Context) {
         val projectionIdIndex = 0
         val projectionDisplayNameIndex = 1
         val projectionSyncEventsIndex = 2
+        val projectionOwnerIndex = 3
+
+        val accountName = sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), "")
 
         val uri: Uri = CalendarContract.Calendars.CONTENT_URI
         val selection =
-            "${CalendarContract.Events.CALENDAR_DISPLAY_NAME} LIKE ?"
-        val selectionArgs: Array<String> = arrayOf("%_${MyApplication.CALENDARS_NAME}%")
+            "(${CalendarContract.Events.CALENDAR_DISPLAY_NAME} LIKE ?) AND (${CalendarContract.Events.ACCOUNT_NAME} = ?)"
+        val selectionArgs: Array<String> = arrayOf("%_${MyApplication.CALENDARS_NAME}%", accountName)
 
         return Observable.create { emitter ->
             val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)

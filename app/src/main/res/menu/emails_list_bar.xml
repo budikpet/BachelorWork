@@ -2,6 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
 	xmlns:app="http://schemas.android.com/apk/res-auto">
 	<item
+		android:id="@+id/emailsSync"
+		android:icon="@drawable/ic_sync_black_24dp"
+		android:title="@string/menuItem_sync"
+		app:showAsAction="ifRoom" />
+	<item
 		android:id="@+id/itemSharePersonalTimetable"
 		android:icon="@drawable/ic_share_black_24dp"
 		android:title="@string/menuItem_sharePersonalTimetable"

@@ -34,7 +34,7 @@ import cz.budikpet.bachelorwork.screens.eventEditView.EventEditFragment
 import cz.budikpet.bachelorwork.screens.eventView.EventViewFragment
 import cz.budikpet.bachelorwork.screens.freeTimeView.FreeTimeFragment
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayFragmentHolder
-import cz.budikpet.bachelorwork.settings.SettingsFragment
+import cz.budikpet.bachelorwork.screens.settings.SettingsFragment
 import cz.budikpet.bachelorwork.util.*
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.dialog_share_timetable.view.*

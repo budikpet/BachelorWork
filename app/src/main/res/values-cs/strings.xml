@@ -99,4 +99,5 @@
 	<string name="alertDialog_title_lessonLength">Specifikujte délku vyučovací hodiny</string>
 	<string name="alertDialog_title_numOfLessons">Specifikujte počet hodin</string>
 	<string name="prefSum_Logout">Přihlášen jako %1$s.</string>
+	<string name="message_emailListUpdated">Seznam emailových adres updatován.</string>
 </resources>

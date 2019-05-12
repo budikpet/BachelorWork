@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork.settings
+package cz.budikpet.bachelorwork.screens.settings
 
 import android.app.TimePickerDialog
 import android.arch.lifecycle.ViewModelProviders
@@ -20,7 +20,6 @@ import cz.budikpet.bachelorwork.screens.main.MainActivity
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
-import org.joda.time.DateTime
 import org.joda.time.LocalTime
 import javax.inject.Inject
 

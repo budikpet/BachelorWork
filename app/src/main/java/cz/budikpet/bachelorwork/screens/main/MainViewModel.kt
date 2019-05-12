@@ -744,6 +744,7 @@ open class MainViewModel : ViewModel() {
             .subscribe(
                 { result ->
                     Log.i(TAG, "updateSharedEmails: $result")
+                    showMessage.postValue(context.getString(R.string.message_emailListUpdated))
                     emails.postValue(ArrayList(result))
                 },
                 { error ->

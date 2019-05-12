@@ -8,7 +8,7 @@ apply plugin: 'kotlin-kapt'
 
 android {
     signingConfigs {
-        release {
+        myRelease {
             storeFile file('/Users/petr/Documents/Projects/AndroidProjects/BachelorWork/keystore/keystore')
             storePassword 'mrem3327'
             keyPassword 'mrem3327'
@@ -20,7 +20,7 @@ android {
         applicationId "cz.budikpet.bachelorwork"
         minSdkVersion 19
         targetSdkVersion 28
-        versionCode 7
+        versionCode 10
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -36,11 +36,10 @@ android {
     }
     buildTypes {
         debug {
-            signingConfig signingConfigs.release
         }
-        release {
+        myRelease {
             debuggable = true
-            signingConfig signingConfigs.release
+            signingConfig signingConfigs.myRelease
         }
     }
 }
