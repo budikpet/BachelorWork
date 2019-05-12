@@ -4,7 +4,10 @@ import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
 import android.content.Context
 import android.content.SharedPreferences
+import android.support.v4.app.ActivityCompat.startActivityForResult
 import android.util.Log
+import android.widget.Toast
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.services.calendar.model.CalendarListEntry
 import com.google.common.collect.Range
 import com.google.common.collect.TreeRangeSet
@@ -18,6 +21,8 @@ import cz.budikpet.bachelorwork.data.models.CalendarListItem
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
+import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
+import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
 import cz.budikpet.bachelorwork.util.schedulers.BaseSchedulerProvider
@@ -30,6 +35,7 @@ import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.*
 import retrofit2.HttpException
+import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 
@@ -176,6 +182,17 @@ open class MainViewModel : ViewModel() {
         return timetableOwner.value!!.first == ctuUsername && selectedSidebarItem.value != R.id.sidebarFreeTime
     }
 
+    fun selectedTimetableIsShared(): Boolean {
+        val calendarName = calendarNameFromId(timetableOwner.value!!.first)
+
+        if(savedTimetables.value != null) {
+            val savedTimetables = savedTimetables.value!!.map { it.id }
+            return savedTimetables.contains(calendarName)
+        }
+
+        return false
+    }
+
     /**
      * Checks whether a user is fully authorized in Sirius API.
      *
@@ -205,7 +222,7 @@ open class MainViewModel : ViewModel() {
             .observeOn(schedulerProvider.ui())
             .onErrorComplete { exception ->
                 Log.e(TAG, "Authorization: $exception")
-                thrownException.postValue(exception)
+                handleException(exception)
                 true
             }
             .subscribe {
@@ -328,7 +345,7 @@ open class MainViewModel : ViewModel() {
             }
             .onErrorComplete { exception ->
                 Log.e(TAG, "UpdateCalendars error: $exception")
-                thrownException.postValue(exception)
+                handleException(exception)
                 return@onErrorComplete true
             }
             .subscribe {
@@ -503,7 +520,7 @@ open class MainViewModel : ViewModel() {
             .subscribeOn(schedulerProvider.io())
             .onErrorComplete { exception ->
                 Log.e(TAG, "RemoveCalendar error: $exception")
-                thrownException.postValue(exception)
+                handleException(exception)
                 return@onErrorComplete true
             }
             .subscribe {
@@ -520,7 +537,7 @@ open class MainViewModel : ViewModel() {
             .subscribeOn(schedulerProvider.io())
             .onErrorComplete { exception ->
                 Log.e(TAG, "AddCalendar error: $exception")
-                thrownException.postValue(exception)
+                handleException(exception)
                 return@onErrorComplete true
             }
             .subscribe {
@@ -540,36 +557,20 @@ open class MainViewModel : ViewModel() {
     private fun updateSavedTimetables(refreshCalendars: Boolean = false) {
         // Update calendars if needed
         val obs = when (refreshCalendars) {
-            true -> repository.refreshCalendars().andThen(repository.getLocalCalendarListItems())
-            false -> repository.getLocalCalendarListItems()
+            true -> repository.refreshCalendars().andThen(repository.getSavedTimetables())
+            false -> repository.getSavedTimetables()
         }
 
 
         val disposable = obs
-            .flatMapMaybe {
-                val username = idFromCalendarName(it.displayName)
-
-                if (repository.isInternetAvailable()) {
-                    // We have internet connection so we can call search endpoint
-                    return@flatMapMaybe repository.searchSirius(username).firstElement()
-                }
-
-                return@flatMapMaybe Maybe.just(SearchItem(username, type = ItemType.UNKNOWN))
-            }
-            .toList()
-            .map {
-                it.sortedWith(Comparator { searchItem1, searchItem2 ->
-                    searchItem1.type.ordinal - searchItem2.type.ordinal
-                })
-            }
             .subscribeOn(schedulerProvider.io())
             .subscribe(
                 { result ->
                     savedTimetables.postValue(ArrayList(result))
                 },
-                { error ->
-                    Log.e(TAG, "UpdateSavedTimetables: $error")
-                    thrownException.postValue(error)
+                { exception ->
+                    Log.e(TAG, "UpdateSavedTimetables: $exception")
+                    handleException(exception)
                 }
             )
 
@@ -616,10 +617,10 @@ open class MainViewModel : ViewModel() {
                     this.events.postValue(events)
                     operationsRunning.value = operationsRunning.value!! - 1
                 },
-                { error ->
-                    Log.e(TAG, "LoadEvents error: $error")
-                    !checkNotFound(error)
-                    thrownException.postValue(error)
+                { exception ->
+                    Log.e(TAG, "LoadEvents error: $exception")
+                    !checkNotFound(exception)
+                    handleException(exception)
                     operationsRunning.value = operationsRunning.value!! - 1
                 }
             )
@@ -660,9 +661,9 @@ open class MainViewModel : ViewModel() {
                     eventToEdit.postValue(null)
                     loadEvents()
                 },
-                { error ->
-                    Log.e(TAG, "addCalendarEvent: $error")
-                    thrownException.postValue(error)
+                { exception ->
+                    Log.e(TAG, "addCalendarEvent: $exception")
+                    handleException(exception)
                 })
 
         compositeDisposable.add(disposable)
@@ -678,9 +679,9 @@ open class MainViewModel : ViewModel() {
                     selectedEvent.postValue(null)
                     loadEvents()
                 },
-                { error ->
-                    Log.e(TAG, "removeCalendarEvent: $error")
-                    thrownException.postValue(error)
+                { exception ->
+                    Log.e(TAG, "removeCalendarEvent: $exception")
+                    handleException(exception)
                 })
 
         compositeDisposable.add(disposable)
@@ -702,9 +703,9 @@ open class MainViewModel : ViewModel() {
                     operationsRunning.value = operationsRunning.value!! - 1
                     updateSharedEmails()
                 },
-                { error ->
-                    Log.e(TAG, "sharePersonalTimetable: $error")
-                    thrownException.postValue(error)
+                { exception ->
+                    Log.e(TAG, "sharePersonalTimetable: $exception")
+                    handleException(exception)
                     operationsRunning.value = operationsRunning.value!! - 1
                     updateSharedEmails()
                 })
@@ -723,7 +724,7 @@ open class MainViewModel : ViewModel() {
             }
             .onErrorComplete { exception ->
                 Log.e(TAG, "Unshare: $exception")
-                thrownException.postValue(exception)
+                handleException(exception)
                 true
             }
             .subscribe {
@@ -747,9 +748,9 @@ open class MainViewModel : ViewModel() {
                     showMessage.postValue(context.getString(R.string.message_emailListUpdated))
                     emails.postValue(ArrayList(result))
                 },
-                { error ->
-                    Log.e(TAG, "updateSharedEmails: $error")
-                    thrownException.postValue(error)
+                { exception ->
+                    Log.e(TAG, "updateSharedEmails: $exception")
+                    handleException(exception)
                 })
 
         compositeDisposable.add(disposable)
@@ -844,13 +845,47 @@ open class MainViewModel : ViewModel() {
                 {
                     operationsRunning.value = operationsRunning.value!! - 1
                 },
-                { error ->
-                    Log.e(TAG, "getFreeTimeEvents: $error")
-                    thrownException.postValue(error)
+                { exception ->
+                    Log.e(TAG, "getFreeTimeEvents: $exception")
+                    handleException(exception)
                     operationsRunning.value = operationsRunning.value!! - 1
                 })
 
         compositeDisposable.add(disposable)
+    }
+
+
+    // MARK: Exceptions
+
+    private fun handleException(exception: Throwable) {
+        var text = context.getString(R.string.exceptionUnknown)
+
+        if (exception is GoogleAccountNotFoundException) {
+            // Prompt the user to select a new google account
+            Log.e(TAG, "Used google account not found.")
+            text = context.getString(R.string.exceptionGoogleAccountNotFound)
+        } else if (exception is HttpException) {
+            Log.e(TAG, "Retrofit 2 HTTP ${exception.code()} exception: ${exception.response()}")
+            if (exception.code() == 500) {
+                text = context.getString(R.string.exceptionCTUInternal)
+            } else if (exception.code() == 404) {
+                text = context.getString(R.string.exceptionTimetableNotFound)
+            } else if (exception.code() == 403) {
+                text = context.getString(R.string.exceptionUnauthorized).format(timetableOwner.value!!.first)
+                timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
+            }
+        } else if (exception is NoInternetConnectionException) {
+            Log.e(TAG, "Could not connect to the internet.")
+            text = context.getString(R.string.exceptionInternetUnavailable)
+        } else if (exception is SocketTimeoutException) {
+            text = context.getString(R.string.exceptionSocket)
+        } else {
+            Log.e(TAG, "Unknown exception occurred: $exception")
+            text = "Unknown exception occurred: $exception"
+        }
+
+        thrownException.postValue(exception)
+        showMessage.postValue(text)
     }
 
     companion object {

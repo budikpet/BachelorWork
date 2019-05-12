@@ -23,10 +23,8 @@ import cz.budikpet.bachelorwork.api.SiriusAuthApiService
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.util.*
-import io.reactivex.Completable
-import io.reactivex.CompletableEmitter
+import io.reactivex.*
 import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
@@ -176,7 +174,8 @@ class Repository @Inject constructor(private val context: Context) {
      * @return An observable @EventsResult endpoint.
      */
     fun getSiriusEventsOf(
-        itemType: ItemType, id: String,
+        itemType: ItemType,
+        id: String,
         dateStart: DateTime,
         dateEnd: DateTime
     ): Observable<EventsResult> {
@@ -190,6 +189,24 @@ class Repository @Inject constructor(private val context: Context) {
             .retry { count, error ->
                 Log.w(TAG, "GetSiriusEventsOf retries: $count. Error: $error")
                 return@retry count < 21 && !isSpecialError(error)
+            }
+            .onErrorResumeNext { error: Throwable ->
+                if(error is HttpException && error.code() == 403) {
+                    // We are probably trying to Sirius update a timetable of another student
+                    getSavedTimetables()
+                        .flatMapObservable {
+                            val savedTimetables = it.map { it.id }
+                            if(savedTimetables.contains(id)) {
+                                // This students timetable is shared via Google Calendar, leave it be
+                                Observable.empty()
+                            } else {
+                                // This students timetable isn't shared, error
+                                Observable.error<EventsResult>(error)
+                            }
+                        }
+                } else {
+                    return@onErrorResumeNext Observable.error(error)
+                }
             }
     }
 
@@ -703,6 +720,26 @@ class Repository @Inject constructor(private val context: Context) {
                 }
 
                 return@filter true
+            }
+    }
+
+    fun getSavedTimetables(): Single<List<SearchItem>> {
+        return getLocalCalendarListItems()
+            .flatMapMaybe {
+                val username = MyApplication.idFromCalendarName(it.displayName)
+
+                if (isInternetAvailable()) {
+                    // We have internet connection so we can call search endpoint
+                    return@flatMapMaybe searchSirius(username).firstElement()
+                }
+
+                return@flatMapMaybe Maybe.just(SearchItem(username, type = ItemType.UNKNOWN))
+            }
+            .toList()
+            .map {
+                it.sortedWith(Comparator { searchItem1, searchItem2 ->
+                    searchItem1.type.ordinal - searchItem2.type.ordinal
+                })
             }
     }
 

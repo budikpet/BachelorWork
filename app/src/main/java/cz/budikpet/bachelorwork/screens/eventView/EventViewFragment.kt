@@ -184,7 +184,7 @@ class EventViewFragment : Fragment() {
                         viewModel.timetableOwner.postValue(Pair(searchItem.id, searchItem.type))
                         exit()
                     } else {
-                        viewModel.thrownException.postValue(NoInternetConnectionException())
+                        viewModel.showMessage.postValue(getString(R.string.exceptionInternetUnavailable))
                     }
                 }
                 .show()

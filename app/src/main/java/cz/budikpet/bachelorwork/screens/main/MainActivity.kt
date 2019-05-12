@@ -8,6 +8,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.design.widget.NavigationView
+import android.support.v4.app.ActivityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -236,9 +237,13 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             }
         })
 
-        viewModel.thrownException.observe(this, Observer {
-            if (it != null) {
-                handleException(it)
+        viewModel.thrownException.observe(this, Observer { exception ->
+            if (exception is UserRecoverableAuthIOException) {
+                val exception = exception as UserRecoverableAuthIOException
+                if(!requested) {
+                    requested = true
+                    startActivityForResult(exception.intent, REQUEST_AUTHORIZATION)
+                }
             }
         })
 
@@ -385,46 +390,6 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             .setNegativeButton(getString(R.string.alertDialog_quit)) { _, _ -> }
             .show()
 
-    }
-
-    // MARK: Exceptions
-
-    private fun handleException(exception: Throwable) {
-        if (exception is UserRecoverableAuthIOException) {
-            if(!requested) {
-                requested = true
-                startActivityForResult(exception.intent, REQUEST_AUTHORIZATION)
-            }
-            return
-        }
-
-        var text = getString(R.string.exceptionUnknown)
-
-        if (exception is GoogleAccountNotFoundException) {
-            // Prompt the user to select a new google account
-            Log.e(TAG, "Used google account not found.")
-            text = getString(R.string.exceptionGoogleAccountNotFound)
-        } else if (exception is HttpException) {
-            Log.e(TAG, "Retrofit 2 HTTP ${exception.code()} exception: ${exception.response()}")
-            if (exception.code() == 500) {
-                text = getString(R.string.exceptionCTUInternal)
-            } else if (exception.code() == 404) {
-                text = getString(R.string.exceptionTimetableNotFound)
-            } else if (exception.code() == 403) {
-                text = getString(R.string.exceptionUnauthorized).format(viewModel.timetableOwner.value!!.first)
-                viewModel.timetableOwner.postValue(Pair(viewModel.ctuUsername, ItemType.PERSON))
-            }
-        } else if (exception is NoInternetConnectionException) {
-            Log.e(TAG, "Could not connect to the internet.")
-            text = getString(R.string.exceptionInternetUnavailable)
-        } else if (exception is SocketTimeoutException) {
-            text = getString(R.string.exceptionSocket)
-        } else {
-            Log.e(TAG, "Unknown exception occurred: $exception")
-            text = "Unknown exception occurred: $exception"
-        }
-
-        Toast.makeText(this, text, Toast.LENGTH_LONG).show()
     }
 
     // MARK: Permissions
