@@ -12,7 +12,7 @@ android {
         applicationId "cz.budikpet.bachelorwork"
         minSdkVersion 23
         targetSdkVersion 28
-        versionCode 1
+        versionCode 5
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
 
@@ -22,12 +22,6 @@ android {
                 'appAuthRedirectScheme': 'net.openid.appauthdemo'
 //                'appAuthRedirectScheme': 'com.google.codelabs.appauth'
         ]
-    }
-    buildTypes {
-        release {
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-        }
     }
 }
 
@@ -70,7 +64,7 @@ dependencies {
 
     // AppAuth
     implementation 'net.openid:appauth:0.7.1'
-    implementation 'joda-time:joda-time:2.10.1'
+    implementation 'joda-time:joda-time:2.10.2'
     implementation 'com.squareup.okio:okio:1.17.4'
     implementation "com.github.bumptech.glide:glide:${project.glideVersion}"
     annotationProcessor "com.github.bumptech.glide:compiler:${project.glideVersion}"
@@ -93,5 +87,14 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
+    androidTestImplementation 'com.android.support.test:rules:1.0.2'
+    androidTestImplementation 'com.android.support.test.espresso:espresso-contrib:3.0.2', {
+        exclude group: 'com.android.support', module: 'support-annotations'
+        exclude group: 'com.android.support', module: 'support-v4'
+        exclude group: 'com.android.support', module: 'design'
+        exclude group: 'com.android.support', module: 'recyclerview-v7'
+    }
+    testImplementation 'org.mockito:mockito-core:2.19.0'
+    androidTestImplementation 'org.mockito:mockito-android:2.19.0'
 
 }
