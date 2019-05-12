@@ -20,13 +20,12 @@ import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.edit
+import cz.budikpet.bachelorwork.util.schedulers.BaseSchedulerProvider
 import io.reactivex.Completable
 import io.reactivex.Maybe
 import io.reactivex.Observable
-import io.reactivex.android.schedulers.AndroidSchedulers
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
-import io.reactivex.schedulers.Schedulers
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import org.joda.time.*
@@ -34,7 +33,7 @@ import retrofit2.HttpException
 import javax.inject.Inject
 
 
-class MainViewModel : ViewModel() {
+open class MainViewModel : ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject
@@ -42,6 +41,9 @@ class MainViewModel : ViewModel() {
 
     @Inject
     internal lateinit var sharedPreferences: SharedPreferences
+
+    @Inject
+    internal lateinit var schedulerProvider: BaseSchedulerProvider
 
     @Inject
     internal lateinit var context: Context
@@ -152,11 +154,11 @@ class MainViewModel : ViewModel() {
      * Checks whether the device has internet connection. WiFi and/or Cellular if enabled.
      * @return true if the device is connected to the internet.
      */
-    fun isInternetAvailable(): Boolean {
+    open fun isInternetAvailable(): Boolean {
         return repository.isInternetAvailable()
     }
 
-    fun goToLastMultidayView() {
+    open fun goToLastMultidayView() {
         val id = when (daysPerMultidayViewFragment) {
             1 -> R.id.sidebarDayView
             3 -> R.id.sidebarThreeDayView
@@ -170,7 +172,7 @@ class MainViewModel : ViewModel() {
         return isInternetAvailable() || (savedTimetables != null && savedTimetables.contains(searchItem))
     }
 
-    fun canEditTimetable(): Boolean {
+    open fun canEditTimetable(): Boolean {
         return timetableOwner.value!!.first == ctuUsername && selectedSidebarItem.value != R.id.sidebarFreeTime
     }
 
@@ -185,7 +187,7 @@ class MainViewModel : ViewModel() {
         compositeDisposable.clear()
 
         val disposable = repository.checkSiriusAuthorization(response, exception)
-            .observeOn(Schedulers.io()) // TODO: Why is it necessery?
+            .observeOn(schedulerProvider.io()) // TODO: Why is it necessery?
             .flatMapObservable { accessToken ->
                 repository.getLoggedUserInfo(accessToken)
             }
@@ -199,8 +201,8 @@ class MainViewModel : ViewModel() {
 
                 Completable.complete()
             }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .onErrorComplete { exception ->
                 Log.e(TAG, "Authorization: $exception")
                 thrownException.postValue(exception)
@@ -214,7 +216,7 @@ class MainViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    fun ctuLogOut() {
+    open fun ctuLogOut() {
         sharedPreferences.edit {
             remove(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString())
             remove(SharedPreferencesKeys.CTU_USERNAME.toString())
@@ -233,8 +235,8 @@ class MainViewModel : ViewModel() {
                 }
             }
             .toList()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .subscribe(
                 { list ->
                     searchItems.postValue(list)
@@ -253,7 +255,7 @@ class MainViewModel : ViewModel() {
     /**
      * The application has all permissions, is signed into Google and CTU accounts.
      */
-    fun ready() {
+    open fun ready() {
         val currOwner = timetableOwner.value
         operationsRunning.value = 0
 
@@ -290,7 +292,7 @@ class MainViewModel : ViewModel() {
             .flatMapCompletable {
                 // Check if personal calendar exists and unhide hidden calendars in Google Calendar service
                 checkGoogleCalendars(it)
-                    .observeOn(Schedulers.computation())
+                    .observeOn(schedulerProvider.computation())
                     .andThen(repository.getLocalCalendarListItems())
                     .filter { !it.syncEvents }
                     .map { it.with(syncEvents = true) }
@@ -302,7 +304,7 @@ class MainViewModel : ViewModel() {
             .andThen(repository.refreshCalendars())
             .andThen(repository.getLocalCalendarListItems())
             .filter { username == null || it.displayName == calendarName }  // If username is null, update all
-            .observeOn(Schedulers.io())
+            .observeOn(schedulerProvider.io())
             .flatMapCompletable { calendarListItem ->
                 // Update the currently picked calendar with data from Sirius API
                 val siriusObs = getSiriusEventsList(calendarListItem)
@@ -319,8 +321,8 @@ class MainViewModel : ViewModel() {
 
                 return@flatMapCompletable updateObs
             }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
                 operationsRunning.value = operationsRunning.value!! - 1
@@ -333,7 +335,7 @@ class MainViewModel : ViewModel() {
             .subscribe {
                 Log.i(TAG, "Update done")
                 operationsRunning.value = operationsRunning.value!! - 1
-                if(username != null) {
+                if (username != null) {
                     showMessage.postValue(context.getString(R.string.message_TimetableUpdated).format(username))
                 } else {
                     showMessage.postValue(context.getString(R.string.message_TimetablesUpdated))
@@ -476,7 +478,7 @@ class MainViewModel : ViewModel() {
     /**
      * @return true if the currently loaded events in [MainViewModel.events] have already been updated.
      */
-    fun areLoadedEventsUpdated(): Boolean {
+    open fun areLoadedEventsUpdated(): Boolean {
         val updatedEventsInterval = this.updatedEventsInterval
         return updatedEventsInterval != null && updatedEventsInterval.isEqual(loadedEventsInterval)
     }
@@ -499,7 +501,7 @@ class MainViewModel : ViewModel() {
             .flatMapCompletable {
                 repository.removeGoogleCalendar(it)
             }
-            .subscribeOn(Schedulers.io())
+            .subscribeOn(schedulerProvider.io())
             .onErrorComplete { exception ->
                 Log.e(TAG, "RemoveCalendar error: $exception")
                 thrownException.postValue(exception)
@@ -516,7 +518,7 @@ class MainViewModel : ViewModel() {
 
     fun addCalendar(calendarName: String) {
         val disposable = repository.addGoogleCalendar(calendarName)
-            .subscribeOn(Schedulers.io())
+            .subscribeOn(schedulerProvider.io())
             .onErrorComplete { exception ->
                 Log.e(TAG, "AddCalendar error: $exception")
                 thrownException.postValue(exception)
@@ -561,7 +563,7 @@ class MainViewModel : ViewModel() {
                     searchItem1.type.ordinal - searchItem2.type.ordinal
                 })
             }
-            .subscribeOn(Schedulers.io())
+            .subscribeOn(schedulerProvider.io())
             .subscribe(
                 { result ->
                     savedTimetables.postValue(ArrayList(result))
@@ -604,8 +606,8 @@ class MainViewModel : ViewModel() {
                     .map { event -> TimetableEvent.from(event) }
             )
             .toList()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
                 operationsRunning.value = operationsRunning.value!! - 1
@@ -645,8 +647,8 @@ class MainViewModel : ViewModel() {
                     else -> repository.addCalendarEvent(it.id, timetableEvent)
                 }
             }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .subscribe(
                 { result ->
                     Log.i(TAG, "addCalendarEvent")
@@ -669,8 +671,8 @@ class MainViewModel : ViewModel() {
 
     fun removeCalendarEvent(timetableEvent: TimetableEvent) {
         val disposable = repository.deleteCalendarEvent(timetableEvent)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .subscribe(
                 { result ->
                     Log.i(TAG, "removeCalendarEvent")
@@ -688,8 +690,8 @@ class MainViewModel : ViewModel() {
     fun sharePersonalTimetable(email: String) {
         operationsRunning.value = operationsRunning.value!! + 1
         val disposable = repository.sharePersonalCalendar(email)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
                 operationsRunning.value = operationsRunning.value!! - 1
@@ -714,8 +716,8 @@ class MainViewModel : ViewModel() {
     fun unsharePersonalTimetable(email: String) {
         operationsRunning.value = operationsRunning.value!! + 1
         val disposable = repository.unsharePersonalCalendar(email)
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
                 operationsRunning.value = operationsRunning.value!! - 1
@@ -735,11 +737,11 @@ class MainViewModel : ViewModel() {
         compositeDisposable.add(disposable)
     }
 
-    fun updateSharedEmails() {
+    open fun updateSharedEmails() {
         val disposable = repository.getEmails(calendarNameFromId(ctuUsername))
             .toList()
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .subscribe(
                 { result ->
                     Log.i(TAG, "updateSharedEmails: $result")
@@ -798,7 +800,7 @@ class MainViewModel : ViewModel() {
                     .onErrorReturn { TimetableEvent(starts_at = weekStart.minusDays(2)) }
             }
             .map { Pair(it.starts_at, it.ends_at) }
-            .observeOn(Schedulers.computation())
+            .observeOn(schedulerProvider.computation())
             .filter {
                 // Filter out event that are not in specified time range
                 val eventTimeRange = Range.closed(it.first.toLocalTime(), it.second.toLocalTime())
@@ -832,8 +834,8 @@ class MainViewModel : ViewModel() {
 
                 freeTimeEvents.postValue(events)
             }
-            .subscribeOn(Schedulers.io())
-            .observeOn(AndroidSchedulers.mainThread())
+            .subscribeOn(schedulerProvider.io())
+            .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
                 operationsRunning.value = operationsRunning.value!! - 1
