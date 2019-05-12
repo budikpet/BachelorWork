@@ -402,6 +402,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
             text = getString(R.string.exceptionSocket)
         } else {
             Log.e(TAG, "Unknown exception occurred: $exception")
+            text = "Unknown exception occurred: $exception"
         }
 
         Toast.makeText(this, text, Toast.LENGTH_LONG).show()
