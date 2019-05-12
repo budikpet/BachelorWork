@@ -129,6 +129,8 @@ class Repository @Inject constructor(private val context: Context) {
 
                 return result
             }
+        } else {
+            return true
         }
 
         return false

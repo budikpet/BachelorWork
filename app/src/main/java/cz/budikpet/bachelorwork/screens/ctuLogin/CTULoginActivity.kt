@@ -91,7 +91,7 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
             putInt(SharedPreferencesKeys.LESSONS_START_TIME.toString(), lessonsStartTime)
             putInt(SharedPreferencesKeys.LENGTH_OF_BREAK.toString(), 15)
             putInt(SharedPreferencesKeys.LENGTH_OF_LESSON.toString(), 90)
-            putBoolean(SharedPreferencesKeys.USE_MOBILE_DATA.toString(), BuildConfig.DEBUG)
+            putBoolean(SharedPreferencesKeys.USE_MOBILE_DATA.toString(), true)
         }
 
     }
