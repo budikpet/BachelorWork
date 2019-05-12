@@ -48,7 +48,7 @@ open class MainViewModel : ViewModel() {
     @Inject
     internal lateinit var context: Context
 
-    private var compositeDisposable = CompositeDisposable()
+    var compositeDisposable = CompositeDisposable()
 
     /** Username of the CTU account that was used to log in. */
     val ctuUsername: String by lazy { repository.ctuUsername }
@@ -255,15 +255,14 @@ open class MainViewModel : ViewModel() {
     /**
      * The application has all permissions, is signed into Google and CTU accounts.
      */
-    open fun ready() {
+    open fun ready(forceUpdate: Boolean = false) {
         val currOwner = timetableOwner.value
         operationsRunning.value = 0
 
-        if (currOwner == null) {
-            selectedSidebarItem.postValue(R.id.sidebarWeekView)
-            timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
+        if (currOwner == null || forceUpdate) {
+            selectedSidebarItem.value = R.id.sidebarWeekView
+            timetableOwner.value = Pair(ctuUsername, ItemType.PERSON)
             updateCalendars(ctuUsername)
-            updateSharedEmails()
         }
     }
 

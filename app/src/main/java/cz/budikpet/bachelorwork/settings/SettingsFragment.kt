@@ -52,6 +52,13 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
         setLogoutButtons()
 
         setLessonButtons()
+
+        val modileData = findPreference(SharedPreferencesKeys.USE_MOBILE_DATA.toString())
+        val useMobData = sharedPreferences.getBoolean(SharedPreferencesKeys.USE_MOBILE_DATA.toString(), false)
+        modileData.summary = when (useMobData) {
+            true -> getString(R.string.prefSum_mobileData_true)
+            else -> getString(R.string.prefSum_mobileData_false)
+        }
     }
 
     override fun onCreateOptionsMenu(menu: Menu?, inflater: MenuInflater?) {
@@ -150,6 +157,8 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
 
             return@setOnPreferenceClickListener true
         }
+        val siriusAccount = sharedPreferences.getString(SharedPreferencesKeys.CTU_USERNAME.toString(), "")
+        ctuLogout.summary = getString(R.string.prefSum_Logout).format(siriusAccount)
 
         val googleLogout = findPreference("prefGoogleLogout")
         googleLogout.setOnPreferenceClickListener {
@@ -157,13 +166,15 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
                 .setTitle(context.getString(R.string.alertDialog_title_notice))
                 .setMessage(getString(R.string.alertDialog_message_googleLogout))
                 .setPositiveButton(context.getString(R.string.alertDialog_positive_yes)) { dialog, which ->
-                    startActivityForResult(credential.newChooseAccountIntent(), MainActivity.CODE_GOOGLE_LOGIN)
+                    activity?.startActivityForResult(credential.newChooseAccountIntent(), MainActivity.CODE_GOOGLE_LOGIN)
                 }
                 .setNegativeButton(context.getString(R.string.alertDialog_negative_no)) { dialog, which -> }
                 .show()
 
             return@setOnPreferenceClickListener true
         }
+        val googleAccount = sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), "")
+        googleLogout.summary = getString(R.string.prefSum_Logout).format(googleAccount)
     }
 
     private fun showTimeEditDialog(time: LocalTime, onPositiveFunction: (LocalTime) -> Unit) {
@@ -264,6 +275,16 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
                 val millisOfDay = sharedPreferences.getInt(key, 0)
                 val time = LocalTime().withMillisOfDay(millisOfDay)
                 preference.summary = time.toString("HH:mm")
+            }
+            SharedPreferencesKeys.CTU_USERNAME.toString() -> {
+                val preference = findPreference(key)
+                val googleAccount = sharedPreferences.getString(key, "")
+                preference.summary = getString(R.string.prefSum_Logout).format(googleAccount)
+            }
+            SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString() -> {
+                val preference = findPreference(key)
+                val googleAccount = sharedPreferences.getString(key, "")
+                preference.summary = getString(R.string.prefSum_Logout).format(googleAccount)
             }
         }
     }

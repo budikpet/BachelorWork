@@ -1,6 +1,7 @@
 package cz.budikpet.bachelorwork.screens.main
 
 import android.accounts.AccountManager
+import android.app.Activity
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.content.Intent
@@ -20,6 +21,7 @@ import android.view.View
 import android.widget.ProgressBar
 import android.widget.Toast
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
+import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
@@ -52,6 +54,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
     companion object {
         const val CODE_GOOGLE_LOGIN = 0
+        const val REQUEST_AUTHORIZATION = 1
     }
 
     private lateinit var viewModel: MainViewModel
@@ -78,6 +81,8 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
                 quitApplication()
             }
     }
+
+    private var requested = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -311,7 +316,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
                 // TODO: Check if the google account still exists
 
-                viewModel.ready()
+                viewModel.ready(true)
 
             } else {
                 // Ask for a Google Account
@@ -337,12 +342,18 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
 
                 credential.selectedAccountName = accountName
 
-                viewModel.ready()
+                viewModel.ready(true)
             } else {
                 Log.i(TAG, "Google account not specified.")
                 alertDialogBuilder.show()
             }
-
+        } else if(requestCode == REQUEST_AUTHORIZATION) {
+            requested = false
+            if (resultCode == Activity.RESULT_OK) {
+                viewModel.ready(true)
+            } else {
+                startActivityForResult(credential.newChooseAccountIntent(), CODE_GOOGLE_LOGIN)
+            }
         }
     }
 
@@ -379,6 +390,14 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     // MARK: Exceptions
 
     private fun handleException(exception: Throwable) {
+        if (exception is UserRecoverableAuthIOException) {
+            if(!requested) {
+                requested = true
+                startActivityForResult(exception.intent, REQUEST_AUTHORIZATION)
+            }
+            return
+        }
+
         var text = getString(R.string.exceptionUnknown)
 
         if (exception is GoogleAccountNotFoundException) {

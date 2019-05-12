@@ -97,4 +97,5 @@
 	<string name="alertDialog_title_breakLength">Specify length of breaks</string>
 	<string name="alertDialog_title_lessonLength">Specify length of lessons</string>
 	<string name="alertDialog_title_numOfLessons">Specify number of lessons</string>
+	<string name="prefSum_Logout">Currently signed in as %1$s.</string>
 </resources>

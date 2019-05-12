@@ -98,4 +98,5 @@
 	<string name="alertDialog_title_breakLength">Specifikujte délku přestávek</string>
 	<string name="alertDialog_title_lessonLength">Specifikujte délku vyučovací hodiny</string>
 	<string name="alertDialog_title_numOfLessons">Specifikujte počet hodin</string>
+	<string name="prefSum_Logout">Přihlášen jako %1$s.</string>
 </resources>
