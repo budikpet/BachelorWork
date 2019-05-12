@@ -9,6 +9,7 @@
     <color name="eventDefault">#42ebf4</color>
     <color name="eventLecture">#F1C95A</color>
     <color name="eventTutorial">#75A754</color>
+    <color name="eventLab">#21E334</color>
     <color name="eventExam">#ff6060</color>
     <color name="eventOther">#e0dbdb</color>
     <color name="clickableText">#FF0099CC</color>

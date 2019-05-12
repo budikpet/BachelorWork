@@ -102,8 +102,9 @@ data class TimetableEvent(
                 EventType.LECTURE -> R.color.eventLecture
                 EventType.EXAM -> R.color.eventExam
                 EventType.OTHER -> R.color.eventOther
-                EventType.TUTORIAL ->
-                    R.color.eventTutorial
+                EventType.TUTORIAL -> R.color.eventTutorial
+                EventType.LABORATORY -> R.color.eventLab
+                EventType.ASSESSMENT -> R.color.eventExam
                 else -> {
                     R.color.eventDefault
                 }

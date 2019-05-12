@@ -18,12 +18,12 @@
 		android:checked="false"
 		android:icon="@drawable/ic_offline_unavailable_black_24dp"
 		android:title="@string/menuItem_CalendarOfflineUnavailable"
-		app:showAsAction="always|withText" />
+		app:showAsAction="always" />
 	<item
 		android:id="@+id/itemSharePersonalTimetable"
 		android:icon="@drawable/ic_share_black_24dp"
 		android:title="@string/menuItem_sharePersonalTimetable"
-		app:showAsAction="ifRoom|withText" />
+		app:showAsAction="ifRoom" />
 	<item
 		android:id="@+id/itemGoToToday"
 		android:title="@string/menuItem_goToToday"
