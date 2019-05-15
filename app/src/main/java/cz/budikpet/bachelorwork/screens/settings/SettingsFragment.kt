@@ -142,22 +142,22 @@ class SettingsFragment : PreferenceFragmentCompat(), SharedPreferences.OnSharedP
 
     private fun setLogoutButtons() {
         val context = context ?: return
-
-        val ctuLogout = findPreference("prefSiriusLogout")
-        ctuLogout.setOnPreferenceClickListener {
-            AlertDialog.Builder(context)
-                .setTitle(context.getString(R.string.alertDialog_title_notice))
-                .setMessage(getString(R.string.alertDialog_message_ctuLogOut))
-                .setPositiveButton(context.getString(R.string.alertDialog_positive_yes)) { dialog, which ->
-                    viewModel.ctuLogOut()
-                }
-                .setNegativeButton(context.getString(R.string.alertDialog_negative_no)) { dialog, which -> }
-                .show()
-
-            return@setOnPreferenceClickListener true
-        }
-        val siriusAccount = sharedPreferences.getString(SharedPreferencesKeys.CTU_USERNAME.toString(), "")
-        ctuLogout.summary = getString(R.string.prefSum_Logout).format(siriusAccount)
+//
+//        val ctuLogout = findPreference("prefSiriusLogout")
+//        ctuLogout.setOnPreferenceClickListener {
+//            AlertDialog.Builder(context)
+//                .setTitle(context.getString(R.string.alertDialog_title_notice))
+//                .setMessage(getString(R.string.alertDialog_message_ctuLogOut))
+//                .setPositiveButton(context.getString(R.string.alertDialog_positive_yes)) { dialog, which ->
+//                    viewModel.ctuLogOut()
+//                }
+//                .setNegativeButton(context.getString(R.string.alertDialog_negative_no)) { dialog, which -> }
+//                .show()
+//
+//            return@setOnPreferenceClickListener true
+//        }
+//        val siriusAccount = sharedPreferences.getString(SharedPreferencesKeys.CTU_USERNAME.toString(), "")
+//        ctuLogout.summary = getString(R.string.prefSum_Logout).format(siriusAccount)
 
         val googleLogout = findPreference("prefGoogleLogout")
         googleLogout.setOnPreferenceClickListener {

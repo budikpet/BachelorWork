@@ -4,11 +4,11 @@
 	<PreferenceCategory
 		android:title="@string/pref_accounts">
 
-		<Preference
-			android:id="@+id/ctuLogout"
-			android:key="prefSiriusLogout"
-			android:shouldDisableView="false"
-			android:title="@string/pref_CTULogout" />
+		<!--<Preference-->
+			<!--android:id="@+id/ctuLogout"-->
+			<!--android:key="prefSiriusLogout"-->
+			<!--android:shouldDisableView="false"-->
+			<!--android:title="@string/pref_CTULogout" />-->
 		<Preference
 			android:id="@+id/googleLogout"
 			android:key="prefGoogleLogout"
