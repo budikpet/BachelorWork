@@ -6,6 +6,9 @@ import org.joda.time.DateTime
 import org.joda.time.Interval
 import java.util.*
 
+/**
+ * This model is used to hold all information about an event. Events from Sirius API and Google Calendar are transformed into it.
+ */
 data class TimetableEvent(
     val siriusId: Int? = null,
     val room: String? = null,      // Can be null

@@ -1,5 +1,8 @@
 package cz.budikpet.bachelorwork.util
 
+/**
+ * All keys that are used by SharedPreferences and Preference API.
+ */
 enum class SharedPreferencesKeys {
     GOOGLE_ACCOUNT_NAME,
     CTU_USERNAME,

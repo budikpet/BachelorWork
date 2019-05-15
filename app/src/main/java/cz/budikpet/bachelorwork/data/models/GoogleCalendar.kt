@@ -2,6 +2,9 @@ package cz.budikpet.bachelorwork.data.models
 
 import cz.budikpet.bachelorwork.data.enums.EventType
 
+/**
+ * Data from Sirius API that can only be stored in Google Calendar event's notes.
+ */
 data class GoogleCalendarMetadata(
     var id: Int? = null,
     val teacherIds: ArrayList<String> = arrayListOf(),

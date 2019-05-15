@@ -12,7 +12,7 @@ import pub.devrel.easypermissions.EasyPermissions
 import pub.devrel.easypermissions.PermissionRequest
 
 /**
- * Purpose of this fragment is to check whether the application has needed permissions and ask for them.
+ * Purpose of this fragment is to check whether the application has needed permissions and to ask for them.
  */
 class PermissionsCheckerFragment : Fragment(), EasyPermissions.RationaleCallbacks, EasyPermissions.PermissionCallbacks {
     private val TAG = "AMY_${this.javaClass.simpleName}"

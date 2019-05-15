@@ -20,10 +20,18 @@ class MyApplication : Application() {
 
         internal lateinit var appComponent: AppComponent
 
+        /**
+         * @param calendarName is a CTU (Sirius API) username.
+         * @return name of the calendar from Google Calendar.
+         */
         fun calendarNameFromId(id: String): String {
             return "${id}_${CALENDARS_NAME}"
         }
 
+        /**
+         * @param calendarName is aname of the calendar from Google Calendar.
+         * @return CTU (Sirius API) username
+         */
         fun idFromCalendarName(calendarName: String): String {
             return calendarName.substringBefore("_")
         }

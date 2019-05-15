@@ -2,7 +2,9 @@ package cz.budikpet.bachelorwork.data.models
 
 import cz.budikpet.bachelorwork.data.enums.ItemType
 
-// SearchItem type
+/**
+ * Full identification of a room, person or lesson in Sirius API.
+ */
 data class SearchItem(
     /** Acronym - T9:350, balikm, BI-AG2 */
     val id: String,

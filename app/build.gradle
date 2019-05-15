@@ -6,14 +6,13 @@ apply plugin: 'kotlin-android-extensions'
 
 apply plugin: 'kotlin-kapt'
 
+apply plugin: 'org.jetbrains.dokka-android'
+
+
 android {
-    signingConfigs {
-        myRelease {
-            storeFile file('/Users/petr/Documents/Projects/AndroidProjects/BachelorWork/keystore/keystore')
-            storePassword 'mrem3327'
-            keyPassword 'mrem3327'
-            keyAlias = 'ctuTimetableKey'
-        }
+    dokka {
+        outputFormat = 'html'
+        outputDirectory = "$buildDir/javadoc"
     }
     compileSdkVersion 28
     defaultConfig {
@@ -38,8 +37,6 @@ android {
         debug {
         }
         myRelease {
-            debuggable = true
-            signingConfig signingConfigs.myRelease
         }
     }
 }
@@ -61,7 +58,7 @@ dependencies {
     implementation 'com.android.support:cardview-v7:28.0.0'
     implementation "com.android.support:preference-v7:28.0.0"
     implementation 'pub.devrel:easypermissions:2.0.1'
-    implementation 'com.android.support:multidex:1.0.1'
+    implementation 'com.android.support:multidex:1.0.3'
 
 
     implementation "com.splitwise:tokenautocomplete:3.0.1@aar"

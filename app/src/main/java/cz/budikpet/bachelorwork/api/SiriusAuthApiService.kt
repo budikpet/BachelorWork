@@ -13,7 +13,7 @@ import retrofit2.http.Query
  */
 interface SiriusAuthApiService {
 
-    /***
+    /**
      * Get info about currently logged in user.
      */
     @GET("userinfo")
