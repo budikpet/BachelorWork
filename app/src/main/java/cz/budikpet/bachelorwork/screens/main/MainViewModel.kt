@@ -182,17 +182,6 @@ open class MainViewModel : ViewModel() {
         return timetableOwner.value!!.first == ctuUsername && selectedSidebarItem.value != R.id.sidebarFreeTime
     }
 
-    fun selectedTimetableIsShared(): Boolean {
-        val calendarName = calendarNameFromId(timetableOwner.value!!.first)
-
-        if(savedTimetables.value != null) {
-            val savedTimetables = savedTimetables.value!!.map { it.id }
-            return savedTimetables.contains(calendarName)
-        }
-
-        return false
-    }
-
     /**
      * Checks whether a user is fully authorized in Sirius API.
      *
@@ -204,7 +193,7 @@ open class MainViewModel : ViewModel() {
         compositeDisposable.clear()
 
         val disposable = repository.checkSiriusAuthorization(response, exception)
-            .observeOn(schedulerProvider.io()) // TODO: Why is it necessery?
+            .observeOn(schedulerProvider.io())
             .flatMapObservable { accessToken ->
                 repository.getLoggedUserInfo(accessToken)
             }
@@ -313,7 +302,7 @@ open class MainViewModel : ViewModel() {
                     .filter { !it.syncEvents }
                     .map { it.with(syncEvents = true) }
                     .flatMapCompletable {
-                        // Make all local calendars sync with Google Calendar service
+                        // Ensure that all used calendars sync Google Calendar service
                         repository.updateLocalCalendarList(it).ignoreElement()
                     }
             }

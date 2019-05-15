@@ -18,6 +18,9 @@ data class GoogleCalendarMetadata(
     val fullName: String = ""
 )
 
+/**
+ * All information needed from locally saved calendars.
+ */
 data class CalendarListItem(val id: Long, val displayName: String, var syncEvents: Boolean) {
     fun with(syncEvents: Boolean): CalendarListItem {
         this.syncEvents = syncEvents
