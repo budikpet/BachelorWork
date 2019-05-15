@@ -2,12 +2,7 @@ package cz.budikpet.bachelorwork.screens.main
 
 import android.arch.lifecycle.MutableLiveData
 import android.arch.lifecycle.ViewModel
-import android.content.Context
-import android.content.SharedPreferences
-import android.support.v4.app.ActivityCompat.startActivityForResult
 import android.util.Log
-import android.widget.Toast
-import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import com.google.api.services.calendar.model.CalendarListEntry
 import com.google.common.collect.Range
 import com.google.common.collect.TreeRangeSet
@@ -18,16 +13,14 @@ import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.CalendarListItem
+import cz.budikpet.bachelorwork.data.models.PassableStringResource
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
-import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
-import cz.budikpet.bachelorwork.util.edit
 import cz.budikpet.bachelorwork.util.schedulers.BaseSchedulerProvider
 import io.reactivex.Completable
-import io.reactivex.Maybe
 import io.reactivex.Observable
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
@@ -39,20 +32,9 @@ import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 
-open class MainViewModel : ViewModel() {
+open class MainViewModel @Inject constructor(var repository: Repository, var schedulerProvider: BaseSchedulerProvider) :
+    ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
-
-    @Inject
-    internal lateinit var repository: Repository
-
-    @Inject
-    internal lateinit var sharedPreferences: SharedPreferences
-
-    @Inject
-    internal lateinit var schedulerProvider: BaseSchedulerProvider
-
-    @Inject
-    internal lateinit var context: Context
 
     var compositeDisposable = CompositeDisposable()
 
@@ -99,7 +81,7 @@ open class MainViewModel : ViewModel() {
     val thrownException = MutableLiveData<Throwable>()
 
     /** A message we want to show to the user. */
-    val showMessage = MutableLiveData<String>()
+    val showMessage = MutableLiveData<PassableStringResource>()
 
     /** Represents items received from Sirius API search endpoint. */
     val searchItems = MutableLiveData<List<SearchItem>>()
@@ -146,8 +128,6 @@ open class MainViewModel : ViewModel() {
     var updatedEventsInterval: Interval? = null
 
     init {
-        MyApplication.appComponent.inject(this)
-
         // Use custom setter
         currentlySelectedDate = DateTime()
     }
@@ -198,12 +178,7 @@ open class MainViewModel : ViewModel() {
                 repository.getLoggedUserInfo(accessToken)
             }
             .flatMapCompletable { userInfo ->
-                if (!sharedPreferences.contains(SharedPreferencesKeys.CTU_USERNAME.toString())) {
-                    // Store the Sirius username
-                    sharedPreferences.edit {
-                        putString(SharedPreferencesKeys.CTU_USERNAME.toString(), userInfo.username)
-                    }
-                }
+                repository.saveCtuUsername(userInfo.username)
 
                 Completable.complete()
             }
@@ -223,10 +198,6 @@ open class MainViewModel : ViewModel() {
     }
 
     open fun ctuLogOut() {
-        sharedPreferences.edit {
-            remove(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString())
-            remove(SharedPreferencesKeys.CTU_USERNAME.toString())
-        }
         repository.signOut()
         ctuSignedOut.postValue(true)
     }
@@ -341,9 +312,9 @@ open class MainViewModel : ViewModel() {
                 Log.i(TAG, "Update done")
                 operationsRunning.value = operationsRunning.value!! - 1
                 if (username != null) {
-                    showMessage.postValue(context.getString(R.string.message_TimetableUpdated).format(username))
+                    showMessage.postValue(PassableStringResource(R.string.message_TimetableUpdated, listOf(username)))
                 } else {
-                    showMessage.postValue(context.getString(R.string.message_TimetablesUpdated))
+                    showMessage.postValue(PassableStringResource(R.string.message_TimetablesUpdated))
                 }
 
                 loadEvents()
@@ -514,7 +485,7 @@ open class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Calendar removed")
-                showMessage.postValue(context.getString(R.string.message_CalendarRemoved))
+                showMessage.postValue(PassableStringResource(R.string.message_CalendarRemoved))
                 updateSavedTimetables(true)
             }
 
@@ -531,7 +502,7 @@ open class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Calendar added")
-                showMessage.postValue(context.getString(R.string.message_CalendarAdded))
+                showMessage.postValue(PassableStringResource(R.string.message_CalendarAdded))
                 updateSavedTimetables(true)
             }
 
@@ -688,7 +659,7 @@ open class MainViewModel : ViewModel() {
             .subscribe(
                 { result ->
                     Log.i(TAG, "CalendarShared, ACL: $result")
-                    showMessage.postValue(context.getString(R.string.message_CalendarShared))
+                    showMessage.postValue(PassableStringResource(R.string.message_CalendarShared))
                     operationsRunning.value = operationsRunning.value!! - 1
                     updateSharedEmails()
                 },
@@ -718,7 +689,7 @@ open class MainViewModel : ViewModel() {
             }
             .subscribe {
                 Log.i(TAG, "Calendar unshared successfully.")
-                showMessage.postValue(context.getString(R.string.message_CalendarUnshared))
+                showMessage.postValue(PassableStringResource(R.string.message_CalendarUnshared))
                 operationsRunning.value = operationsRunning.value!! - 1
                 updateSharedEmails()
             }
@@ -734,7 +705,7 @@ open class MainViewModel : ViewModel() {
             .subscribe(
                 { result ->
                     Log.i(TAG, "updateSharedEmails: $result")
-                    showMessage.postValue(context.getString(R.string.message_emailListUpdated))
+                    showMessage.postValue(PassableStringResource(R.string.message_emailListUpdated))
                     emails.postValue(ArrayList(result))
                 },
                 { exception ->
@@ -847,30 +818,29 @@ open class MainViewModel : ViewModel() {
     // MARK: Exceptions
 
     private fun handleException(exception: Throwable) {
-        var text = context.getString(R.string.exceptionUnknown)
+        var text = PassableStringResource(R.string.exceptionUnknown, listOf(exception.toString()))
 
         if (exception is GoogleAccountNotFoundException) {
             // Prompt the user to select a new google account
             Log.e(TAG, "Used google account not found.")
-            text = context.getString(R.string.exceptionGoogleAccountNotFound)
+            text = PassableStringResource(R.string.exceptionGoogleAccountNotFound)
         } else if (exception is HttpException) {
             Log.e(TAG, "Retrofit 2 HTTP ${exception.code()} exception: ${exception.response()}")
             if (exception.code() == 500) {
-                text = context.getString(R.string.exceptionCTUInternal)
+                text = PassableStringResource(R.string.exceptionCTUInternal)
             } else if (exception.code() == 404) {
-                text = context.getString(R.string.exceptionTimetableNotFound)
+                text = PassableStringResource(R.string.exceptionTimetableNotFound)
             } else if (exception.code() == 403) {
-                text = context.getString(R.string.exceptionUnauthorized).format(timetableOwner.value!!.first)
+                text = PassableStringResource(R.string.exceptionUnauthorized, listOf(timetableOwner.value!!.first))
                 timetableOwner.postValue(Pair(ctuUsername, ItemType.PERSON))
             }
         } else if (exception is NoInternetConnectionException) {
             Log.e(TAG, "Could not connect to the internet.")
-            text = context.getString(R.string.exceptionInternetUnavailable)
+            text = PassableStringResource(R.string.exceptionInternetUnavailable)
         } else if (exception is SocketTimeoutException) {
-            text = context.getString(R.string.exceptionSocket)
+            text = PassableStringResource(R.string.exceptionSocket)
         } else {
             Log.e(TAG, "Unknown exception occurred: $exception")
-            text = "Unknown exception occurred: $exception"
         }
 
         thrownException.postValue(exception)

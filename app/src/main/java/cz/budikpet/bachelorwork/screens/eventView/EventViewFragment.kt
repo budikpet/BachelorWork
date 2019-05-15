@@ -15,19 +15,25 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
+import cz.budikpet.bachelorwork.data.models.PassableStringResource
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import cz.budikpet.bachelorwork.di.util.MyViewModelFactory
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
-import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import cz.budikpet.bachelorwork.util.toDp
 import kotlinx.android.synthetic.main.fragment_event_view.*
 import org.joda.time.DateTime
+import javax.inject.Inject
 
 // TODO: If clickable things do not exist, app freezes (user defined or edited events). Check if it exists.
 
 class EventViewFragment : Fragment() {
+
+    @Inject
+    lateinit var viewModelFactory: MyViewModelFactory
 
     private lateinit var viewModel: MainViewModel
     private lateinit var selectedEvent: TimetableEvent
@@ -41,9 +47,10 @@ class EventViewFragment : Fragment() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MyApplication.appComponent.inject(this)
 
         viewModel = activity?.run {
-            ViewModelProviders.of(this).get(MainViewModel::class.java)
+            ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
         subscribeObservers()
@@ -184,7 +191,7 @@ class EventViewFragment : Fragment() {
                         viewModel.timetableOwner.postValue(Pair(searchItem.id, searchItem.type))
                         exit()
                     } else {
-                        viewModel.showMessage.postValue(getString(R.string.exceptionInternetUnavailable))
+                        viewModel.showMessage.postValue(PassableStringResource(R.string.exceptionInternetUnavailable))
                     }
                 }
                 .show()

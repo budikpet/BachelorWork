@@ -49,7 +49,7 @@
 	<string name="alertDialog_share">Share</string>
 	<string name="alertDialog_message_share">Please specify the email address of a Google account you want to share your personal timetable with.</string>
 	<string name="menuItem_SaveEvent">Save</string>
-	<string name="exceptionUnknown">Unknown exception occurred.</string>
+	<string name="exceptionUnknown">Unknown exception occurred: %1$s</string>
 	<string name="exceptionGoogleAccountNotFound">Specified Google account not found.</string>
 	<string name="exceptionCTUInternal">CTU internal server error occurred. Please try again.</string>
 	<string name="exceptionTimetableNotFound">Timetable not found.</string>

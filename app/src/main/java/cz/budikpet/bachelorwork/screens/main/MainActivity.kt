@@ -8,7 +8,6 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.design.widget.NavigationView
-import android.support.v4.app.ActivityCompat
 import android.support.v4.widget.DrawerLayout
 import android.support.v7.app.AlertDialog
 import android.support.v7.app.AppCompatActivity
@@ -25,7 +24,7 @@ import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccoun
 import com.google.api.client.googleapis.extensions.android.gms.auth.UserRecoverableAuthIOException
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
-import cz.budikpet.bachelorwork.data.enums.ItemType
+import cz.budikpet.bachelorwork.di.util.MyViewModelFactory
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment
 import cz.budikpet.bachelorwork.screens.PermissionsCheckerFragment.Companion.requiredPerms
 import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListFragment
@@ -42,8 +41,6 @@ import kotlinx.android.synthetic.main.dialog_share_timetable.view.*
 import net.openid.appauth.AuthorizationException
 import net.openid.appauth.AuthorizationResponse
 import pub.devrel.easypermissions.EasyPermissions
-import retrofit2.HttpException
-import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 
@@ -59,6 +56,9 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
     }
 
     private lateinit var viewModel: MainViewModel
+
+    @Inject
+    lateinit var viewModelFactory: MyViewModelFactory
 
     @Inject
     internal lateinit var credential: GoogleAccountCredential
@@ -89,7 +89,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         MyApplication.appComponent.inject(this)
-        viewModel = ViewModelProviders.of(this).get(MainViewModel::class.java)
+        viewModel = ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
 
         val toolbar = findViewById<Toolbar>(R.id.mainToolbar)
         setSupportActionBar(toolbar)
@@ -248,7 +248,15 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         })
 
         viewModel.showMessage.observe(this, Observer {
-            Toast.makeText(this, it, Toast.LENGTH_LONG).show()
+            val passableResource = it ?: return@Observer
+
+            val string = if (passableResource.args == null) {
+                getString(passableResource.resId)
+            } else {
+                getString(passableResource.resId).format(passableResource.args)
+            }
+
+            Toast.makeText(this, string, Toast.LENGTH_LONG).show()
         })
 
         viewModel.selectedSidebarItem.observe(this, Observer {
@@ -258,6 +266,11 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         })
 
         viewModel.ctuSignedOut.observe(this, Observer {
+            sharedPreferences.edit {
+                remove(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString())
+                remove(SharedPreferencesKeys.CTU_USERNAME.toString())
+            }
+
             val mainIntent = Intent(this, CTULoginActivity::class.java)
             mainIntent.flags = Intent.FLAG_ACTIVITY_CLEAR_TOP
             startActivity(mainIntent)

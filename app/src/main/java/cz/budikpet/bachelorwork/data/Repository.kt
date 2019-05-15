@@ -107,6 +107,15 @@ class Repository @Inject constructor(private val context: Context) {
             .retry(5)
     }
 
+    fun saveCtuUsername(username: String) {
+        if (!sharedPreferences.contains(SharedPreferencesKeys.CTU_USERNAME.toString())) {
+            // Store the Sirius username
+            sharedPreferences.edit {
+                putString(SharedPreferencesKeys.CTU_USERNAME.toString(), username)
+            }
+        }
+    }
+
     /**
      * Checks whether the device has internet connection. WiFi and/or Cellular if enabled.
      * @return true if the device is connected to the internet.

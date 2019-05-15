@@ -20,11 +20,14 @@ import android.view.*
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.ItemType
+import cz.budikpet.bachelorwork.data.models.PassableStringResource
+import cz.budikpet.bachelorwork.di.util.MyViewModelFactory
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import kotlinx.android.synthetic.main.dialog_share_timetable.view.*
 import org.joda.time.DateTime
 import org.joda.time.Interval
+import javax.inject.Inject
 
 class MultidayFragmentHolder : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
@@ -40,6 +43,9 @@ class MultidayFragmentHolder : Fragment() {
     private var shareMenuItem: MenuItem? = null
 
     private var pagerPosition = PREFILLED_WEEKS / 2
+
+    @Inject
+    lateinit var viewModelFactory: MyViewModelFactory
 
     private lateinit var viewModel: MainViewModel
 
@@ -95,9 +101,11 @@ class MultidayFragmentHolder : Fragment() {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
 
+        MyApplication.appComponent.inject(this)
+
         // Receive MainViewModel reference in a fragment
         viewModel = activity?.run {
-            ViewModelProviders.of(this).get(MainViewModel::class.java)
+            ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
         subscribeObservers()
@@ -154,7 +162,7 @@ class MultidayFragmentHolder : Fragment() {
             override fun onMenuItemActionExpand(item: MenuItem?): Boolean {
                 // User entered the searchView
                 if (!viewModel.isInternetAvailable()) {
-                    viewModel.showMessage.postValue(getString(R.string.exceptionInternetUnavailable))
+                    viewModel.showMessage.postValue(PassableStringResource(R.string.exceptionInternetUnavailable))
                 }
 
                 return true

@@ -11,14 +11,20 @@ import android.support.v7.widget.LinearLayoutManager
 import android.support.v7.widget.RecyclerView
 import android.support.v7.widget.helper.ItemTouchHelper
 import android.view.*
+import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
+import cz.budikpet.bachelorwork.di.util.MyViewModelFactory
 import cz.budikpet.bachelorwork.screens.calendarListView.CalendarsListSwipeDelete
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.MarginItemDecoration
 import cz.budikpet.bachelorwork.util.toDp
+import javax.inject.Inject
 
 class EmailListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
     private val TAG = "MY_${this.javaClass.simpleName}"
+
+    @Inject
+    lateinit var viewModelFactory: MyViewModelFactory
 
     private lateinit var viewModel: MainViewModel
 
@@ -58,9 +64,10 @@ class EmailListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        MyApplication.appComponent.inject(this)
 
         viewModel = activity?.run {
-            ViewModelProviders.of(this).get(MainViewModel::class.java)
+            ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
         setHasOptionsMenu(true)

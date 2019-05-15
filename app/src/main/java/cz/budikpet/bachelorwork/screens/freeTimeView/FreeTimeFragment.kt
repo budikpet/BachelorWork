@@ -23,6 +23,7 @@ import cz.budikpet.bachelorwork.MyApplication
 
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.models.SearchItem
+import cz.budikpet.bachelorwork.di.util.MyViewModelFactory
 import cz.budikpet.bachelorwork.screens.TokenCompletionView
 import cz.budikpet.bachelorwork.screens.eventEditView.AutoSuggestAdapter
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
@@ -60,6 +61,9 @@ class FreeTimeFragment : Fragment() {
         }
 
     @Inject
+    lateinit var viewModelFactory: MyViewModelFactory
+
+    @Inject
     internal lateinit var sharedPreferences: SharedPreferences
     private lateinit var viewModel: MainViewModel
 
@@ -95,7 +99,7 @@ class FreeTimeFragment : Fragment() {
         MyApplication.appComponent.inject(this)
 
         viewModel = activity?.run {
-            ViewModelProviders.of(this).get(MainViewModel::class.java)
+            ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
         if(viewModel.selectedWeekStart != null) {

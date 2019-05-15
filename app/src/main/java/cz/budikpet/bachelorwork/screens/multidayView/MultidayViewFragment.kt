@@ -18,6 +18,7 @@ import android.widget.TextView
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R.*
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import cz.budikpet.bachelorwork.di.util.MyViewModelFactory
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.util.SharedPreferencesKeys
 import cz.budikpet.bachelorwork.util.toDp
@@ -58,6 +59,9 @@ class MultidayViewFragment : Fragment() {
         )
     }
 
+    @Inject
+    lateinit var viewModelFactory: MyViewModelFactory
+
     private lateinit var viewModel: MainViewModel
     private lateinit var eventsColumns: List<ConstraintLayout>
 
@@ -69,7 +73,7 @@ class MultidayViewFragment : Fragment() {
         MyApplication.appComponent.inject(this)
 
         viewModel = activity?.run {
-            ViewModelProviders.of(this).get(MainViewModel::class.java)
+            ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
         arguments?.let {

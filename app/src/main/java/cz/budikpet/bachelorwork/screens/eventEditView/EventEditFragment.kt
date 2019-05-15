@@ -14,20 +14,26 @@ import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.*
 import com.tokenautocomplete.TokenCompleteTextView
+import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import cz.budikpet.bachelorwork.di.util.MyViewModelFactory
 import cz.budikpet.bachelorwork.screens.TokenCompletionView
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import kotlinx.android.synthetic.main.fragment_event_edit.*
 import org.joda.time.LocalDate
+import javax.inject.Inject
 
 // TODO: Disable edit if the timetable is not saved
 
 class EventEditFragment : Fragment() {
     private val TAG = "MY_${this.javaClass.simpleName}"
+
+    @Inject
+    lateinit var viewModelFactory: MyViewModelFactory
 
     private lateinit var viewModel: MainViewModel
     private var selectedAutoTextView: AutoCompleteTextView? = null
@@ -41,9 +47,10 @@ class EventEditFragment : Fragment() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+        MyApplication.appComponent.inject(this)
 
         viewModel = activity?.run {
-            ViewModelProviders.of(this).get(MainViewModel::class.java)
+            ViewModelProviders.of(this, viewModelFactory).get(MainViewModel::class.java)
         } ?: throw Exception("Invalid Activity")
 
         selectedEvent = viewModel.eventToEditChanges
