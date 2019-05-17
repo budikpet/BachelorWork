@@ -19,34 +19,34 @@ import javax.inject.Singleton
  * Provides @Context through dependency injection.
  */
 @Module
-internal class TestAppModule(private val context: Context): AppModule(context) {
+internal class TestAppModule(private val context: Context) {
 
     @Provides
-    override fun provideContext(): Context {
+    fun provideContext(): Context {
         return context
     }
 
     @Provides
     @Singleton
-    override fun providesSiriusApiService(): SiriusApiService {
+    fun providesSiriusApiService(): SiriusApiService {
         return SiriusApiService.create()
     }
 
     @Provides
     @Singleton
-    override fun providesSiriusAuthApiService(): SiriusAuthApiService {
+    fun providesSiriusAuthApiService(): SiriusAuthApiService {
         return SiriusAuthApiService.create()
     }
 
     @Provides
     @Singleton
-    override fun providesSharedPreferences(): SharedPreferences {
+    fun providesSharedPreferences(): SharedPreferences {
         return PreferenceManager.getDefaultSharedPreferences(context)
     }
 
     @Provides
     @Singleton
-    override fun providesGoogleAccountCredential(): GoogleAccountCredential {
+    fun providesGoogleAccountCredential(): GoogleAccountCredential {
         val credential = GoogleAccountCredential.usingOAuth2(context, setOf(CalendarScopes.CALENDAR))
         val accountName =
             providesSharedPreferences().getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), null)
@@ -60,7 +60,7 @@ internal class TestAppModule(private val context: Context): AppModule(context) {
 
     @Provides
     @Singleton
-    override fun providesScheduler(): BaseSchedulerProvider {
+    fun providesScheduler(): BaseSchedulerProvider {
         return object: BaseSchedulerProvider {
             override fun io() = Schedulers.trampoline()
 

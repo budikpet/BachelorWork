@@ -5,6 +5,7 @@ import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.net.Uri
 import android.os.Bundle
+import android.preference.PreferenceManager
 import android.provider.CalendarContract
 import android.util.Log
 import com.google.api.client.googleapis.extensions.android.gms.auth.GoogleAccountCredential
@@ -37,7 +38,7 @@ import javax.inject.Singleton
 
 
 @Singleton
-class Repository @Inject constructor(private val context: Context) {
+open class Repository @Inject constructor(private val context: Context, var sharedPreferences: SharedPreferences) {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
     @Inject
@@ -52,8 +53,6 @@ class Repository @Inject constructor(private val context: Context) {
     @Inject
     internal lateinit var credential: GoogleAccountCredential
 
-    @Inject
-    internal lateinit var sharedPreferences: SharedPreferences
 
     /** Username of the CTU account that was used to log in. */
     val ctuUsername by lazy { sharedPreferences.getString(SharedPreferencesKeys.CTU_USERNAME.toString(), "") }
@@ -62,22 +61,23 @@ class Repository @Inject constructor(private val context: Context) {
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     }
 
-    private val calendarService: Calendar
-        get() {
-            if (credential.selectedAccountName != null) {
-                return field
-            } else {
-                throw GoogleAccountNotFoundException()
-            }
-        }
+//    private val calendarService: Calendar
+//        get() {
+//            if (credential.selectedAccountName != null) {
+//                return field
+//            } else {
+//                throw GoogleAccountNotFoundException()
+//            }
+//        }
+    private lateinit var calendarService: Calendar
 
     init {
-        MyApplication.appComponent.inject(this)
-
-        val transport = NetHttpTransport.Builder().build()
-        calendarService = Calendar.Builder(transport, GsonFactory.getDefaultInstance(), setHttpTimeout(credential))
-            .setApplicationName(MyApplication.CALENDARS_NAME)
-            .build()
+//        MyApplication.appComponent.inject(this)
+//
+//        val transport = NetHttpTransport.Builder().build()
+//        calendarService = Calendar.Builder(transport, GsonFactory.getDefaultInstance(), setHttpTimeout(credential))
+//            .setApplicationName(MyApplication.CALENDARS_NAME)
+//            .build()
     }
 
     /**
@@ -418,41 +418,45 @@ class Repository @Inject constructor(private val context: Context) {
     /**
      * Gets a list of calendars used by this application using Android calendar provider.
      */
-    fun getLocalCalendarListItems(): Observable<CalendarListItem> {
-        val eventProjection: Array<String> = arrayOf(
-            CalendarContract.Calendars._ID,
-            CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
-            CalendarContract.Calendars.SYNC_EVENTS
-        )
+//    fun getLocalCalendarListItems(): Observable<CalendarListItem> {
+//        val eventProjection: Array<String> = arrayOf(
+//            CalendarContract.Calendars._ID,
+//            CalendarContract.Calendars.CALENDAR_DISPLAY_NAME,
+//            CalendarContract.Calendars.SYNC_EVENTS
+//        )
+//
+//        val projectionIdIndex = 0
+//        val projectionDisplayNameIndex = 1
+//        val projectionSyncEventsIndex = 2
+//        val projectionOwnerIndex = 3
+//
+//        val accountName = sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), "")
+//
+//        val uri: Uri = CalendarContract.Calendars.CONTENT_URI
+//        val selection =
+//            "(${CalendarContract.Events.CALENDAR_DISPLAY_NAME} LIKE ?) AND (${CalendarContract.Events.ACCOUNT_NAME} = ?)"
+//        val selectionArgs: Array<String> = arrayOf("%_${MyApplication.CALENDARS_NAME}%", accountName)
+//
+//        return Observable.create { emitter ->
+//            val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
+//            Log.i(TAG, "Found ${cursor.count} used calendars.")
+//
+//            // Use the cursor to step through the returned records
+//            while (cursor.moveToNext()) {
+//                // Get the field values
+//                val displayName = cursor.getString(projectionDisplayNameIndex)
+//                val id = cursor.getLong(projectionIdIndex)
+//                val syncEvents = cursor.getInt(projectionSyncEventsIndex) == 1
+//
+//                emitter.onNext(CalendarListItem(id, displayName, syncEvents))
+//            }
+//            cursor.close()
+//            emitter.onComplete()
+//        }
+//    }
 
-        val projectionIdIndex = 0
-        val projectionDisplayNameIndex = 1
-        val projectionSyncEventsIndex = 2
-        val projectionOwnerIndex = 3
-
-        val accountName = sharedPreferences.getString(SharedPreferencesKeys.GOOGLE_ACCOUNT_NAME.toString(), "")
-
-        val uri: Uri = CalendarContract.Calendars.CONTENT_URI
-        val selection =
-            "(${CalendarContract.Events.CALENDAR_DISPLAY_NAME} LIKE ?) AND (${CalendarContract.Events.ACCOUNT_NAME} = ?)"
-        val selectionArgs: Array<String> = arrayOf("%_${MyApplication.CALENDARS_NAME}%", accountName)
-
-        return Observable.create { emitter ->
-            val cursor = context.contentResolver.query(uri, eventProjection, selection, selectionArgs, null)
-            Log.i(TAG, "Found ${cursor.count} used calendars.")
-
-            // Use the cursor to step through the returned records
-            while (cursor.moveToNext()) {
-                // Get the field values
-                val displayName = cursor.getString(projectionDisplayNameIndex)
-                val id = cursor.getLong(projectionIdIndex)
-                val syncEvents = cursor.getInt(projectionSyncEventsIndex) == 1
-
-                emitter.onNext(CalendarListItem(id, displayName, syncEvents))
-            }
-            cursor.close()
-            emitter.onComplete()
-        }
+    open fun getLocalCalendarListItems(): Observable<CalendarListItem> {
+        return Observable.empty()
     }
 
     fun getLocalCalendarListItem(siriusUsername: String): Single<CalendarListItem> {
@@ -481,7 +485,7 @@ class Repository @Inject constructor(private val context: Context) {
      *
      * @param calId id of the calendar we get events from. Received from a list of calendars using Android Calendar provider.
      */
-    fun getCalendarEvents(
+    open fun getCalendarEvents(
         calId: Long,
         dateStart: DateTime,
         dateEnd: DateTime
