@@ -9,10 +9,10 @@ data class Event(
     val starts_at: Date,
     val ends_at: Date,
     val deleted: Boolean = false,
-    val capacity: Int,
+    val capacity: Int = 0,
     val occupied: Int = 0,
-    val event_type: EventType,
-    val original_data: OriginalData,
+    val event_type: EventType = EventType.OTHER,
+    val original_data: OriginalData = OriginalData(null, null, null),
     val links: Links
 )
 
@@ -24,7 +24,7 @@ data class OriginalData(
 )
 
 data class Links(
-    val room: String,
+    val room: String? = null,
     val course: String,
     val teachers: ArrayList<String>,
     val students: ArrayList<String>? = null

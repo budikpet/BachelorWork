@@ -4,6 +4,7 @@ import cz.budikpet.bachelorwork.data.enums.EventType
 import cz.budikpet.bachelorwork.data.models.EventsResult
 import cz.budikpet.bachelorwork.data.models.SearchResult
 import io.reactivex.Observable
+import io.reactivex.Single
 import retrofit2.Retrofit
 import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import retrofit2.converter.gson.GsonConverterFactory
@@ -31,7 +32,7 @@ interface SiriusApiService {
         @Query("from") from: String? = null,        // ex. 2018-3-13
         @Query("to") to: String? = null,
         @Query("with_original_date") withOriginalDate: Boolean = false
-    ): Observable<EventsResult>
+    ): Single<EventsResult>
 
     /**
      * Get events of a specific person.
@@ -48,7 +49,7 @@ interface SiriusApiService {
         @Query("from") from: String? = null,        // ex. 2018-3-13
         @Query("to") to: String? = null,
         @Query("with_original_date") withOriginalDate: Boolean = false
-    ): Observable<EventsResult>
+    ): Single<EventsResult>
 
     /**
      * Get events of a specific room.
@@ -65,7 +66,7 @@ interface SiriusApiService {
         @Query("from") from: String? = null,        // ex. 2018-3-13
         @Query("to") to: String? = null,
         @Query("with_original_date") withOriginalDate: Boolean = false
-    ): Observable<EventsResult>
+    ): Single<EventsResult>
 
     /**
      * Get events of a specific course.
@@ -82,7 +83,7 @@ interface SiriusApiService {
         @Query("from") from: String? = null,        // ex. 2018-3-13
         @Query("to") to: String? = null,
         @Query("with_original_date") withOriginalDate: Boolean = false
-    ): Observable<EventsResult>
+    ): Single<EventsResult>
 
     /**
      * Get results of a search from a query.
@@ -95,7 +96,7 @@ interface SiriusApiService {
         @Query("limit") limit: Int? = 20,    // <1; 1000>
         @Query("offset") offset: Int? = 0,
         @Query("q") query: String
-    ): Observable<SearchResult>
+    ): Single<SearchResult>
 
     companion object {
         fun create(): SiriusApiService {

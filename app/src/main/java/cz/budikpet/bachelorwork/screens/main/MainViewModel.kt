@@ -380,7 +380,6 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
                     loadedEventsInterval.end
                 )
             }
-            .flatMap { Observable.fromIterable(it.events) }
             .map { event -> TimetableEvent.from(event) }
             .toList()
             .toObservable()
@@ -562,8 +561,6 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
                     loadedEventsInterval.start,
                     loadedEventsInterval.end
                 )
-                    .flatMap { Observable.fromIterable(it.events) }
-                    .filter { !it.deleted }
                     .map { event -> TimetableEvent.from(event) }
             )
             .toList()
@@ -757,7 +754,6 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
                 }
 
                 return@flatMap repository.getSiriusEventsOf(it.type, it.id, weekStart, weekEnd)
-                    .flatMap { Observable.fromIterable(it.events) }
                     .map { TimetableEvent.from(it) }
                     .onErrorReturn { TimetableEvent(starts_at = weekStart.minusDays(2)) }
             }

@@ -167,7 +167,7 @@ open class Repository @Inject constructor(private val context: Context, var shar
             .observeOn(Schedulers.io())
             .flatMap { accessToken ->
                 siriusApiService.search(accessToken, query = query)
-                    .flatMap { searchResult ->
+                    .flatMapObservable { searchResult ->
                         Observable.fromIterable(searchResult.results)
                     }
             }
@@ -187,18 +187,19 @@ open class Repository @Inject constructor(private val context: Context, var shar
         id: String,
         dateStart: DateTime,
         dateEnd: DateTime
-    ): Observable<EventsResult> {
+    ): Observable<Event> {
         return hasInternetConnection()
             .flatMap { appAuthManager.getFreshAccessToken() }
             .subscribeOn(Schedulers.io())
             .observeOn(Schedulers.io()) // Observe the refreshAccessToken operation on a non-main thread.
-            .flatMapObservable { accessToken ->
+            .flatMap { accessToken ->
                 getSiriusEventsOf(itemType, id, accessToken, dateStart, dateEnd)
             }
             .retry { count, error ->
                 Log.w(TAG, "GetSiriusEventsOf retries: $count. Error: $error")
                 return@retry count < 21 && !isSpecialError(error)
             }
+            .flatMapObservable { Observable.fromIterable(it.events) }
             .onErrorResumeNext { error: Throwable ->
                 if(error is HttpException && error.code() == 403) {
                     // We are probably trying to Sirius update a timetable of another student
@@ -210,7 +211,7 @@ open class Repository @Inject constructor(private val context: Context, var shar
                                 Observable.empty()
                             } else {
                                 // This students timetable isn't shared, error
-                                Observable.error<EventsResult>(error)
+                                Observable.error<Event>(error)
                             }
                         }
                 } else {
@@ -233,7 +234,7 @@ open class Repository @Inject constructor(private val context: Context, var shar
         accessToken: String,
         dateStart: DateTime,
         dateEnd: DateTime
-    ): Observable<EventsResult> {
+    ): Single<EventsResult> {
         val dateString = dateStart.toString("YYYY-MM-dd")
 
         val endDateString = dateEnd.toString("YYYY-MM-dd")
@@ -258,7 +259,7 @@ open class Repository @Inject constructor(private val context: Context, var shar
             )
             ItemType.UNKNOWN -> {
                 Log.e(TAG, "getSiriusEventsOf: ItemType.Unknown")
-                Observable.empty()
+                Single.never<EventsResult>()
             }
         }
     }

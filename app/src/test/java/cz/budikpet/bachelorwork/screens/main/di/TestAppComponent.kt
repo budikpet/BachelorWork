@@ -1,8 +1,5 @@
 package cz.budikpet.bachelorwork.screens.main.di
 
-import cz.budikpet.bachelorwork.di.AppComponent
-import cz.budikpet.bachelorwork.screens.main.MainViewModel
-import cz.budikpet.bachelorwork.screens.main.MainViewModelTest
 import dagger.Component
 import javax.inject.Singleton
 
