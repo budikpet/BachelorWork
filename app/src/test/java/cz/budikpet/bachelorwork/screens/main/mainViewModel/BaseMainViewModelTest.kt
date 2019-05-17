@@ -47,7 +47,7 @@ open class BaseMainViewModelTest {
 
     @Before
     open fun initTest() {
-        MockitoAnnotations.initMocks(this);
+        MockitoAnnotations.initMocks(this)
         viewModel.timetableOwner.value = Pair(username, ItemType.PERSON)
         viewModel.operationsRunning.value = 0
     }

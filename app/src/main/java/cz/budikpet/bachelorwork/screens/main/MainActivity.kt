@@ -398,7 +398,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         AlertDialog.Builder(this)
             .setView(shareDialogView)
             .setPositiveButton(getString(R.string.alertDialog_share)) { dialog, id ->
-                viewModel.sharePersonalTimetable(emailEditText.text.toString())
+                viewModel.shareTimetable(emailEditText.text.toString())
             }
             .setNegativeButton(getString(R.string.alertDialog_quit)) { _, _ -> }
             .show()

@@ -51,7 +51,7 @@ class EmailListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
 
                         if (adapter != null && deletedEmail != null) {
                             // Remove the calendar from the Google Calendar service
-                            viewModel.unsharePersonalTimetable(deletedEmail)
+                            viewModel.unshareTimetable(deletedEmail)
                         }
                     }
                 }
@@ -108,7 +108,7 @@ class EmailListFragment : Fragment(), CalendarsListSwipeDelete.Callback {
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when(item?.itemId) {
             R.id.emailsSync -> {
-                viewModel.updateSharedEmails()
+                viewModel.updateSharedEmails(viewModel.ctuUsername)
                 return true
             }
         }

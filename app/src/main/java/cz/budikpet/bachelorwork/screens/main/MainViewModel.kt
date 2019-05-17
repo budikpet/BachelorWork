@@ -319,7 +319,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
 
                 loadEvents()
                 updateSavedTimetables()
-                updateSharedEmails()
+                updateSharedEmails(ctuUsername)
 
                 // Refresh Google Calendar without waiting
                 repository.startCalendarRefresh()
@@ -644,7 +644,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
         compositeDisposable.add(disposable)
     }
 
-    fun sharePersonalTimetable(email: String) {
+    fun shareTimetable(email: String, username: String = ctuUsername) {
         operationsRunning.value = operationsRunning.value!! + 1
         val disposable = repository.sharePersonalCalendar(email)
             .subscribeOn(schedulerProvider.io())
@@ -658,19 +658,18 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
                     Log.i(TAG, "CalendarShared, ACL: $result")
                     showMessage.postValue(PassableStringResource(R.string.message_CalendarShared))
                     operationsRunning.value = operationsRunning.value!! - 1
-                    updateSharedEmails()
+                    updateSharedEmails(username)
                 },
                 { exception ->
-                    Log.e(TAG, "sharePersonalTimetable: $exception")
+                    Log.e(TAG, "shareTimetable: $exception")
                     handleException(exception)
                     operationsRunning.value = operationsRunning.value!! - 1
-                    updateSharedEmails()
                 })
 
         compositeDisposable.add(disposable)
     }
 
-    fun unsharePersonalTimetable(email: String) {
+    fun unshareTimetable(email: String, username: String = ctuUsername) {
         operationsRunning.value = operationsRunning.value!! + 1
         val disposable = repository.unsharePersonalCalendar(email)
             .subscribeOn(schedulerProvider.io())
@@ -688,14 +687,14 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
                 Log.i(TAG, "Calendar unshared successfully.")
                 showMessage.postValue(PassableStringResource(R.string.message_CalendarUnshared))
                 operationsRunning.value = operationsRunning.value!! - 1
-                updateSharedEmails()
+                updateSharedEmails(username)
             }
 
         compositeDisposable.add(disposable)
     }
 
-    fun updateSharedEmails() {
-        val disposable = repository.getEmails(calendarNameFromId(ctuUsername))
+    fun updateSharedEmails(username: String) {
+        val disposable = repository.getEmails(calendarNameFromId(username))
             .toList()
             .subscribeOn(schedulerProvider.io())
             .observeOn(schedulerProvider.ui())
