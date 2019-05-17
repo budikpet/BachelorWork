@@ -22,7 +22,6 @@ import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import cz.budikpet.bachelorwork.util.schedulers.BaseSchedulerProvider
 import io.reactivex.Completable
 import io.reactivex.Observable
-import io.reactivex.Single
 import io.reactivex.disposables.CompositeDisposable
 import io.reactivex.functions.BiFunction
 import net.openid.appauth.AuthorizationException
@@ -33,7 +32,7 @@ import java.net.SocketTimeoutException
 import javax.inject.Inject
 
 
-open class MainViewModel @Inject constructor(var repository: Repository, var schedulerProvider: BaseSchedulerProvider) :
+class MainViewModel @Inject constructor(var repository: Repository, var schedulerProvider: BaseSchedulerProvider) :
     ViewModel() {
     private val TAG = "MY_${this.javaClass.simpleName}"
 
@@ -141,11 +140,11 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
      * Checks whether the device has internet connection. WiFi and/or Cellular if enabled.
      * @return true if the device is connected to the internet.
      */
-    open fun isInternetAvailable(): Boolean {
+    fun isInternetAvailable(): Boolean {
         return repository.isInternetAvailable()
     }
 
-    open fun goToLastMultidayView() {
+    fun goToLastMultidayView() {
         val id = when (daysPerMultidayViewFragment) {
             1 -> R.id.sidebarDayView
             3 -> R.id.sidebarThreeDayView
@@ -159,7 +158,7 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
         return isInternetAvailable() || (savedTimetables != null && savedTimetables.contains(searchItem))
     }
 
-    open fun canEditTimetable(): Boolean {
+    fun canEditTimetable(): Boolean {
         return timetableOwner.value!!.first == ctuUsername && selectedSidebarItem.value != R.id.sidebarFreeTime
     }
 
@@ -198,7 +197,7 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
         compositeDisposable.add(disposable)
     }
 
-    open fun ctuLogOut() {
+    fun ctuLogOut() {
         repository.signOut()
         ctuSignedOut.postValue(true)
     }
@@ -233,7 +232,7 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
     /**
      * The application has all permissions, is signed into Google and CTU accounts.
      */
-    open fun ready(forceUpdate: Boolean = false) {
+    fun ready(forceUpdate: Boolean = false) {
         val currOwner = timetableOwner.value
         operationsRunning.value = 0
 
@@ -454,7 +453,7 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
     /**
      * @return true if the currently loaded events in [MainViewModel.events] have already been updated.
      */
-    open fun areLoadedEventsUpdated(): Boolean {
+    fun areLoadedEventsUpdated(): Boolean {
         val updatedEventsInterval = this.updatedEventsInterval
         return updatedEventsInterval != null && updatedEventsInterval.isEqual(loadedEventsInterval)
     }
@@ -695,7 +694,7 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
         compositeDisposable.add(disposable)
     }
 
-    open fun updateSharedEmails() {
+    fun updateSharedEmails() {
         val disposable = repository.getEmails(calendarNameFromId(ctuUsername))
             .toList()
             .subscribeOn(schedulerProvider.io())
@@ -741,21 +740,7 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
         operationsRunning.value = operationsRunning.value!! + 1
         val disposable = Observable.fromIterable(timetables)
             .flatMap {
-                val savedTimetables = savedTimetables.value
-                if (savedTimetables != null) {
-                    if (savedTimetables.contains(it)) {
-                        // Timetable is available in a calendar
-                        return@flatMap repository.getLocalCalendarListItem(it.id)
-                            .flatMapObservable { calendarItem ->
-                                repository.getCalendarEvents(calendarItem.id, weekStart, weekEnd)
-                                    .filter { !it.deleted }
-                            }
-                    }
-                }
-
-                return@flatMap repository.getSiriusEventsOf(it.type, it.id, weekStart, weekEnd)
-                    .map { TimetableEvent.from(it) }
-                    .onErrorReturn { TimetableEvent(starts_at = weekStart.minusDays(2)) }
+                getCalendarOrSiriusTimetableEvents(it, weekStart, weekEnd)
             }
             .map { Pair(it.starts_at, it.ends_at) }
             .observeOn(schedulerProvider.computation())
@@ -770,27 +755,8 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
             }
             .doOnComplete {
                 Log.i(TAG, "$rangeSet")
-
-                val events = arrayListOf<TimetableEvent>()
-                for (range in rangeSet.asRanges()) {
-                    val startsAt = range.lowerEndpoint()
-                    val endsAt = range.upperEndpoint()
-                    val hours = Hours.hoursBetween(startsAt, endsAt).hours
-                    val minutes = Minutes.minutesBetween(startsAt, endsAt).minutes
-
-                    var acronym = ""
-                    if (minutes % 60 != 0) {
-                        acronym = "${minutes % 60} m"
-                    }
-                    if (hours > 0) {
-                        acronym = "$hours h $acronym"
-                    }
-
-                    val event = TimetableEvent(starts_at = startsAt, ends_at = endsAt, acronym = acronym)
-                    events.add(event)
-                }
-
-                freeTimeEvents.postValue(events)
+                setFreeTimeEvents(rangeSet)
+                operationsRunning.value = operationsRunning.value!! - 1
             }
             .subscribeOn(schedulerProvider.io())
             .observeOn(schedulerProvider.ui())
@@ -799,9 +765,7 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
                 operationsRunning.value = operationsRunning.value!! - 1
             }
             .subscribe(
-                {
-                    operationsRunning.value = operationsRunning.value!! - 1
-                },
+                {},
                 { exception ->
                     Log.e(TAG, "getFreeTimeEvents: $exception")
                     handleException(exception)
@@ -809,6 +773,51 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
                 })
 
         compositeDisposable.add(disposable)
+    }
+
+    private fun getCalendarOrSiriusTimetableEvents(
+        searchItem: SearchItem,
+        weekStart: DateTime,
+        weekEnd: DateTime
+    ): Observable<TimetableEvent> {
+        val savedTimetables = savedTimetables.value
+        if (savedTimetables != null) {
+            if (savedTimetables.contains(searchItem)) {
+                // Timetable is available in a calendar
+                return repository.getLocalCalendarListItem(searchItem.id)
+                    .flatMapObservable { calendarItem ->
+                        repository.getCalendarEvents(calendarItem.id, weekStart, weekEnd)
+                            .filter { !it.deleted }
+                    }
+            }
+        }
+
+        return repository.getSiriusEventsOf(searchItem.type, searchItem.id, weekStart, weekEnd)
+            .map { TimetableEvent.from(it) }
+            .onErrorReturn { TimetableEvent(starts_at = weekStart.minusDays(2)) }
+    }
+
+    private fun setFreeTimeEvents(rangeSet: TreeRangeSet<DateTime>) {
+        val events = arrayListOf<TimetableEvent>()
+        for (range in rangeSet.asRanges()) {
+            val startsAt = range.lowerEndpoint()
+            val endsAt = range.upperEndpoint()
+            val hours = Hours.hoursBetween(startsAt, endsAt).hours
+            val minutes = Minutes.minutesBetween(startsAt, endsAt).minutes
+
+            var acronym = ""
+            if (minutes % 60 != 0) {
+                acronym = "${minutes % 60} m"
+            }
+            if (hours > 0) {
+                acronym = "$hours h $acronym"
+            }
+
+            val event = TimetableEvent(starts_at = startsAt, ends_at = endsAt, acronym = acronym)
+            events.add(event)
+        }
+
+        freeTimeEvents.postValue(events)
     }
 
 

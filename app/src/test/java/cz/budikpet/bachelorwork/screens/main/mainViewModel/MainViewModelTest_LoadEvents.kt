@@ -8,11 +8,14 @@ import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
-import cz.budikpet.bachelorwork.screens.main.mock
+import cz.budikpet.bachelorwork.screens.main.util.mock
+import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import cz.budikpet.bachelorwork.util.schedulers.BaseSchedulerProvider
 import io.reactivex.Observable
+import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
 import org.joda.time.DateTime
+import org.junit.After
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -20,40 +23,19 @@ import org.mockito.InjectMocks
 import org.mockito.MockitoAnnotations
 
 
-internal class MainViewModelTest {
-    @Rule
-    @JvmField
-    val rule = InstantTaskExecutorRule()
-
-    @InjectMocks
-    val repository = mock<Repository>()
+internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
 
     val testObserver = mock<Observer<List<TimetableEvent>>>()
 
-    val viewModel by lazy {
-        val schedulersProvider = object : BaseSchedulerProvider {
-            override fun io() = Schedulers.trampoline()
-
-            override fun computation() = Schedulers.trampoline()
-
-            override fun ui() = Schedulers.trampoline()
-        }
-
-        MainViewModel(repository, schedulersProvider)
-    }
-
-    val username = "budikpet"
-
     @Before
-    fun initTest() {
-        MockitoAnnotations.initMocks(this);
+    override fun initTest() {
+        super.initTest()
         reset(testObserver)
-        viewModel.timetableOwner.value = Pair(username, ItemType.PERSON)
-        viewModel.operationsRunning.value = 0
     }
 
     @Test
     fun loadEvents_loadFromCalendar() {
+        // Data
         val start = DateTime().minusDays(1)
         val end = DateTime().plusDays(2)
 
@@ -70,10 +52,11 @@ internal class MainViewModelTest {
             TimetableEvent(fullName = "TestEvent4", starts_at = start, ends_at = end, deleted = true)
         )
 
+        // Stubs
         whenever(repository.getLocalCalendarListItems())
             .thenReturn(Observable.fromIterable(calendars))
 
-        whenever(repository.getCalendarEvents(eq(11L), any(), any()))
+        whenever(repository.getCalendarEvents(any(), any(), any()))
             .thenReturn(Observable.fromIterable(result))
 
         whenever(repository.getSiriusEventsOf(any(), any(), any(), any()))
@@ -82,10 +65,12 @@ internal class MainViewModelTest {
         viewModel.events.observeForever(testObserver)
         viewModel.loadEvents(start.plusDays(1))
 
+        // Asserts
         assert(viewModel.events.value != null)
         assert(viewModel.events.value!!.count() == result.count())
         assert(viewModel.events.value!!.any { it.deleted })
         assert(viewModel.events.value!! == result)
+        assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
         assert(viewModel.operationsRunning.value!! == 0)
@@ -95,6 +80,7 @@ internal class MainViewModelTest {
 
     @Test
     fun loadEvents_loadFromSirius() {
+        // Data
         val start = DateTime().minusDays(1)
         val end = DateTime().plusDays(2)
 
@@ -128,10 +114,12 @@ internal class MainViewModelTest {
             TimetableEvent.from(siriusEvents[1])
         )
 
+        // Stubs
+
         whenever(repository.getLocalCalendarListItems())
             .thenReturn(Observable.fromIterable(calendars))
 
-        whenever(repository.getCalendarEvents(eq(11L), any(), any()))
+        whenever(repository.getCalendarEvents(any(), any(), any()))
             .thenReturn(Observable.fromIterable(result))
 
         whenever(repository.getSiriusEventsOf(any(), any(), any(), any()))
@@ -140,18 +128,52 @@ internal class MainViewModelTest {
         viewModel.events.observeForever(testObserver)
         viewModel.loadEvents(start.plusDays(1))
 
+        // Asserts
+
         assert(viewModel.events.value != null)
         assert(viewModel.events.value!!.count() == result.count())
         assert(viewModel.events.value!!.any { it.deleted })
         assert(viewModel.events.value!! == result)
+        assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
         assert(viewModel.operationsRunning.value!! == 0)
-
-        verify(repository, times(2)).getSiriusEventsOf(any(), any(), any(), any())
+        assert(viewModel.compositeDisposable.size() > 0)
     }
 
-    private fun dummyEventsResult(events: List<Event>): EventsResult {
-        return EventsResult(Meta(10, 0, 100), events)
+    @Test
+    fun loadEvents_error() {
+        // Data
+        val start = DateTime().minusDays(1)
+        val end = DateTime().plusDays(2)
+
+        val calendars = listOf(
+            CalendarListItem(12L, MyApplication.calendarNameFromId("${username}_test"), true),
+            CalendarListItem(13L, MyApplication.calendarNameFromId("balikm"), true)
+        )
+
+        // Stubs
+
+        whenever(repository.getLocalCalendarListItems())
+            .thenReturn(Observable.fromIterable(calendars))
+
+        whenever(repository.getCalendarEvents(any(), any(), any()))
+            .thenReturn(Observable.error(NoInternetConnectionException()))
+
+        whenever(repository.getSiriusEventsOf(any(), any(), any(), any()))
+            .thenReturn(Observable.error(NoInternetConnectionException()))
+
+        viewModel.events.observeForever(testObserver)
+        viewModel.loadEvents(start.plusDays(1))
+
+        // Asserts
+
+        assert(viewModel.events.value == null)
+        assert(viewModel.thrownException.value != null)
+
+        assert(viewModel.operationsRunning.value != null)
+        assert(viewModel.operationsRunning.value!! == 0)
+        assert(viewModel.compositeDisposable.size() > 0)
     }
+
 }

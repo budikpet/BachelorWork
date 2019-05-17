@@ -1,4 +1,4 @@
-package cz.budikpet.bachelorwork.screens.main
+package cz.budikpet.bachelorwork.screens.main.util
 
 import org.mockito.Mockito
 
