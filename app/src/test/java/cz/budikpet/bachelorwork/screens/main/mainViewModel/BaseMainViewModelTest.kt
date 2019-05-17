@@ -54,7 +54,7 @@ open class BaseMainViewModelTest {
 
     @After
     fun clear() {
-//        assert(viewModel.compositeDisposable.size() > 0)
+        assert(viewModel.compositeDisposable.size() > 0)
         viewModel.onDestroy()
         assert(viewModel.compositeDisposable.size() <= 0)
     }

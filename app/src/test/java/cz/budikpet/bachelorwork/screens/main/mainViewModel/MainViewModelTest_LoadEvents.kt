@@ -74,8 +74,6 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
 
         assert(viewModel.operationsRunning.value != null)
         assert(viewModel.operationsRunning.value!! == 0)
-
-        verify(repository, times(1)).getSiriusEventsOf(any(), any(), any(), any())
     }
 
     @Test
@@ -138,7 +136,6 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
 
         assert(viewModel.operationsRunning.value != null)
         assert(viewModel.operationsRunning.value!! == 0)
-        assert(viewModel.compositeDisposable.size() > 0)
     }
 
     @Test
@@ -173,7 +170,6 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
 
         assert(viewModel.operationsRunning.value != null)
         assert(viewModel.operationsRunning.value!! == 0)
-        assert(viewModel.compositeDisposable.size() > 0)
     }
 
 }
