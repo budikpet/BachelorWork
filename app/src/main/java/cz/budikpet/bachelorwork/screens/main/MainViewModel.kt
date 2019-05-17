@@ -589,42 +589,6 @@ open class MainViewModel @Inject constructor(var repository: Repository, var sch
         compositeDisposable.add(disposable)
     }
 
-    /*
-    fun loadEvents(middleDate: DateTime = currentlySelectedDate) {
-        val pair = timetableOwner.value
-
-        if (pair == null) {
-            Log.e(TAG, "Timetable owner not specified.")
-            return
-        }
-
-        loadedEventsInterval = withMiddleDate(middleDate)
-
-        operationsRunning.value = operationsRunning.value!! + 1
-        val disposable = repository.getLocalCalendarListItems()
-            .flatMapSingle { Single.just(arrayListOf<TimetableEvent>()) }
-            .subscribeOn(schedulerProvider.io())
-            .observeOn(schedulerProvider.ui())
-            .doOnDispose {
-                Log.i(TAG, "Dispose")
-                operationsRunning.value = operationsRunning.value!! - 1
-            }
-            .subscribe(
-                { events ->
-                    this.events.postValue(events)
-                    operationsRunning.value = operationsRunning.value!! - 1
-                },
-                { exception ->
-                    Log.e(TAG, "LoadEvents error: $exception")
-                    !checkNotFound(exception)
-                    handleException(exception)
-                    operationsRunning.value = operationsRunning.value!! - 1
-                }
-            )
-
-        compositeDisposable.add(disposable)
-    }
-*/
     private fun checkNotFound(error: Throwable): Boolean {
         if (error is HttpException && error.code() == 404) {
             // Calendar not found, go back
