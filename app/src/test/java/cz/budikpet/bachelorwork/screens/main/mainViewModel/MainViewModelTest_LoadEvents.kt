@@ -8,6 +8,7 @@ import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
+import cz.budikpet.bachelorwork.screens.main.util.listsEqual
 import cz.budikpet.bachelorwork.screens.main.util.mock
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import cz.budikpet.bachelorwork.util.schedulers.BaseSchedulerProvider
@@ -45,7 +46,7 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
             CalendarListItem(13L, MyApplication.calendarNameFromId("balikm"), true)
         )
 
-        val result = listOf(
+        val result = arrayListOf(
             TimetableEvent(siriusId = 5, fullName = "TestEvent1", starts_at = start, ends_at = end),
             TimetableEvent(siriusId = 6, fullName = "TestEvent2", starts_at = start, ends_at = end),
             TimetableEvent(fullName = "TestEvent3", starts_at = start, ends_at = end),
@@ -69,7 +70,7 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
         assert(viewModel.events.value != null)
         assert(viewModel.events.value!!.count() == result.count())
         assert(viewModel.events.value!!.any { it.deleted })
-        assert(viewModel.events.value!! == result)
+        assert(listsEqual(viewModel.events.value!!, result))
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
@@ -107,7 +108,7 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
             )
 
 
-        val result = listOf(
+        val result = arrayListOf(
             TimetableEvent.from(siriusEvents[0]),
             TimetableEvent.from(siriusEvents[1])
         )
@@ -131,7 +132,7 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
         assert(viewModel.events.value != null)
         assert(viewModel.events.value!!.count() == result.count())
         assert(viewModel.events.value!!.any { it.deleted })
-        assert(viewModel.events.value!! == result)
+        assert(listsEqual(viewModel.events.value!!, result))
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)

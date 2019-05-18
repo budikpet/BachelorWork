@@ -77,6 +77,10 @@ data class TimetableEvent(
         return deepEvent
     }
 
+    fun fullEqual(other: TimetableEvent): Boolean {
+        return this == other && googleId == other.googleId && teachersNames == other.teachersNames && note == other.note && changed == other.changed
+    }
+
     companion object {
         fun from(event: Event): TimetableEvent {
             val room = when {

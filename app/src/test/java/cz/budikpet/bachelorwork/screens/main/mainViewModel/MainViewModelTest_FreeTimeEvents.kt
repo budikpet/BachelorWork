@@ -10,6 +10,7 @@ import com.nhaarman.mockitokotlin2.whenever
 import cz.budikpet.bachelorwork.MyApplication
 import cz.budikpet.bachelorwork.data.enums.ItemType
 import cz.budikpet.bachelorwork.data.models.*
+import cz.budikpet.bachelorwork.screens.main.util.listsEqual
 import cz.budikpet.bachelorwork.screens.main.util.mock
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import io.reactivex.Observable
@@ -117,7 +118,7 @@ internal class MainViewModelTest_FreeTimeEvents : BaseMainViewModelTest() {
         // Asserts
 
         assert(viewModel.freeTimeEvents.value != null)
-        assert(viewModel.freeTimeEvents.value!! == result)
+        assert(listsEqual(viewModel.freeTimeEvents.value!!, result))
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
@@ -168,7 +169,7 @@ internal class MainViewModelTest_FreeTimeEvents : BaseMainViewModelTest() {
         // Asserts
 
         assert(viewModel.freeTimeEvents.value != null)
-        assert(viewModel.freeTimeEvents.value!! == result)
+        assert(listsEqual(viewModel.freeTimeEvents.value!!, result))
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
@@ -199,7 +200,7 @@ internal class MainViewModelTest_FreeTimeEvents : BaseMainViewModelTest() {
         // Asserts
 
         assert(viewModel.freeTimeEvents.value != null)
-        assert(viewModel.freeTimeEvents.value!! == result)
+        assert(listsEqual(viewModel.freeTimeEvents.value!!, result))
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)

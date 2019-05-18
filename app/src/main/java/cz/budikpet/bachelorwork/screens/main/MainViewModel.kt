@@ -595,7 +595,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
         return false
     }
 
-    fun addCalendarEvent(timetableEvent: TimetableEvent) {
+    fun addOrUpdateCalendarEvent(timetableEvent: TimetableEvent) {
         val disposable = repository.getLocalCalendarListItems()
             .filter { it.displayName == calendarNameFromId(timetableOwner.value!!.first) }
             .flatMapSingle {
@@ -608,7 +608,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
             .observeOn(schedulerProvider.ui())
             .subscribe(
                 { result ->
-                    Log.i(TAG, "addCalendarEvent")
+                    Log.i(TAG, "addOrUpdateCalendarEvent")
 
                     if (selectedEvent.value != null) {
                         selectedEvent.postValue(timetableEvent)
@@ -619,7 +619,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
                     loadEvents()
                 },
                 { exception ->
-                    Log.e(TAG, "addCalendarEvent: $exception")
+                    Log.e(TAG, "addOrUpdateCalendarEvent: $exception")
                     handleException(exception)
                 })
 
