@@ -16,6 +16,7 @@ import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.joda.time.*
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
@@ -30,7 +31,13 @@ internal class MainViewModelTest_FreeTimeEvents : BaseMainViewModelTest() {
     private lateinit var start: DateTime
     private lateinit var end: DateTime
 
-    val testObserver = mock<Observer<List<TimetableEvent>>>()
+    private val testObserver = mock<Observer<List<TimetableEvent>>>()
+
+    @After
+    override fun clear() {
+        assert(viewModel.compositeDisposable.size() > 0)
+        super.clear()
+    }
 
     @Before
     override fun initTest() {

@@ -56,7 +56,7 @@ open class Repository @Inject constructor(private val context: Context, var shar
 
 
     /** Username of the CTU account that was used to log in. */
-    val ctuUsername by lazy { sharedPreferences.getString(SharedPreferencesKeys.CTU_USERNAME.toString(), "") }
+    open val ctuUsername by lazy { sharedPreferences.getString(SharedPreferencesKeys.CTU_USERNAME.toString(), "") }
 
     private val connectivityManager by lazy {
         context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
@@ -464,7 +464,7 @@ open class Repository @Inject constructor(private val context: Context, var shar
     /**
      * Updates an event in a calendar using Android calendar provider.
      */
-    open fun updateLocalCalendarList(calendarListItem: CalendarListItem): Single<Int> {
+    open fun updateLocalCalendarListItem(calendarListItem: CalendarListItem): Single<Int> {
 
         val values = ContentValues().apply {
             put(CalendarContract.Calendars.SYNC_EVENTS, calendarListItem.syncEvents)

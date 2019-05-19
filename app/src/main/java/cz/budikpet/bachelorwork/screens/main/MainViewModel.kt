@@ -252,6 +252,37 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
      * @param username if a username is provided then only its calendar is updated and loaded
      */
     fun updateCalendars(username: String? = null) {
+        val disposable = updateCalendarsCompletable(username)
+            .subscribe {
+                Log.i(TAG, "Update done")
+                operationsRunning.value = operationsRunning.value!! - 1
+                if (username != null) {
+                    showMessage.postValue(PassableStringResource(R.string.message_TimetableUpdated, listOf(username)))
+                } else {
+                    showMessage.postValue(PassableStringResource(R.string.message_TimetablesUpdated))
+                }
+
+                loadEvents()
+                updateSavedTimetables()
+                updateSharedEmails(ctuUsername)
+
+                // Refresh Google Calendar without waiting
+                repository.startCalendarRefresh()
+            }
+
+        compositeDisposable.add(disposable)
+    }
+
+    /**
+     * Updates one or all calendars used by the application with data from Sirius API.
+     *
+     * Uses [MainViewModel.loadedEventsInterval]. Events that are chronologically in the [MainViewModel.loadedEventsInterval]
+     * are the only ones updated and loaded.
+     *
+     * @param username if a username is provided then only its calendar is updated and loaded
+     * @return a completable which does those functions
+     */
+    fun updateCalendarsCompletable(username: String? = null): Completable {
         val calendarName = when {
             username != null -> calendarNameFromId(username)
             else -> null
@@ -263,21 +294,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
         operationsRunning.value = operationsRunning.value!! + 1
         compositeDisposable.clear()
 
-        val disposable = repository.getGoogleCalendarList()
-            .toList()
-            .flatMapCompletable {
-                // Check if personal calendar exists and unhide hidden calendars in Google Calendar service
-                checkGoogleCalendars(it)
-                    .observeOn(schedulerProvider.computation())
-                    .andThen(repository.getLocalCalendarListItems())
-                    .filter { !it.syncEvents }
-                    .map { it.with(syncEvents = true) }
-                    .flatMapCompletable {
-                        // Ensure that all used calendars sync Google Calendar service
-                        repository.updateLocalCalendarList(it).ignoreElement()
-                    }
-            }
-            .andThen(repository.refreshCalendars())
+        return prepareLocalCalendarsForUpdate()
             .andThen(repository.getLocalCalendarListItems())
             .filter { username == null || it.displayName == calendarName }  // If username is null, update all
             .observeOn(schedulerProvider.io())
@@ -308,24 +325,37 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
                 handleException(exception)
                 return@onErrorComplete true
             }
-            .subscribe {
-                Log.i(TAG, "Update done")
-                operationsRunning.value = operationsRunning.value!! - 1
-                if (username != null) {
-                    showMessage.postValue(PassableStringResource(R.string.message_TimetableUpdated, listOf(username)))
-                } else {
-                    showMessage.postValue(PassableStringResource(R.string.message_TimetablesUpdated))
-                }
+    }
 
-                loadEvents()
-                updateSavedTimetables()
-                updateSharedEmails(ctuUsername)
-
-                // Refresh Google Calendar without waiting
-                repository.startCalendarRefresh()
+    /**
+     * Local calendars need to be synchronized before Sirius API update.
+     *
+     * Tasks:
+     *
+     * 1/ Checks if used calendars in Google Calendar service are visible
+     *
+     * 2/ Checks if personal calendar exists
+     *
+     * 3/ Checks if local copies of used calendars are syncable
+     *
+     * 4/ Synchronizes local calendar copies with Google Calendar service
+     */
+    fun prepareLocalCalendarsForUpdate(): Completable {
+        return repository.getGoogleCalendarList()
+            .toList()
+            .flatMapCompletable {
+                // Check if personal calendar exists and unhide hidden calendars in Google Calendar service
+                checkGoogleCalendars(it)
+                    .observeOn(schedulerProvider.computation())
+                    .andThen(repository.getLocalCalendarListItems())
+                    .filter { !it.syncEvents }
+                    .map { it.with(syncEvents = true) }
+                    .flatMapCompletable {
+                        // Ensure that all used calendars sync Google Calendar service
+                        repository.updateLocalCalendarListItem(it).ignoreElement()
+                    }
             }
-
-        compositeDisposable.add(disposable)
+            .andThen(repository.refreshCalendars())
     }
 
     /**
@@ -337,7 +367,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
         val hiddenCalendars = mutableListOf<CalendarListEntry>()
 
         for (calendar in calendars) {
-            if (calendar.hidden != null) {
+            if (calendar.hidden != null && calendar.hidden == true) {
                 // Calendars that the app is using mustn't be hidden
                 calendar.hidden = false
                 hiddenCalendars.add(calendar)
@@ -414,7 +444,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
             .intersect(deleted.map { Pair(it.siriusId!!, it.changed) })
             .map { it.first }
 
-        // Remove events that were changed by user
+        // Filter out events that were changed by user
         new = new.filter { !changedByUser.contains(it.siriusId) }
         deleted = deleted.filter { !changedByUser.contains(it.siriusId) }
 

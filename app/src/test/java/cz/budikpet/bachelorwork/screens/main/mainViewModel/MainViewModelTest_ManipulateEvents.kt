@@ -1,34 +1,37 @@
 package cz.budikpet.bachelorwork.screens.main.mainViewModel
 
 import android.arch.lifecycle.Observer
-import com.nhaarman.mockitokotlin2.*
+import com.nhaarman.mockitokotlin2.any
+import com.nhaarman.mockitokotlin2.reset
+import com.nhaarman.mockitokotlin2.whenever
 import cz.budikpet.bachelorwork.MyApplication
-import cz.budikpet.bachelorwork.data.models.*
+import cz.budikpet.bachelorwork.data.models.CalendarListItem
+import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.main.util.listsEqual
 import cz.budikpet.bachelorwork.screens.main.util.mock
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
-import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import io.reactivex.Observable
 import io.reactivex.Single
 import org.joda.time.DateTime
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 
 internal class MainViewModelTest_ManipulateEvents: BaseMainViewModelTest() {
-    val observerEventToEdit = mock<Observer<TimetableEvent?>>()
-    val observerEvents = mock<Observer<List<TimetableEvent>>>()
+    private val observerEventToEdit = mock<Observer<TimetableEvent?>>()
+    private val observerEvents = mock<Observer<List<TimetableEvent>>>()
 
     private val start = DateTime().minusDays(1)
     private val end = DateTime().plusDays(2)
-    val events = arrayListOf(
+    private val events = arrayListOf(
         TimetableEvent(siriusId = 5, fullName = "TestEvent1", starts_at = start, ends_at = end).also { it.googleId = 2 },
         TimetableEvent(siriusId = 6, fullName = "TestEvent2", starts_at = start, ends_at = end),
         TimetableEvent(fullName = "TestEvent4", starts_at = start, ends_at = end, deleted = true),
         TimetableEvent(fullName = "TestEvent3", starts_at = start, ends_at = end).also { it.googleId = 1 }
     )
 
-    val calendars = listOf(
+    private val calendars = listOf(
         CalendarListItem(11L, MyApplication.calendarNameFromId(username), true),
         CalendarListItem(12L, MyApplication.calendarNameFromId("${username}_test"), true),
         CalendarListItem(13L, MyApplication.calendarNameFromId("balikm"), true)
@@ -48,6 +51,12 @@ internal class MainViewModelTest_ManipulateEvents: BaseMainViewModelTest() {
 
         viewModel.events.value = events
         viewModel.events.observeForever(observerEvents)
+    }
+
+    @After
+    override fun clear() {
+        assert(viewModel.compositeDisposable.size() > 0)
+        super.clear()
     }
 
     @Test

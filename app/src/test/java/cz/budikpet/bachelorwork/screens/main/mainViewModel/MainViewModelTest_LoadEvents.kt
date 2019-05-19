@@ -1,37 +1,36 @@
 package cz.budikpet.bachelorwork.screens.main.mainViewModel
 
-import android.arch.core.executor.testing.InstantTaskExecutorRule
 import android.arch.lifecycle.Observer
 import com.nhaarman.mockitokotlin2.*
 import cz.budikpet.bachelorwork.MyApplication
-import cz.budikpet.bachelorwork.data.Repository
-import cz.budikpet.bachelorwork.data.enums.ItemType
-import cz.budikpet.bachelorwork.data.models.*
-import cz.budikpet.bachelorwork.screens.main.MainViewModel
+import cz.budikpet.bachelorwork.data.models.CalendarListItem
+import cz.budikpet.bachelorwork.data.models.Event
+import cz.budikpet.bachelorwork.data.models.Links
+import cz.budikpet.bachelorwork.data.models.TimetableEvent
 import cz.budikpet.bachelorwork.screens.main.util.listsEqual
 import cz.budikpet.bachelorwork.screens.main.util.mock
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
-import cz.budikpet.bachelorwork.util.schedulers.BaseSchedulerProvider
 import io.reactivex.Observable
-import io.reactivex.Single
-import io.reactivex.schedulers.Schedulers
 import org.joda.time.DateTime
 import org.junit.After
 import org.junit.Before
-import org.junit.Rule
 import org.junit.Test
-import org.mockito.InjectMocks
-import org.mockito.MockitoAnnotations
 
 
 internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
 
-    val testObserver = mock<Observer<List<TimetableEvent>>>()
+    private val testObserver = mock<Observer<List<TimetableEvent>>>()
 
     @Before
     override fun initTest() {
         super.initTest()
         reset(testObserver)
+    }
+
+    @After
+    override fun clear() {
+        assert(viewModel.compositeDisposable.size() > 0)
+        super.clear()
     }
 
     @Test
@@ -75,6 +74,8 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
 
         assert(viewModel.operationsRunning.value != null)
         assert(viewModel.operationsRunning.value!! == 0)
+
+        verify(testObserver, times(1)).onChanged(any())
     }
 
     @Test
@@ -137,6 +138,8 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
 
         assert(viewModel.operationsRunning.value != null)
         assert(viewModel.operationsRunning.value!! == 0)
+
+        verify(testObserver, times(1)).onChanged(any())
     }
 
     @Test
@@ -171,6 +174,8 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
 
         assert(viewModel.operationsRunning.value != null)
         assert(viewModel.operationsRunning.value!! == 0)
+
+        verify(testObserver, times(0)).onChanged(any())
     }
 
 }

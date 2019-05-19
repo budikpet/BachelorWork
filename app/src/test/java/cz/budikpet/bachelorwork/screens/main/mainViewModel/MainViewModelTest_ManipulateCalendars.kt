@@ -1,7 +1,6 @@
 package cz.budikpet.bachelorwork.screens.main.mainViewModel
 
 import android.arch.lifecycle.Observer
-import com.google.api.services.calendar.model.CalendarListEntry
 import com.nhaarman.mockitokotlin2.reset
 import com.nhaarman.mockitokotlin2.whenever
 import cz.budikpet.bachelorwork.MyApplication
@@ -11,15 +10,16 @@ import cz.budikpet.bachelorwork.screens.main.util.mock
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import io.reactivex.Completable
 import io.reactivex.Single
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-internal class MainViewModelTest_manipulateCalendars : BaseMainViewModelTest() {
+internal class MainViewModelTest_ManipulateCalendars : BaseMainViewModelTest() {
 
-    val testObserver = mock<Observer<ArrayList<SearchItem>>>()
+    private val testObserver = mock<Observer<ArrayList<SearchItem>>>()
 
     val calendarName = MyApplication.calendarNameFromId(username)
-    val savedTimetables = arrayListOf(
+    private val savedTimetables = arrayListOf(
         SearchItem("budikpet", type = ItemType.PERSON),
         SearchItem("balikm", type = ItemType.PERSON)
     )
@@ -30,6 +30,12 @@ internal class MainViewModelTest_manipulateCalendars : BaseMainViewModelTest() {
         reset(testObserver)
 
         viewModel.savedTimetables.value = savedTimetables
+    }
+
+    @After
+    override fun clear() {
+        assert(viewModel.compositeDisposable.size() > 0)
+        super.clear()
     }
 
     @Test

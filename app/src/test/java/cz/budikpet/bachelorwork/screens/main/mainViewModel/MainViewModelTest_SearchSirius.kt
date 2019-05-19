@@ -9,16 +9,17 @@ import cz.budikpet.bachelorwork.data.models.SearchItem
 import cz.budikpet.bachelorwork.screens.main.util.mock
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import io.reactivex.Observable
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 
 internal class MainViewModelTest_SearchSirius : BaseMainViewModelTest() {
 
-    val testObserver = mock<Observer<List<SearchItem>>>()
+    private val testObserver = mock<Observer<List<SearchItem>>>()
 
     val calendarName = MyApplication.calendarNameFromId(username)
-    val searchItems = arrayListOf(
+    private val searchItems = arrayListOf(
         SearchItem(type = ItemType.PERSON, id = "budikpet"),
         SearchItem(type = ItemType.ROOM, id = "budik"),
         SearchItem(type = ItemType.COURSE, id = "budisl")
@@ -28,6 +29,12 @@ internal class MainViewModelTest_SearchSirius : BaseMainViewModelTest() {
     override fun initTest() {
         super.initTest()
         reset(testObserver)
+    }
+
+    @After
+    override fun clear() {
+        assert(viewModel.compositeDisposable.size() > 0)
+        super.clear()
     }
 
     @Test

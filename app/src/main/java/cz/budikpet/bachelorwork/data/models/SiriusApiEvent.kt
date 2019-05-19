@@ -6,8 +6,8 @@ import java.util.*
 data class Event(
     val id: Int,
     val name: EventName? = null,
-    val starts_at: Date,
-    val ends_at: Date,
+    val starts_at: Date = Date(),
+    val ends_at: Date = Date(),
     val deleted: Boolean = false,
     val capacity: Int = 0,
     val occupied: Int = 0,
@@ -26,6 +26,6 @@ data class OriginalData(
 data class Links(
     val room: String? = null,
     val course: String,
-    val teachers: ArrayList<String>,
+    val teachers: ArrayList<String> = arrayListOf(),
     val students: ArrayList<String>? = null
 )

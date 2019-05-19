@@ -11,21 +11,28 @@ import cz.budikpet.bachelorwork.util.NoInternetConnectionException
 import io.reactivex.Completable
 import io.reactivex.Observable
 import io.reactivex.Single
+import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
 
 internal class MainViewModelTest_ShareCalendars : BaseMainViewModelTest() {
 
-    val testObserver = mock<Observer<ArrayList<String>>>()
+    private val testObserver = mock<Observer<ArrayList<String>>>()
 
-    val calendarName = MyApplication.calendarNameFromId(username)
-    val emails = arrayListOf("budikpet@fit.cvut.cz", "balikm@fit.cvut.cz")
+    private val calendarName = MyApplication.calendarNameFromId(username)
+    private val emails = arrayListOf("budikpet@fit.cvut.cz", "balikm@fit.cvut.cz")
 
     @Before
     override fun initTest() {
         super.initTest()
         reset(testObserver)
+    }
+
+    @After
+    override fun clear() {
+        assert(viewModel.compositeDisposable.size() > 0)
+        super.clear()
     }
 
     @Test
