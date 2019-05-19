@@ -255,7 +255,6 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
         val disposable = updateCalendarsCompletable(username)
             .subscribe {
                 Log.i(TAG, "Update done")
-                operationsRunning.value = operationsRunning.value!! - 1
                 if (username != null) {
                     showMessage.postValue(PassableStringResource(R.string.message_TimetableUpdated, listOf(username)))
                 } else {
@@ -318,6 +317,10 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
             .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
+            .doOnTerminate {
+                Log.i(TAG, "OnTerminate")
                 operationsRunning.value = operationsRunning.value!! - 1
             }
             .onErrorComplete { exception ->
@@ -599,16 +602,18 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
                 Log.i(TAG, "Dispose")
                 operationsRunning.value = operationsRunning.value!! - 1
             }
+            .doOnEvent { t1, t2 ->
+                Log.i(TAG, "OnEvent")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
             .subscribe(
                 { events ->
                     this.events.postValue(events)
-                    operationsRunning.value = operationsRunning.value!! - 1
                 },
                 { exception ->
                     Log.e(TAG, "LoadEvents error: $exception")
                     !checkNotFound(exception)
                     handleException(exception)
-                    operationsRunning.value = operationsRunning.value!! - 1
                 }
             )
 
@@ -683,17 +688,19 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
                 Log.i(TAG, "Dispose")
                 operationsRunning.value = operationsRunning.value!! - 1
             }
+            .doOnEvent { t1, t2 ->
+                Log.i(TAG, "OnEvent")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
             .subscribe(
                 { result ->
                     Log.i(TAG, "CalendarShared, ACL: $result")
                     showMessage.postValue(PassableStringResource(R.string.message_CalendarShared))
-                    operationsRunning.value = operationsRunning.value!! - 1
                     updateSharedEmails(username)
                 },
                 { exception ->
                     Log.e(TAG, "shareTimetable: $exception")
                     handleException(exception)
-                    operationsRunning.value = operationsRunning.value!! - 1
                 })
 
         compositeDisposable.add(disposable)
@@ -708,6 +715,10 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
                 Log.i(TAG, "Dispose")
                 operationsRunning.value = operationsRunning.value!! - 1
             }
+            .doOnTerminate {
+                Log.i(TAG, "OnTerminate")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
             .onErrorComplete { exception ->
                 Log.e(TAG, "Unshare: $exception")
                 handleException(exception)
@@ -716,7 +727,6 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
             .subscribe {
                 Log.i(TAG, "Calendar unshared successfully.")
                 showMessage.postValue(PassableStringResource(R.string.message_CalendarUnshared))
-                operationsRunning.value = operationsRunning.value!! - 1
                 updateSharedEmails(username)
             }
 
@@ -785,7 +795,6 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
             .doOnComplete {
                 Log.i(TAG, "$rangeSet")
                 setFreeTimeEvents(rangeSet)
-                operationsRunning.value = operationsRunning.value!! - 1
             }
             .subscribeOn(schedulerProvider.io())
             .observeOn(schedulerProvider.ui())
@@ -793,12 +802,15 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
                 Log.i(TAG, "Dispose")
                 operationsRunning.value = operationsRunning.value!! - 1
             }
+            .doOnTerminate {
+                Log.i(TAG, "OnTerminate")
+                operationsRunning.value = operationsRunning.value!! - 1
+            }
             .subscribe(
                 {},
                 { exception ->
                     Log.e(TAG, "getFreeTimeEvents: $exception")
                     handleException(exception)
-                    operationsRunning.value = operationsRunning.value!! - 1
                 })
 
         compositeDisposable.add(disposable)
