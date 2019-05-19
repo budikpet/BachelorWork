@@ -12,10 +12,7 @@ import cz.budikpet.bachelorwork.MyApplication.Companion.idFromCalendarName
 import cz.budikpet.bachelorwork.R
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.ItemType
-import cz.budikpet.bachelorwork.data.models.CalendarListItem
-import cz.budikpet.bachelorwork.data.models.PassableStringResource
-import cz.budikpet.bachelorwork.data.models.SearchItem
-import cz.budikpet.bachelorwork.data.models.TimetableEvent
+import cz.budikpet.bachelorwork.data.models.*
 import cz.budikpet.bachelorwork.screens.multidayView.MultidayViewFragment
 import cz.budikpet.bachelorwork.util.GoogleAccountNotFoundException
 import cz.budikpet.bachelorwork.util.NoInternetConnectionException
@@ -73,7 +70,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
     var eventToEditChanges: TimetableEvent? = null
 
     /** Indicates whether some operation is running. */
-    val operationsRunning = MutableLiveData<Int>()
+    val operationsRunning = MutableLiveData<Counter>()
 
     val ctuSignedOut = MutableLiveData<Boolean>()
 
@@ -234,7 +231,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
      */
     fun ready(forceUpdate: Boolean = false) {
         val currOwner = timetableOwner.value
-        operationsRunning.value = 0
+        operationsRunning.value = Counter(0)
 
         if (currOwner == null || forceUpdate) {
             selectedSidebarItem.value = R.id.sidebarWeekView
@@ -290,7 +287,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
         Log.i(TAG, "Update started")
         updatedEventsInterval = loadedEventsInterval
 
-        operationsRunning.value = operationsRunning.value!! + 1
+        operationsRunning.value = operationsRunning.value!!.increment()
         compositeDisposable.clear()
 
         return prepareLocalCalendarsForUpdate()
@@ -317,11 +314,11 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
             .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .doOnTerminate {
                 Log.i(TAG, "OnTerminate")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .onErrorComplete { exception ->
                 Log.e(TAG, "UpdateCalendars error: $exception")
@@ -582,7 +579,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
 
         loadedEventsInterval = withMiddleDate(middleDate)
 
-        operationsRunning.value = operationsRunning.value!! + 1
+        operationsRunning.value = operationsRunning.value!!.increment()
         val disposable = repository.getLocalCalendarListItems()
             .filter { it.displayName == calendarNameFromId(pair.first) }
             .flatMap { repository.getCalendarEvents(it.id, loadedEventsInterval.start, loadedEventsInterval.end) }
@@ -600,11 +597,11 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
             .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .doOnEvent { t1, t2 ->
                 Log.i(TAG, "OnEvent")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .subscribe(
                 { events ->
@@ -680,17 +677,17 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
     }
 
     fun shareTimetable(email: String, username: String = ctuUsername) {
-        operationsRunning.value = operationsRunning.value!! + 1
+        operationsRunning.value = operationsRunning.value!!.increment()
         val disposable = repository.sharePersonalCalendar(email)
             .subscribeOn(schedulerProvider.io())
             .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .doOnEvent { t1, t2 ->
                 Log.i(TAG, "OnEvent")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .subscribe(
                 { result ->
@@ -707,17 +704,17 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
     }
 
     fun unshareTimetable(email: String, username: String = ctuUsername) {
-        operationsRunning.value = operationsRunning.value!! + 1
+        operationsRunning.value = operationsRunning.value!!.increment()
         val disposable = repository.unsharePersonalCalendar(email)
             .subscribeOn(schedulerProvider.io())
             .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .doOnTerminate {
                 Log.i(TAG, "OnTerminate")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .onErrorComplete { exception ->
                 Log.e(TAG, "Unshare: $exception")
@@ -776,7 +773,7 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
         }
 
         compositeDisposable.clear()
-        operationsRunning.value = operationsRunning.value!! + 1
+        operationsRunning.value = operationsRunning.value!!.increment()
         val disposable = Observable.fromIterable(timetables)
             .flatMap {
                 getCalendarOrSiriusTimetableEvents(it, weekStart, weekEnd)
@@ -800,11 +797,11 @@ class MainViewModel @Inject constructor(var repository: Repository, var schedule
             .observeOn(schedulerProvider.ui())
             .doOnDispose {
                 Log.i(TAG, "Dispose")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .doOnTerminate {
                 Log.i(TAG, "OnTerminate")
-                operationsRunning.value = operationsRunning.value!! - 1
+                operationsRunning.value = operationsRunning.value!!.decrement()
             }
             .subscribe(
                 {},

@@ -72,9 +72,9 @@ internal class MainViewModelTest_Update : BaseMainViewModelTest() {
 
         assert(viewModel.thrownException.value == null)
 
-        verify(repository, times(1)).updateGoogleCalendarList(any())
-        verify(repository, times(1)).addGoogleCalendar(any())
-        verify(repository, times(2)).updateLocalCalendarListItem(any())
+        verify(repository, times(1)).updateGoogleCalendarList(any())    // Only 1 calendar was hidden
+        verify(repository, times(1)).addGoogleCalendar(any())           // Only personal calendar added
+        verify(repository, times(2)).updateLocalCalendarListItem(any()) // 2 calendars did not sync
     }
 
     private fun prepareLocalCalendarsForUpdateStubs() {
@@ -154,10 +154,10 @@ internal class MainViewModelTest_Update : BaseMainViewModelTest() {
         completableObserver.assertComplete()
         completableObserver.assertNoErrors()
 
-        verify(repository, times(1)).deleteCalendarEvent(any(), any())
-        verify(repository, times(1)).addCalendarEvent(any(), any())
+        verify(repository, times(1)).deleteCalendarEvent(any(), any())  // Invoked for DeletedSiriusEvent only
+        verify(repository, times(1)).addCalendarEvent(any(), any())     // Invoked for NewEvent only
 
         assert(viewModel.operationsRunning.value != null)
-        assert(viewModel.operationsRunning.value!! == 0)
+        assert(viewModel.operationsRunning.value!!.number == 0)
     }
 }

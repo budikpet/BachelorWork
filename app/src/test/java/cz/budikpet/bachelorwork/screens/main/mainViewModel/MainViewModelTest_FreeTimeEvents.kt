@@ -129,7 +129,7 @@ internal class MainViewModelTest_FreeTimeEvents : BaseMainViewModelTest() {
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
-        assert(viewModel.operationsRunning.value!! == 0)
+        assert(viewModel.operationsRunning.value!!.number == 0)
     }
 
     @Test
@@ -180,7 +180,7 @@ internal class MainViewModelTest_FreeTimeEvents : BaseMainViewModelTest() {
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
-        assert(viewModel.operationsRunning.value!! == 0)
+        assert(viewModel.operationsRunning.value!!.number == 0)
     }
 
     @Test
@@ -211,7 +211,7 @@ internal class MainViewModelTest_FreeTimeEvents : BaseMainViewModelTest() {
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
-        assert(viewModel.operationsRunning.value!! == 0)
+        assert(viewModel.operationsRunning.value!!.number == 0)
     }
 
     private fun getResult(

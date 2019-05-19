@@ -5,6 +5,7 @@ import com.nhaarman.mockitokotlin2.doReturn
 import com.nhaarman.mockitokotlin2.whenever
 import cz.budikpet.bachelorwork.data.Repository
 import cz.budikpet.bachelorwork.data.enums.ItemType
+import cz.budikpet.bachelorwork.data.models.Counter
 import cz.budikpet.bachelorwork.screens.main.MainViewModel
 import cz.budikpet.bachelorwork.screens.main.util.mock
 import cz.budikpet.bachelorwork.util.schedulers.BaseSchedulerProvider
@@ -42,7 +43,7 @@ open class BaseMainViewModelTest {
     open fun initTest() {
         MockitoAnnotations.initMocks(this)
         viewModel.timetableOwner.value = Pair(username, ItemType.PERSON)
-        viewModel.operationsRunning.value = 0
+        viewModel.operationsRunning.value = Counter(0)
 
         whenever(repository.ctuUsername)
             .doReturn(username)

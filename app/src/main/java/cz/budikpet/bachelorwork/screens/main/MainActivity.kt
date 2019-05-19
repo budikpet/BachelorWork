@@ -162,7 +162,7 @@ class MainActivity : AppCompatActivity(), PermissionsCheckerFragment.Callback {
         viewModel.operationsRunning.observe(this, Observer { operationsRunning ->
             Log.i(TAG, "Running: $operationsRunning")
             if (operationsRunning != null) {
-                if (operationsRunning <= 0) {
+                if (operationsRunning.number <= 0) {
                     // Update done
                     progressBar.visibility = View.GONE
                 } else {

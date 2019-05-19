@@ -117,12 +117,15 @@ class CTULoginActivity : AppCompatActivity(), PermissionsCheckerFragment.Callbac
     private fun startAuthorization() {
         val authService = AuthorizationService(this)
 
+        val okIntent = Intent(this, MainActivity::class.java)
+        okIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+
         val cancelIntent = Intent(this, CTULoginActivity::class.java)
         cancelIntent.putExtra("isCancelIntent", true)
 
         authService.performAuthorizationRequest(
             appAuthManager.authRequest,
-            PendingIntent.getActivity(this, 0, Intent(this, MainActivity::class.java), 0),
+            PendingIntent.getActivity(this, 0, okIntent, 0),
             PendingIntent.getActivity(this, 0, cancelIntent, 0)
         )
     }

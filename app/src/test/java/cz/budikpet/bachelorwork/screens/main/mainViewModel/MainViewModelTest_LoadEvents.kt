@@ -73,7 +73,7 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
-        assert(viewModel.operationsRunning.value!! == 0)
+        assert(viewModel.operationsRunning.value!!.number == 0)
 
         verify(testObserver, times(1)).onChanged(any())
     }
@@ -137,7 +137,7 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
         assert(viewModel.thrownException.value == null)
 
         assert(viewModel.operationsRunning.value != null)
-        assert(viewModel.operationsRunning.value!! == 0)
+        assert(viewModel.operationsRunning.value!!.number == 0)
 
         verify(testObserver, times(1)).onChanged(any())
     }
@@ -173,7 +173,7 @@ internal class MainViewModelTest_LoadEvents: BaseMainViewModelTest() {
         assert(viewModel.thrownException.value != null)
 
         assert(viewModel.operationsRunning.value != null)
-        assert(viewModel.operationsRunning.value!! == 0)
+        assert(viewModel.operationsRunning.value!!.number == 0)
 
         verify(testObserver, times(0)).onChanged(any())
     }
